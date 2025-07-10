@@ -2,4 +2,5 @@ export {
   useWebSocket,
   usePriceSubscription,
   useBalanceSubscription,
-} from './useWebSocket'; 
+} from './useWebSocket';
+export { useDeepLinking } from './useDeepLinking'; 

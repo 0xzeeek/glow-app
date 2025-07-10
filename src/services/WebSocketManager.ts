@@ -1,10 +1,82 @@
-import { EventEmitter } from 'events';
 import { 
   WSConnectParams, 
   WSMessage, 
   PriceUpdate, 
   BalanceUpdate 
 } from '../types/solana-trading-backend';
+
+// btoa polyfill for React Native
+const btoa = (str: string): string => {
+  // Simple base64 encoding for React Native
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let result = '';
+  let i = 0;
+  
+  while (i < str.length) {
+    const a = str.charCodeAt(i++);
+    const b = i < str.length ? str.charCodeAt(i++) : 0;
+    const c = i < str.length ? str.charCodeAt(i++) : 0;
+    
+    const bitmap = (a << 16) | (b << 8) | c;
+    
+    result += chars.charAt((bitmap >> 18) & 63);
+    result += chars.charAt((bitmap >> 12) & 63);
+    result += i - 2 < str.length ? chars.charAt((bitmap >> 6) & 63) : '=';
+    result += i - 1 < str.length ? chars.charAt(bitmap & 63) : '=';
+  }
+  
+  return result;
+};
+
+// Custom EventEmitter for React Native compatibility
+class EventEmitter {
+  private events: { [key: string]: Function[] } = {};
+
+  on(event: string, listener: Function): this {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(listener);
+    return this;
+  }
+
+  off(event: string, listener: Function): this {
+    if (!this.events[event]) return this;
+    
+    this.events[event] = this.events[event].filter(l => l !== listener);
+    return this;
+  }
+
+  emit(event: string, ...args: any[]): boolean {
+    if (!this.events[event]) return false;
+    
+    this.events[event].forEach(listener => {
+      try {
+        listener(...args);
+      } catch (error) {
+        console.error(`Error in event listener for ${event}:`, error);
+      }
+    });
+    return true;
+  }
+
+  once(event: string, listener: Function): this {
+    const onceWrapper = (...args: any[]) => {
+      this.off(event, onceWrapper);
+      listener(...args);
+    };
+    return this.on(event, onceWrapper);
+  }
+
+  removeAllListeners(event?: string): this {
+    if (event) {
+      delete this.events[event];
+    } else {
+      this.events = {};
+    }
+    return this;
+  }
+}
 
 interface WebSocketConfig {
   url: string;
@@ -28,9 +100,9 @@ export class WebSocketManager extends EventEmitter {
   private ws: WebSocket | null = null;
   private config: Required<WebSocketConfig>;
   private reconnectAttempts = 0;
-  private heartbeatTimer: NodeJS.Timeout | null = null;
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private connectionTimer: NodeJS.Timeout | null = null;
+  private heartbeatTimer: number | null = null;
+  private reconnectTimer: number | null = null;
+  private connectionTimer: number | null = null;
   private isConnecting = false;
   private shouldReconnect = true;
   private subscriptions = new Set<string>();
@@ -170,7 +242,7 @@ export class WebSocketManager extends EventEmitter {
       if (this.connectParams) {
         this.performConnect();
       }
-    }, delay);
+    }, delay) as any;
   }
 
   private startHeartbeat(): void {
@@ -180,7 +252,7 @@ export class WebSocketManager extends EventEmitter {
       if (this.isConnected()) {
         this.send({ type: 'PING' });
       }
-    }, this.config.heartbeatInterval);
+    }, this.config.heartbeatInterval) as any;
   }
 
   private stopHeartbeat(): void {
@@ -196,7 +268,7 @@ export class WebSocketManager extends EventEmitter {
         this.handleError(new Error('Connection timeout'));
         this.ws?.close();
       }
-    }, this.config.connectionTimeout);
+    }, this.config.connectionTimeout) as any;
   }
 
   private clearConnectionTimeout(): void {

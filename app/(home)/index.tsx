@@ -1,10 +1,37 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, ScrollView, Text } from 'react-native';
+import HeaderBar from '../../src/components/navigation/HeaderBar';
+import TopMovers from '../../src/components/home/TopMovers';
+import FeaturedToken from '../../src/components/home/FeaturedToken';
+import CreatorTokenRow from '../../src/components/home/CreatorTokenRow';
+import BottomNav from '../../src/components/navigation/BottomNav';
+import { topMovers, featuredToken, creatorTokens } from '../../src/data/mockTokens';
 
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Home Screen - To Be Implemented</Text>
+      <HeaderBar />
+      
+      <ScrollView 
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <TopMovers data={topMovers} />
+        
+        <FeaturedToken token={featuredToken} />
+        
+        <View style={styles.tokenListSection}>
+          <Text style={styles.sectionTitle}>CREATORS</Text>
+          <FlatList
+            data={creatorTokens}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <CreatorTokenRow token={item} />}
+            scrollEnabled={false}
+          />
+        </View>
+      </ScrollView>
+      
+      <BottomNav activeTab="home" />
     </View>
   );
 }
@@ -12,12 +39,21 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0A0A0A',
+    backgroundColor: '#FFFFFF',
   },
-  text: {
-    color: '#FFFFFF',
-    fontSize: 18,
+  scrollContent: {
+    flex: 1,
+  },
+  tokenListSection: {
+    marginTop: 16,
+    backgroundColor: '#FFFFFF',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#666666',
+    marginLeft: 20,
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
 }); 

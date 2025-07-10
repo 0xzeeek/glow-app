@@ -1,36 +1,6 @@
-export { 
-  ApiError,
-  initializeApiClient,
-  getApiClient,
-  createQueryClient,
-  queryKeys,
-} from './ApiClient';
-
-export {
-  WebSocketManager,
-  getWebSocketManager,
-} from './WebSocketManager';
-
-export {
-  AuthService,
-  initializeAuthService,
-  getAuthService,
-} from './AuthService';
-
-export {
-  SolanaAuthService,
-  authenticateWithDynamicWallet,
-} from './SolanaAuthService';
-
-export {
-  OfflineManager,
-  getOfflineManager,
-} from './OfflineManager';
-
-export {
-  ErrorHandler,
-  ErrorSeverity,
-  ErrorCategory,
-  initializeErrorHandler,
-  getErrorHandler,
-} from './ErrorHandler'; 
+export { createQueryClient, initializeApiClient, getApiClient, ApiError, queryKeys } from './ApiClient';
+export { initializeErrorHandler, getErrorHandler, ErrorHandler, ErrorSeverity, ErrorCategory } from './ErrorHandler';
+export { getWebSocketManager, WebSocketManager } from './WebSocketManager';
+export { getOfflineManager, OfflineManager } from './OfflineManager';
+export { getCrossmintAuthService } from './CrossmintAuthService';
+export { SolanaAuthService, authenticateWithDynamicWallet } from './SolanaAuthService'; 

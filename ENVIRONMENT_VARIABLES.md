@@ -4,13 +4,20 @@ Create a `.env.local` file in the root of your project with the following variab
 
 ## Required Variables
 
+### Crossmint Configuration
+```bash
+# Your Crossmint API key for authentication and embedded wallets
+# Get this from https://console.crossmint.com/
+EXPO_PUBLIC_CROSSMINT_API_KEY=your-crossmint-api-key-here
+```
+
 ### Backend API Configuration
 ```bash
 # REST API endpoint
-EXPO_PUBLIC_API_URL=https://your-api.execute-api.us-east-1.amazonaws.com
+EXPO_PUBLIC_API_URL=https://api.glow.club
 
 # WebSocket endpoint (AWS API Gateway)
-EXPO_PUBLIC_WS_URL=wss://your-api.execute-api.us-east-1.amazonaws.com/production
+EXPO_PUBLIC_WS_URL=wss://ws.glow.club
 
 # Or for Cloudflare Workers:
 # EXPO_PUBLIC_WS_URL=wss://broadcast.yourdomain.com
@@ -30,12 +37,6 @@ EXPO_PUBLIC_USE_CLOUDFLARE=false
 ```bash
 # Sentry DSN for error tracking
 EXPO_PUBLIC_SENTRY_DSN=https://your-sentry-dsn@sentry.io/project-id
-```
-
-### Dynamic Labs
-```bash
-# Your Dynamic Labs environment ID
-EXPO_PUBLIC_DYNAMIC_ENVIRONMENT_ID=your-dynamic-environment-id
 ```
 
 ## Development vs Production

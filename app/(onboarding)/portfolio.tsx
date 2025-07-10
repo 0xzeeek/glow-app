@@ -4,8 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Button } from '../../src/components/Button';
-import { ProgressIndicator } from '../../src/components/ProgressIndicator';
+import { Button } from '../../src/components/shared/Button';
+import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
 
 export default function PortfolioOnboardingScreen() {
   const router = useRouter();

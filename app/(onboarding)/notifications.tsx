@@ -16,8 +16,8 @@ import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { LightningBolt } from '../../assets';
-import { Button } from '../../src/components/Button';
-import { ProgressIndicator } from '../../src/components/ProgressIndicator';
+import { Button } from '../../src/components/shared/Button';
+import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
 import { colors } from '../../src/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -62,8 +62,8 @@ export default function NotificationsOnboardingScreen() {
           });
         }
         
-        // Navigate regardless of the user's choice
-        router.push('/(onboarding)/portfolio');
+        // Navigate to email screen regardless of the user's choice
+        router.push('/(onboarding)/email');
       }
       
       appStateRef.current = nextAppState;
@@ -85,7 +85,7 @@ export default function NotificationsOnboardingScreen() {
           [
             {
               text: 'Continue',
-              onPress: () => router.push('/(onboarding)/portfolio'),
+              onPress: () => router.push('/(onboarding)/email'),
             },
           ]
         );
@@ -98,23 +98,20 @@ export default function NotificationsOnboardingScreen() {
       if (existingStatus === 'granted') {
         // Permissions already granted, navigate immediately
         console.log('Permissions already granted, navigating...');
-        router.push('/(onboarding)/portfolio');
+        router.push('/(onboarding)/email');
         return;
       }
 
       // Set flag to indicate we're waiting for permission response
       isWaitingForPermissionRef.current = true;
       
-      // Show the system permission dialog
+      // Request permissions - navigation will happen via app state handler
       console.log('Requesting permissions...');
       await Notifications.requestPermissionsAsync();
-      
-      // Don't navigate here - let the app state change handler do it
-      // The navigation will happen when the app returns to foreground
     } catch (error) {
       console.error('Error requesting notifications:', error);
       // Navigate anyway on error
-      router.push('/(onboarding)/portfolio');
+      router.push('/(onboarding)/email');
     }
   };
 

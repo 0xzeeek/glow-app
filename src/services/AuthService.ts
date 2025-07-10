@@ -1,5 +1,6 @@
 // @ts-ignore - Dynamic SDK types not fully available
 import { createClient } from '@dynamic-labs/client';
+import { SolanaExtension } from '@dynamic-labs/solana-extension';
 // @ts-ignore - Dynamic SDK types not fully available
 import { ReactNativeExtension } from '@dynamic-labs/react-native-extension';
 import * as SecureStore from 'expo-secure-store';
@@ -26,19 +27,46 @@ export class AuthService {
 
   constructor(config: AuthConfig) {
     this.config = config;
-    
-    // Initialize Dynamic SDK client
-    this.dynamicClient = createClient({
-      environmentId: config.environmentId,
-    }).extend(ReactNativeExtension());
+
+    try {
+      // Initialize Dynamic SDK client
+      this.dynamicClient = createClient({
+        environmentId: config.environmentId,
+        appLogoUrl: 'https://glow.club/favicon.ico',
+        appName: 'Glow',
+      })
+        .extend(ReactNativeExtension({
+          appOrigin: 'https://glow.club' // Required for passkeys
+        }))
+        .extend(SolanaExtension());
+    } catch (error) {
+      console.warn('Failed to create Dynamic SDK client:', error);
+      console.warn('Dynamic SDK features will be unavailable');
+      // Set a placeholder client to prevent crashes
+      this.dynamicClient = null;
+    }
   }
 
   // Initialize authentication service
   public async initialize(): Promise<void> {
     try {
+      // Check if Dynamic client is properly initialized
+      if (!this.dynamicClient || !this.dynamicClient.auth) {
+        console.warn('Dynamic SDK client not properly initialized');
+        return;
+      }
+
       // Check if user has existing Dynamic session
-      const isAuthenticated = await this.dynamicClient.auth.isAuthenticated();
+      // Some versions of Dynamic SDK might have different API
+      let isAuthenticated = false;
       
+      if (typeof this.dynamicClient.auth.isAuthenticated === 'function') {
+        isAuthenticated = await this.dynamicClient.auth.isAuthenticated();
+      } else if (this.dynamicClient.user) {
+        // Alternative way to check authentication
+        isAuthenticated = !!this.dynamicClient.user;
+      }
+
       if (isAuthenticated) {
         const wallet = await this.getCurrentWallet();
         if (wallet) {
@@ -46,9 +74,9 @@ export class AuthService {
           await this.authenticateWithBackend({
             address: wallet,
             chain: 'solana',
-            connector: 'embedded'
+            connector: 'embedded',
           });
-          
+
           // Update user store
           userStore.setState({
             isAuthenticated: true,
@@ -57,16 +85,24 @@ export class AuthService {
         }
       }
     } catch (error) {
-      console.error('Failed to initialize auth service:', error);
+      console.warn('Failed to initialize auth service:', error);
+      // Don't throw - allow app to continue without auth
     }
   }
 
   // Email OTP authentication flow
   public async sendOTP(email: string): Promise<void> {
+    if (!this.dynamicClient) {
+      throw new Error('Dynamic SDK not initialized. Please check your configuration.');
+    }
+
     try {
-      await this.dynamicClient.auth.email.sendOTP({
-        email,
-      });
+      // Check if email auth is available
+      if (!this.dynamicClient.auth || !this.dynamicClient.auth.email) {
+        throw new Error('Email authentication not available. Please check Dynamic SDK setup.');
+      }
+
+      await this.dynamicClient.auth.email.sendOTP(email);
     } catch (error) {
       console.error('Failed to send OTP:', error);
       throw new Error('Failed to send verification code');
@@ -77,21 +113,19 @@ export class AuthService {
   public async verifyOTP(email: string, otp: string): Promise<WalletInfo> {
     try {
       // Verify OTP with Dynamic
-      const authResult = await this.dynamicClient.auth.email.verifyOTP({
-        email,
-        token: otp,
-      });
+      const authResult = await this.dynamicClient.auth.email.verifyOTP(otp);
 
       if (!authResult.isAuthenticated) {
         throw new Error('Authentication failed');
+        console.log('Auth result →', authResult);
       }
 
       // Get or create embedded wallet
       const wallet = await this.getOrCreateWallet();
-      
+
       // Authenticate with backend WebSocket using Dynamic wallet
       await this.authenticateWithBackend(wallet);
-      
+
       // Update user store
       userStore.setState({
         isAuthenticated: true,
@@ -111,7 +145,7 @@ export class AuthService {
     try {
       // Check if user already has wallets
       const wallets = await this.dynamicClient.wallets.getWallets();
-      
+
       if (wallets.length > 0) {
         // Return first Solana wallet
         const solanaWallet = wallets.find((w: any) => w.chain === 'solana');
@@ -156,13 +190,13 @@ export class AuthService {
   private async authenticateWithBackend(wallet: WalletInfo): Promise<void> {
     try {
       const apiClient = getApiClient();
-      
+
       // Get nonce from backend
       const { nonce } = await apiClient.getNonce(wallet.address);
-      
+
       // Sign nonce with Dynamic wallet
       const signature = await this.signMessage(nonce);
-      
+
       // Connect WebSocket with auth params
       const wsManager = getWebSocketManager();
       wsManager.connect({
@@ -170,36 +204,35 @@ export class AuthService {
         signature,
         nonce,
       });
-      
+
       // Wait for connection
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('WebSocket connection timeout'));
         }, 10000);
-        
+
         wsManager.once('connected', () => {
           clearTimeout(timeout);
           resolve();
         });
-        
-        wsManager.once('error', (error) => {
+
+        wsManager.once('error', (error: Error) => {
           clearTimeout(timeout);
           reject(error);
         });
       });
-      
+
       // Subscribe to user's balance updates
       wsManager.subscribeToBalance(wallet.address);
-      
+
       // Subscribe to watchlist prices
       const { watchlist } = tradingStore.getState();
       watchlist.forEach((token: string) => {
         wsManager.subscribeToPrice(token);
       });
-      
+
       // Store wallet address for reconnection
       await SecureStore.setItemAsync('last_wallet', wallet.address);
-      
     } catch (error) {
       console.error('Failed to authenticate with backend:', error);
       throw new Error('Failed to connect to trading backend');
@@ -238,7 +271,7 @@ export class AuthService {
         email: null,
         profile: null,
       });
-      
+
       // Clear trading data
       tradingStore.getState().reset();
     } catch (error) {
@@ -271,7 +304,7 @@ export class AuthService {
       return null;
     }
   }
-  
+
   // Get Dynamic client (for advanced use cases)
   public getDynamicClient() {
     return this.dynamicClient;
@@ -288,7 +321,9 @@ export const initializeAuthService = (config: AuthConfig): AuthService => {
 
 export const getAuthService = (): AuthService => {
   if (!authService) {
-    throw new Error('AuthService not initialized. Call initializeAuthService first.');
+    throw new Error(
+      'AuthService not initialized. Please set up Dynamic SDK by adding EXPO_PUBLIC_DYNAMIC_ENVIRONMENT_ID to your .env.local file. See ENV_SETUP.md for instructions.'
+    );
   }
   return authService;
-}; 
+};

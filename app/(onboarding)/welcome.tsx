@@ -14,7 +14,7 @@ import {
   StarSmall, 
   SparkleIcon 
 } from '../../assets';
-import { Button } from '../../src/components/Button';
+import { Button } from '../../src/components/shared/Button';
 import { colors } from '../../src/theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -194,3 +194,78 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 }); 
+
+// import React from 'react';
+// import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+// import { useAuth } from '@crossmint/client-sdk-react-native-ui';
+
+// export default function WelcomeScreen({ navigation }: any) {
+//     const { createAuthSession, user, status } = useAuth();
+
+//     const handleGetStarted = async () => {
+//         try {
+//             if (!user) {
+//                 const authSession = await createAuthSession('c4014401-a81f-419a-8acf-65350824252d');
+//                 console.log('authSession', authSession);
+//             } else {
+//                 navigation.navigate('Dashboard');
+//             }
+//         } catch (error) {
+//             console.error('Error creating auth session:', error);
+//         }
+//     };
+
+//     return (
+//         <View style={styles.container}>
+//             <Text style={styles.title}>Welcome to MyApp</Text>
+//             <Text style={styles.subtitle}>
+//                 Your gateway to the decentralized world
+//             </Text>
+            
+//             <TouchableOpacity 
+//                 style={styles.button} 
+//                 onPress={handleGetStarted}
+//                 disabled={status === "in-progress"}
+//             >
+//                 <Text style={styles.buttonText}>
+//                     {status === "in-progress" ? "Loading..." : "Get Started"}
+//                 </Text>
+//             </TouchableOpacity>
+//         </View>
+//     );
+// }
+
+// const styles = StyleSheet.create({
+//     container: {
+//         flex: 1,
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         padding: 20,
+//         backgroundColor: '#f5f5f5',
+//     },
+//     title: {
+//         fontSize: 32,
+//         fontWeight: 'bold',
+//         marginBottom: 10,
+//         textAlign: 'center',
+//     },
+//     subtitle: {
+//         fontSize: 16,
+//         color: '#666',
+//         marginBottom: 40,
+//         textAlign: 'center',
+//     },
+//     button: {
+//         backgroundColor: '#007AFF',
+//         paddingHorizontal: 40,
+//         paddingVertical: 15,
+//         borderRadius: 25,
+//         minWidth: 200,
+//     },
+//     buttonText: {
+//         color: 'white',
+//         fontSize: 18,
+//         fontWeight: '600',
+//         textAlign: 'center',
+//     },
+// });
