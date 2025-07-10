@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 48,
     fontWeight: '900',
-    color: theme.colors.primary.main,
+    color: theme.colors.text.primary,
     textAlign: 'center',
     marginBottom: 48,
     letterSpacing: 2,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   },
   button: {
     height: 56,
-    backgroundColor: theme.colors.primary.main,
+    backgroundColor: theme.colors.text.primary,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 16,
-    color: theme.colors.primary.main,
+    color: theme.colors.text.primary,
     textAlign: 'center',
     marginTop: 8,
   },
