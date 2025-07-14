@@ -5,22 +5,21 @@ import {
   Image,
   StyleSheet,
   Dimensions,
-  SafeAreaView,
   Platform,
   Alert,
   AppState,
   AppStateStatus,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { LightningBolt } from '../../assets';
+import { BackgroundOnbordingMain, OnboardingLightningBolt } from '../../assets';
 import { Button } from '../../src/components/shared/Button';
 import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
 import { colors } from '../../src/theme';
+import { fonts } from '../../src/theme/typography';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Configure notifications
 Notifications.setNotificationHandler({
@@ -38,21 +37,25 @@ export default function NotificationsOnboardingScreen() {
   const appStateRef = useRef(AppState.currentState);
   const isWaitingForPermissionRef = useRef(false);
 
+  const handleTermsPress = () => {
+    // Open terms of use
+    console.log('Open Terms of Use');
+  };
+
+  const handlePrivacyPress = () => {
+    // Open privacy policy
+    console.log('Open Privacy Policy');
+  };
+
   useEffect(() => {
     const handleAppStateChange = async (nextAppState: AppStateStatus) => {
-      // Check if app is coming back to foreground after permission dialog
       if (
         appStateRef.current.match(/inactive|background/) &&
         nextAppState === 'active' &&
         isWaitingForPermissionRef.current
       ) {
         isWaitingForPermissionRef.current = false;
-        
-        // Check the permission status and navigate
         const { status } = await Notifications.getPermissionsAsync();
-        console.log('Permission status after dialog:', status);
-        
-        // Configure Android notification channel if granted
         if (status === 'granted' && Platform.OS === 'android') {
           await Notifications.setNotificationChannelAsync('default', {
             name: 'default',
@@ -61,16 +64,11 @@ export default function NotificationsOnboardingScreen() {
             lightColor: '#FF231F7C',
           });
         }
-        
-        // Navigate to email screen regardless of the user's choice
         router.push('/(onboarding)/email');
       }
-      
       appStateRef.current = nextAppState;
     };
-
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
     return () => {
       subscription.remove();
     };
@@ -91,138 +89,150 @@ export default function NotificationsOnboardingScreen() {
         );
         return;
       }
-
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      console.log('Existing permission status:', existingStatus);
-
       if (existingStatus === 'granted') {
-        // Permissions already granted, navigate immediately
-        console.log('Permissions already granted, navigating...');
         router.push('/(onboarding)/email');
         return;
       }
-
-      // Set flag to indicate we're waiting for permission response
       isWaitingForPermissionRef.current = true;
-      
-      // Request permissions - navigation will happen via app state handler
-      console.log('Requesting permissions...');
       await Notifications.requestPermissionsAsync();
     } catch (error) {
-      console.error('Error requesting notifications:', error);
-      // Navigate anyway on error
       router.push('/(onboarding)/email');
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="light" />
-      
-      {/* Lightning Bolt */}
-      <View style={styles.imageContainer}>
-        <Image 
-          source={LightningBolt} 
-          style={styles.lightningBolt} 
-          resizeMode="contain" 
-        />
+    <View style={styles.container}>
+      {/* Background gradient image */}
+      <Image source={BackgroundOnbordingMain} style={styles.backgroundImage} resizeMode="cover" />
+      <View style={styles.content}>
+        <View style={styles.imageWrapper}>
+          <Image source={OnboardingLightningBolt} style={styles.lightningBolt} />
+        </View>
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>Don’t Miss a Drop</Text>
+          <Text style={styles.subtitle}>
+            Glow launches, price moves, rewards{`\n`}all in real time.
+          </Text>
+        </View>
+        <View style={styles.bottomContainer}>
+          <View style={styles.progressWrapper}>
+            <ProgressIndicator totalSteps={3} currentStep={1} style={styles.progressIndicator} />
+          </View>
+          <Button
+            title="ENABLE NOTIFICATIONS"
+            onPress={handleEnableNotifications}
+          />
+         {/* Terms and Privacy */}
+         <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.legalLink} onPress={handleTermsPress}>
+                Terms of Use
+              </Text>{' '}
+              and{'\n'}have read and agreed to our{' '}
+              <Text style={styles.legalLink} onPress={handlePrivacyPress}>
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
+        </View>
       </View>
-
-      {/* Title */}
-      <Text style={styles.title}>Don't Miss a Drop</Text>
-
-      {/* Subtitle */}
-      <Text style={styles.subtitle}>
-        Glow launches, price moves, rewards{'\n'}all in real time.
-      </Text>
-
-      {/* Spacer */}
-      <View style={styles.spacer} />
-
-      {/* Progress Indicator */}
-      <ProgressIndicator 
-        totalSteps={3} 
-        currentStep={2} 
-        style={styles.progressIndicator}
-      />
-
-      {/* Button */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title="ENABLE NOTIFICATIONS"
-          onPress={handleEnableNotifications}
-          style={styles.button}
-          textStyle={styles.buttonText}
-        />
-      </View>
-
-      {/* Bottom indicator */}
-      <View style={styles.indicatorContainer}>
-        <View style={styles.indicator} />
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
-  },
-  imageContainer: {
-    flex: 1,
     justifyContent: 'center',
+  },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
+  },
+  content: {
+    flex: 1,
+    width: '100%',
     alignItems: 'center',
-    marginTop: 40,
+    justifyContent: 'flex-start',
+    paddingTop: 60,
+  },
+  imageWrapper: {
+    marginTop: 20,
+    marginBottom: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   lightningBolt: {
-    width: 260,
-    height: 320,
+    width: 183,
+    height: 275,
+  },
+  titleContainer: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    height: 150,
+    width: SCREEN_WIDTH,
+    transform: [{ translateX: -SCREEN_WIDTH / 2 }, { translateY: 0 }],
+    alignItems: 'center',
   },
   title: {
-    fontFamily: 'DGMTypeset-Regular',
-    fontSize: 38,
-    color: colors.text.primary,
+    fontFamily: fonts.primary,
+    fontSize: 32,
+    color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontFamily: 'SFPro-Regular',
-    fontSize: 18,
-    color: colors.text.tertiary,
-    textAlign: 'center',
-    lineHeight: 26,
-  },
-  spacer: {
-    flex: 0.5,
-  },
-  progressIndicator: {
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    width: '100%',
-    paddingHorizontal: 40,
-    marginBottom: 30,
-  },
-  button: {
-    width: '100%',
-  },
-  buttonText: {
-    fontFamily: 'SFPro-Bold',
-    fontSize: 16,
+    marginBottom: 12,
     letterSpacing: 0.5,
   },
-  indicatorContainer: {
+  subtitle: {
+    fontFamily: fonts.primary,
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.4)',
+    textAlign: 'center',
+    opacity: 0.7,
+    marginBottom: 36,
+    lineHeight: 26,
+  },
+  bottomContainer: {
     position: 'absolute',
-    bottom: 50,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 40,
     width: '100%',
     alignItems: 'center',
   },
-  indicator: {
-    width: 134,
-    height: 5,
-    backgroundColor: colors.neutral[0],
-    borderRadius: 2.5,
+  progressWrapper: {
+    marginBottom: 20,
+    alignItems: 'center',
+    width: '100%',
   },
-}); 
+  progressIndicator: {
+    height: 6,
+    minHeight: 6,
+    maxHeight: 6,
+    marginBottom: 0,
+    marginTop: 0,
+    // Make dots skinnier
+  },
+  legalContainer: {
+    paddingTop: 20,
+  },
+  legalText: {
+    fontFamily: 'SFPro-Regular',
+    fontSize: 12,
+    color: colors.text.neutral,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: colors.text.secondary,
+    textDecorationLine: 'underline',
+  },
+});

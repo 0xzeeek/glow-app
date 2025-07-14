@@ -5,42 +5,33 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
-  ActivityIndicator,
 } from 'react-native';
-import { colors, typography } from '@/theme';
+import { colors, fonts } from '@/theme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
-  loading?: boolean;
   style?: ViewStyle;
-  textStyle?: TextStyle;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   variant = 'primary',
-  size = 'large',
   disabled = false,
-  loading = false,
   style,
-  textStyle,
 }) => {
-  const isDisabled = disabled || loading;
+  const isDisabled = disabled;
 
   const getButtonStyle = (): ViewStyle => {
     const baseStyle = styles.base;
-    const sizeStyle = styles[size];
     const variantStyle = styles[variant];
     const disabledStyle = isDisabled ? styles.disabled : {};
 
     return {
       ...baseStyle,
-      ...sizeStyle,
       ...variantStyle,
       ...disabledStyle,
       ...style,
@@ -49,16 +40,13 @@ export const Button: React.FC<ButtonProps> = ({
 
   const getTextStyle = (): TextStyle => {
     const baseTextStyle = styles.text;
-    const sizeTextStyle = textStyles[size];
     const variantTextStyle = textStyles[variant];
     const disabledTextStyle = isDisabled ? styles.disabledText : {};
 
     return {
       ...baseTextStyle,
-      ...sizeTextStyle,
       ...variantTextStyle,
       ...disabledTextStyle,
-      ...textStyle,
     };
   };
 
@@ -69,14 +57,7 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={isDisabled}
       activeOpacity={0.8}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'primary' ? colors.neutral[1000] : colors.neutral[0]}
-          size="small"
-        />
-      ) : (
-        <Text style={getTextStyle()}>{title}</Text>
-      )}
+      <Text style={getTextStyle()}>{title}</Text>
     </TouchableOpacity>
   );
 };
@@ -86,29 +67,15 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  // Size styles
-  small: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    minHeight: 36,
-  },
-  medium: {
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    minHeight: 44,
-  },
-  large: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    minHeight: 48,
+    paddingVertical: 20,
+    width: '90%',
   },
   // Variant styles
   primary: {
-    backgroundColor: colors.neutral[0],
+    backgroundColor: colors.background.primary,
   },
   secondary: {
-    backgroundColor: colors.primary[500],
+    backgroundColor: colors.background.secondary,
   },
   outline: {
     backgroundColor: 'transparent',
@@ -121,6 +88,11 @@ const styles = StyleSheet.create({
   },
   text: {
     textAlign: 'center',
+    fontFamily: fonts.primary,
+    fontSize: 16,
+    letterSpacing: 0,
+    lineHeight: 16,
+    textTransform: 'uppercase',
   },
   disabledText: {
     opacity: 0.7,
@@ -128,25 +100,14 @@ const styles = StyleSheet.create({
 });
 
 const textStyles = {
-  // Size text styles
-  small: {
-    fontSize: 14,
-  },
-  medium: {
-    fontSize: 16,
-  },
-  large: {
-    fontSize: 18,
-    fontWeight: '600' as TextStyle['fontWeight'],
-  },
   // Variant text styles
   primary: {
-    color: colors.neutral[1000],
+    color: colors.text.primary,
   },
   secondary: {
-    color: colors.neutral[0],
+    color: colors.text.secondary,
   },
   outline: {
-    color: colors.neutral[0],
+    color: colors.text.secondary,
   },
-}; 
+};

@@ -1,16 +1,45 @@
+import { PlusWallet, Logo, DepositWallet } from 'assets';
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { fonts } from '../../theme/typography';
+import { useUser } from '../../contexts';
+import { colors } from '@/theme/colors';
 
 export default function HeaderBar() {
+  const router = useRouter();
+  const { cashBalance } = useUser();
+  
+  const handleDepositPress = () => {
+    router.push('/(profile)');
+  };
+
+  if (cashBalance > 0) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.logoContainer}>
+            <Image source={Logo} style={styles.logo} />
+          </View>
+          <TouchableOpacity style={styles.cashButton} onPress={handleDepositPress}>
+            <Image source={DepositWallet} style={styles.walletIcon} />
+            <Text style={styles.cashAmount}>${cashBalance.toFixed(2)}</Text>
+            <Ionicons name="chevron-forward" size={16} color="#000" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoIcon}>@</Text>
-          <Text style={styles.logoText}>GLOW</Text>
+          <Image source={Logo} style={styles.logo} />
         </View>
-        <TouchableOpacity style={styles.depositButton}>
-          <Text style={styles.plusIcon}>+</Text>
+        <TouchableOpacity style={styles.depositButton} onPress={handleDepositPress}>
+          <Image source={PlusWallet} style={styles.depositButtonIcon} />
           <Text style={styles.depositButtonText}>DEPOSIT</Text>
         </TouchableOpacity>
       </View>
@@ -34,12 +63,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoIcon: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginRight: 4,
-    transform: [{ scaleX: -1 }],
+  logo: {
+    width: 191,
+    height: 40,
   },
   logoText: {
     fontSize: 26,
@@ -55,16 +81,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  plusIcon: {
-    color: '#FFFFFF',
-    fontSize: 16,
+  depositButtonIcon: {
+    width: 20,
+    height: 20,
     marginRight: 6,
-    fontWeight: 'bold',
   },
   depositButtonText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  cashButton: {
+    borderWidth: 1,
+    borderColor: colors.neutral[300],
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  walletIcon: {
+    width: 20,
+    height: 20,
+  },
+  cashAmount: {
+    fontSize: 18,
+    fontFamily: fonts.primaryBold,
+    color: '#000000',
+    letterSpacing: -0.5,
   },
 }); 

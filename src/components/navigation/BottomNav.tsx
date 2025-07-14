@@ -1,7 +1,9 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useUser } from '../../contexts/UserContext';
+import { Home, HomeSelected, Plus, PlusSelected, Profile as ProfileIcon } from '../../../assets';
+import { colors } from '@/theme/colors';
 
 interface BottomNavProps {
   activeTab?: 'home' | 'add' | 'profile';
@@ -9,6 +11,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
   const router = useRouter();
+  const { profileImage } = useUser();
 
   const handleHomePress = () => {
     if (activeTab !== 'home') {
@@ -30,23 +33,23 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={handleHomePress}>
-        <Ionicons 
-          name={activeTab === 'home' ? 'home' : 'home-outline'} 
-          size={24} 
-          color={activeTab === 'home' ? '#000000' : '#666666'} 
-        />
+        <Image source={activeTab === 'home' ? HomeSelected : Home} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleAddPress}>
-        <View style={styles.addButton}>
-          <MaterialIcons name="add" size={24} color="#666666" />
-        </View>
+        <Image source={activeTab === 'add' ? PlusSelected : Plus} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleProfilePress}>
-        <Ionicons 
-          name={activeTab === 'profile' ? 'person' : 'person-outline'} 
-          size={24} 
-          color={activeTab === 'profile' ? '#000000' : '#666666'} 
-        />
+        {profileImage ? (
+          <Image
+            source={{ uri: profileImage }}
+            style={[styles.profileImage, activeTab === 'profile' && styles.activeProfileImage]}
+          />
+        ) : (
+          <Image
+            source={ProfileIcon}
+            style={[styles.navIcon, activeTab === 'profile' && styles.activeIcon]}
+          />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -68,13 +71,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
   },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: '#E0E0E0',
-    justifyContent: 'center',
-    alignItems: 'center',
+  navIcon: {
+    width: 30,
+    height: 30,
+    resizeMode: 'contain',
   },
-}); 
+  activeIcon: {
+    opacity: 1,
+  },
+  profileImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 50,
+  },
+  activeProfileImage: {
+    borderWidth: 2,
+    borderColor: colors.text.primary,
+    borderRadius: 50,
+  },
+});

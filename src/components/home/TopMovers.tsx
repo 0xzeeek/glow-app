@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TopMover } from '../../data/mockTokens';
+import { colors } from '@/theme/colors';
 
 interface TopMoversProps {
   data: TopMover[];
@@ -22,7 +23,9 @@ export default function TopMovers({ data }: TopMoversProps) {
         style={styles.moverItem}
         onPress={() => router.push(`/(token)/${item.id}`)}
       >
-        <Image source={{ uri: item.image }} style={styles.profileImage} />
+        <View style={styles.avatarContainer} >
+          <Image source={{ uri: item.image }} style={styles.profileImage} />
+        </View>
         <Text style={[styles.changeText, { color: changeColor }]}>
           {arrow} {Math.abs(item.changePercent)}%
         </Text>
@@ -56,12 +59,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 20,
   },
-  profileImage: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  avatarContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 50,
+    height: 50,
+    borderRadius: 100,
+    borderColor: colors.neutral[300],
+    borderWidth: 1,
     marginBottom: 8,
-    backgroundColor: '#F5F5F5',
+  },
+  profileImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 28,
   },
   changeText: {
     fontSize: 13,

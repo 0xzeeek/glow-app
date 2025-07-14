@@ -9,8 +9,6 @@ export default function Index() {
   
   useEffect(() => {
     checkOnboardingStatus();
-    // TODO: remove this after testing
-    AsyncStorage.clear();
   }, []);
   
   const checkOnboardingStatus = async () => {
@@ -28,16 +26,12 @@ export default function Index() {
     return null; // Or a splash screen
   }
   
-  // First time user - show onboarding
+  // If onboarding is not complete, show onboarding
+  // (User will be authenticated during onboarding process)
   if (!hasCompletedOnboarding) {
     return <Redirect href="/(onboarding)" />;
   }
   
-  // Onboarding complete - check auth
-  if (isAuthenticated) {
-    return <Redirect href="/(home)" />;
-  }
-  
-  // Onboarding complete but not authenticated
-  return <Redirect href="/(auth)" />;
+  // Onboarding complete means user is authenticated, go to home
+  return <Redirect href="/(home)" />;
 } 

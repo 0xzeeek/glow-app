@@ -3,76 +3,63 @@ import {
   View, 
   Text, 
   TextInput, 
-  TouchableOpacity, 
-  Image,
   KeyboardAvoidingView,
   Platform,
-  Alert,
-  ActivityIndicator,
   StyleSheet,
+  Dimensions,
+  Image,
+  TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth, useCrossmintAuth } from '@crossmint/client-sdk-react-native-ui';
-import { theme } from '../../src/theme';
+import { colors } from '../../src/theme';
+import { fonts } from '../../src/theme/typography';
+import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
+import { BackgroundOnbordingMain } from '../../assets';
+import { Button } from '../../src/components/shared/Button';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { crossmintAuth } = useCrossmintAuth();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
-  const [emailId, setEmailId] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
 
   useEffect(() => {
-    // Get email and emailId from previous screen
-    const loadData = async () => {
+    const loadEmail = async () => {
       const storedEmail = await AsyncStorage.getItem('onboarding_email');
-      const storedEmailId = await AsyncStorage.getItem('crossmint_email_id');
-      
       if (storedEmail) {
         setEmail(storedEmail);
       }
-      if (storedEmailId) {
-        setEmailId(storedEmailId);
-      }
-
-      if (crossmintAuth) {
-        const result = await crossmintAuth.confirmEmailOtp(email, emailId, otp);
-        console.log('result', result);
-      }
-      
-      console.log('Loaded email:', storedEmail, 'emailId:', storedEmailId);
     };
-    
-    loadData();
+    loadEmail();
   }, []);
+
+  useEffect(() => {
+    // Dismiss keyboard when 6 digits are entered
+    if (otp.length === 6) {
+      Keyboard.dismiss();
+    }
+  }, [otp]);
+
+  const handleOtpChange = (text: string) => {
+    // Only allow numbers and limit to 6 digits
+    const cleanedText = text.replace(/[^0-9]/g, '').slice(0, 6);
+    setOtp(cleanedText);
+  };
 
   const handleVerify = async () => {
     if (!otp || otp.length < 6) {
-      Alert.alert('Invalid Code', 'Please enter the 6-digit verification code');
       return;
     }
 
-    router.push('/(home)');
-    return;
     setLoading(true);
     try {
-      // get email id and email token from async storage
-      const email = await AsyncStorage.getItem('onboarding_email');
-      const emailId = await AsyncStorage.getItem('emailId');
-      const emailToken = await AsyncStorage.getItem('emailToken');
-      console.log('email', email);
-      console.log('emailId', emailId);
-      console.log('emailToken', emailToken);
-      if (crossmintAuth && emailId && email) {
-        // verify the otp
-        const result = await crossmintAuth.confirmEmailOtp(email, emailId, otp);
-        console.log('result', result);
-
-        
-      }
+      // TODO: Implement actual verification logic
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+      router.replace('/(home)');
     } catch (error: any) {
       console.error('Verification error:', error);
     } finally {
@@ -80,199 +67,141 @@ export default function VerifyScreen() {
     }
   };
 
-  // const handleResend = async () => {
-  //   setResending(true);
-  //   try {
-      
-  //     if (authAny && typeof authAny.sendEmailOtp === 'function') {
-  //       console.log('Resending OTP to email:', email);
-  //       const result = await authAny.sendEmailOtp(email);
-  //       console.log('Resend result:', result);
-        
-  //       // Update emailId if returned
-  //       if (result && result.emailId) {
-  //         setEmailId(result.emailId);
-  //         await AsyncStorage.setItem('crossmint_email_id', result.emailId);
-  //       }
-        
-  //       Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
-  //     } else {
-  //       Alert.alert('Error', 'Unable to resend code. Please try again later.');
-  //     }
-  //   } catch (error: any) {
-  //     console.error('Resend error:', error);
-  //     Alert.alert('Error', 'Failed to resend code. Please try again.');
-  //   } finally {
-  //     setResending(false);
-  //   }
-  // };
+  const handleResend = () => {
+    // TODO: Implement resend logic
+    console.log('Resend code');
+  };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.content}>
-        {/* Verify Icon */}
-        <View style={styles.iconContainer}>
-          <Image 
-            source={require('../../assets/images/onboarding/verify.png')}
-            style={styles.icon}
-            resizeMode="contain"
+    <View style={styles.container}>
+      <Image source={BackgroundOnbordingMain} style={styles.backgroundImage} resizeMode="cover" />
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={styles.content}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>Verify your email</Text>
+            <Text style={styles.subtitle}>
+              We sent a code to{'\n'}
+              <Text style={styles.email}>{email || 'your email'}</Text>
+            </Text>
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="000000"
+            placeholderTextColor={colors.text.neutral}
+            value={otp}
+            onChangeText={handleOtpChange}
+            keyboardType="number-pad"
+            maxLength={6}
+            autoFocus
+            editable={!loading}
+          />
+
+          <TouchableOpacity onPress={handleResend} disabled={loading}>
+            <Text style={styles.resendText}>
+              Didn't receive a code? <Text style={styles.resendLink}>Resend</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.bottomContainer}>
+          <View style={styles.progressWrapper}>
+            <ProgressIndicator totalSteps={3} currentStep={3} />
+          </View>
+          <Button 
+            title="Verify" 
+            onPress={handleVerify} 
+            disabled={!otp || otp.length < 6 || loading}
           />
         </View>
-
-        <Text style={styles.title}>Verify your email</Text>
-        <Text style={styles.subtitle}>
-          We sent a code to{'\n'}
-          <Text style={styles.email}>{email}</Text>
-        </Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="000000"
-          placeholderTextColor="#666"
-          value={otp}
-          onChangeText={setOtp}
-          keyboardType="number-pad"
-          maxLength={6}
-          autoFocus
-          editable={!loading}
-        />
-
-        {/* <TouchableOpacity
-          style={styles.resendButton}
-          onPress={handleResend}
-          disabled={loading || resending}
-        >
-          <Text style={styles.resendText}>
-            {resending ? 'Sending...' : "Didn't receive a code? Resend"}
-          </Text>
-        </TouchableOpacity> */}
-
-        <View style={styles.spacer} />
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            (!otp || loading) && styles.buttonDisabled
-          ]}
-          onPress={handleVerify}
-          disabled={!otp || loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color="#000" />
-          ) : (
-            <Text style={styles.buttonText}>VERIFY</Text>
-          )}
-        </TouchableOpacity>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '100%' }]} />
-          </View>
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    width: '100%',
+    height: '100%',
+  },
+  backgroundImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 100,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: 200,
   },
-  iconContainer: {
+  titleContainer: {
+    width: SCREEN_WIDTH,
     alignItems: 'center',
     marginBottom: 48,
   },
-  icon: {
-    width: 120,
-    height: 90,
-  },
   title: {
+    fontFamily: fonts.primary,
     fontSize: 32,
-    fontWeight: '300',
-    color: '#FFF',
+    color: colors.text.secondary,
     textAlign: 'center',
-    marginBottom: 16,
-    fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : 'sans-serif',
+    marginBottom: 12,
+    letterSpacing: 0.5,
   },
   subtitle: {
+    fontFamily: fonts.primary,
     fontSize: 16,
-    color: '#666',
+    color: 'rgba(255, 255, 255, 0.4)',
     textAlign: 'center',
-    marginBottom: 48,
-    lineHeight: 22,
-    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'sans-serif',
+    lineHeight: 26,
   },
   email: {
-    color: '#FFF',
-    fontWeight: '500',
+    fontFamily: fonts.primary,
+    color: colors.text.secondary,
+    opacity: 0.8,
   },
   input: {
     height: 56,
     borderWidth: 1,
-    borderColor: '#333',
-    borderRadius: 28,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 16,
     paddingHorizontal: 24,
     fontSize: 24,
-    color: '#FFF',
+    color: colors.text.secondary,
     backgroundColor: 'transparent',
     marginBottom: 24,
-    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'sans-serif',
+    fontFamily: fonts.primary,
     textAlign: 'center',
     letterSpacing: 8,
-  },
-  resendButton: {
-    paddingVertical: 12,
-    alignItems: 'center',
+    width: SCREEN_WIDTH - 48,
   },
   resendText: {
+    fontFamily: fonts.primary,
     fontSize: 14,
-    color: '#999',
+    color: 'rgba(255, 255, 255, 0.4)',
+    textAlign: 'center',
+  },
+  resendLink: {
+    color: colors.text.secondary,
     textDecorationLine: 'underline',
   },
-  spacer: {
-    flex: 1,
-  },
-  button: {
-    height: 56,
-    backgroundColor: theme.colors.primary[500],
-    borderRadius: 28,
-    justifyContent: 'center',
+  bottomContainer: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    paddingBottom: 100,
     alignItems: 'center',
-    marginBottom: 40,
+    width: '100%',
   },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    letterSpacing: 1,
-    fontFamily: Platform.OS === 'ios' ? 'SF Pro Text' : 'sans-serif',
-  },
-  progressContainer: {
-    paddingBottom: 20,
-  },
-  progressBar: {
-    height: 3,
-    backgroundColor: '#222',
-    borderRadius: 1.5,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 1.5,
+  progressWrapper: {
+    marginBottom: 20,
+    alignItems: 'center',
+    width: '100%',
   },
 }); 

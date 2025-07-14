@@ -9,15 +9,12 @@ import TokenInfo from '../../src/components/token-details/TokenInfo';
 import TokenSocials from '../../src/components/token-details/TokenSocials';
 import FloatingBuyButton from '../../src/components/token-details/FloatingBuyButton';
 import BottomNav from '../../src/components/navigation/BottomNav';
-import { getTokenDetailsById } from '../../src/data/mockTokenDetails';
+import { useTokenData } from '../../src/contexts';
 
 export default function TokenDetailScreen() {
   const { id } = useLocalSearchParams();
-  const tokenDetails = getTokenDetailsById(id as string);
-  
-  const handleBuyPress = () => {
-    console.log('Buy button pressed for token:', id);
-  };
+  const { getTokenDetails } = useTokenData();
+  const tokenDetails = getTokenDetails(id as string);
 
   return (
     <View style={styles.container}>
@@ -50,7 +47,12 @@ export default function TokenDetailScreen() {
         <TokenSocials socialLinks={tokenDetails.socialLinks} />
       </ScrollView>
       
-      <FloatingBuyButton onPress={handleBuyPress} />
+      <FloatingBuyButton 
+        tokenName={tokenDetails.name}
+        tokenImage={tokenDetails.profileImage}
+        tokenId={tokenDetails.id}
+        tokenPrice={parseFloat(tokenDetails.price.replace('$', ''))} 
+      />
       <BottomNav />
     </View>
   );

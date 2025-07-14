@@ -9,13 +9,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import NetInfo from '@react-native-community/netinfo';
-import {
-  CrossmintProvider,
-  CrossmintAuthProvider,
-  CrossmintWalletProvider
-} from "@crossmint/client-sdk-react-native-ui";
 
-import { 
+import {
   createQueryClient,
   initializeApiClient,
   initializeErrorHandler,
@@ -26,6 +21,7 @@ import { uiStore } from '../src/stores/uiStore';
 import { userStore } from '../src/stores/userStore';
 import { fonts } from '../assets';
 import { useDeepLinking } from '../src/hooks/useDeepLinking';
+import { AppProviders } from '../src/contexts';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -34,14 +30,13 @@ const queryClient = createQueryClient();
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
-  
+
   // Initialize deep linking
   useDeepLinking();
 
   useEffect(() => {
     async function prepare() {
       try {
-
         // Load fonts
         await Font.loadAsync(fonts);
 
@@ -60,29 +55,29 @@ export default function RootLayout() {
           url: process.env.EXPO_PUBLIC_WS_URL || 'wss://ws.glow.club',
           useCloudflare: process.env.EXPO_PUBLIC_USE_CLOUDFLARE === 'true',
         });
-        
+
         // Setup WebSocket event listeners
         wsManager.on('connected', () => {
           console.log('WebSocket connected');
           uiStore.getState().setOnline(true);
         });
-        
-        wsManager.on('disconnected', (reason) => {
+
+        wsManager.on('disconnected', reason => {
           console.log('WebSocket disconnected:', reason);
         });
-        
-        wsManager.on('error', (error) => {
+
+        wsManager.on('error', error => {
           console.error('WebSocket error:', error);
         });
 
-        // Initialize offline manager  
+        // Initialize offline manager
         getOfflineManager();
 
         // Setup network monitoring
         const unsubscribe = NetInfo.addEventListener(state => {
           const isConnected = state.isConnected ?? false;
           uiStore.getState().setOnline(isConnected);
-          
+
           // Reconnect WebSocket when network comes back
           if (isConnected && !wsManager.isConnected()) {
             const authState = userStore.getState();
@@ -120,55 +115,41 @@ export default function RootLayout() {
   }
 
   return (
-    <CrossmintProvider apiKey={process.env.EXPO_PUBLIC_CROSSMINT_API_KEY || ''}>
-      <CrossmintAuthProvider>
-        <CrossmintWalletProvider
-          createOnLogin={{
-            chain: "solana",
-            signer: { type: "email" }
-          }}
-        >
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <QueryClientProvider client={queryClient}>
-              <StatusBar style="light" />
-              <Stack
-                screenOptions={{
-                  headerStyle: {
-                    backgroundColor: '#0A0A0A',
-                  },
-                  headerTintColor: '#fff',
-                  headerTitleStyle: {
-                    fontWeight: '600',
-                  },
-                  contentStyle: {
-                    backgroundColor: '#0A0A0A',
-                  },
-                  animation: 'slide_from_right',
-                }}
-              >
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-                <Stack.Screen 
-                  name="(home)" 
-                  options={{ 
-                    headerShown: false,
-                    animation: 'slide_from_left',
-                  }} 
-                />
-                <Stack.Screen name="(token)" options={{ headerShown: false }} />
-                <Stack.Screen 
-                  name="(profile)" 
-                  options={{ 
-                    headerShown: false,
-                    animation: 'slide_from_right',
-                  }} 
-                />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-            </QueryClientProvider>
-          </GestureHandlerRootView>
-        </CrossmintWalletProvider>
-      </CrossmintAuthProvider>
-    </CrossmintProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <AppProviders>
+          <StatusBar style="light" />
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#FFFFFF',
+              },
+              contentStyle: {
+                backgroundColor: '#FFFFFF',
+              },
+              animation: 'slide_from_right',
+            }}
+          >
+            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(home)"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_left',
+              }}
+            />
+            <Stack.Screen name="(token)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(profile)"
+              options={{
+                headerShown: false,
+                animation: 'slide_from_right',
+              }}
+            />
+            <Stack.Screen name="+not-found" />
+          </Stack>
+        </AppProviders>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

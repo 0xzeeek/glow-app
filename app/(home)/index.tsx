@@ -5,9 +5,13 @@ import TopMovers from '../../src/components/home/TopMovers';
 import FeaturedToken from '../../src/components/home/FeaturedToken';
 import CreatorTokenRow from '../../src/components/home/CreatorTokenRow';
 import BottomNav from '../../src/components/navigation/BottomNav';
-import { topMovers, featuredToken, creatorTokens } from '../../src/data/mockTokens';
+import { useTokenData } from '../../src/contexts';
+import { fonts } from '@/theme/typography';
+import { colors } from '@/theme/colors';
 
 export default function HomeScreen() {
+  const { topMovers, featuredToken, creatorTokens } = useTokenData();
+  
   return (
     <View style={styles.container}>
       <HeaderBar />
@@ -51,9 +55,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#666666',
+    color: colors.neutral[700],
     marginLeft: 20,
     marginBottom: 12,
     letterSpacing: 0.5,
+    fontFamily: fonts.secondaryBold,
   },
 }); 

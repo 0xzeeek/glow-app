@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import BuyModal from '../shared/BuyModal';
 
 interface FloatingBuyButtonProps {
-  onPress: () => void;
+  tokenName: string;
+  tokenImage: string;
+  tokenId: string;
+  tokenPrice: number;
 }
 
-export default function FloatingBuyButton({ onPress }: FloatingBuyButtonProps) {
+export default function FloatingBuyButton({ tokenName, tokenImage, tokenId, tokenPrice }: FloatingBuyButtonProps) {
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  
   return (
-    <TouchableOpacity style={styles.button} onPress={onPress}>
-      <Text style={styles.buttonText}>BUY NOW</Text>
-    </TouchableOpacity>
+    <>
+      <TouchableOpacity style={styles.button} onPress={() => setShowBuyModal(true)}>
+        <Text style={styles.buttonText}>BUY NOW</Text>
+      </TouchableOpacity>
+      
+      <BuyModal
+        visible={showBuyModal}
+        onClose={() => setShowBuyModal(false)}
+        tokenName={tokenName}
+        tokenImage={tokenImage}
+        tokenId={tokenId}
+        tokenPrice={tokenPrice}
+      />
+    </>
   );
 }
 

@@ -37,15 +37,15 @@ const styles = StyleSheet.create({
   },
   dot: {
     width: 8,
-    height: 8,
+    height: 1,
     borderRadius: 4,
     backgroundColor: colors.neutral[800],
   },
   activeDot: {
     backgroundColor: colors.neutral[0],
-    width: 24,
+    width: 8,
   },
   dotWithMargin: {
-    marginRight: 8,
+    marginRight: 4,
   },
 }); 

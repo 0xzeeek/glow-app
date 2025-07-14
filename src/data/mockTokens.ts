@@ -11,6 +11,7 @@ export interface FeaturedTokenData {
   image: string;
   status: string;
   marketCap: string;
+  price: number;
 }
 
 export interface CreatorToken {
@@ -38,6 +39,7 @@ export const featuredToken: FeaturedTokenData = {
   image: 'https://i.pravatar.cc/300?img=25',
   status: 'LIVE',
   marketCap: '$8.3M',
+  price: 0.007,
 };
 
 export const creatorTokens: CreatorToken[] = [
