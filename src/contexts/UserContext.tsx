@@ -59,12 +59,47 @@ interface UserProviderProps {
 
 export function UserProvider({ children }: UserProviderProps) {
   // User profile state
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState('leo_lepicerie');
   const [userEmail, setUserEmail] = useState('');
   const [profileImage, setProfileImage] = useState<string | null>("https://i.pravatar.cc/300?img=25");
   
-  const [cashBalance, setCashBalance] = useState(100.81); // Starting balance
-  const [portfolio, setPortfolio] = useState<OwnedToken[]>([]);
+  const [cashBalance, setCashBalance] = useState(449.75); // Balance to match screenshot
+  const [portfolio, setPortfolio] = useState<OwnedToken[]>([
+    // Sample tokens for testing - 3 Andrew_Allen tokens
+    {
+      tokenId: 'ct-1',
+      tokenName: 'Andrew_Allen',
+      tokenImage: 'https://i.pravatar.cc/150?img=7',
+      purchasePrice: 0.0069,
+      currentPrice: 0.007,
+      quantity: 10000,
+      purchaseDate: new Date('2024-01-15'),
+      gains: 0.0001,
+      gainsPercentage: 1.16,
+    },
+    {
+      tokenId: 'ct-2',
+      tokenName: 'Andrew_Allen',
+      tokenImage: 'https://i.pravatar.cc/150?img=7',
+      purchasePrice: 0.0069,
+      currentPrice: 0.007,
+      quantity: 1,
+      purchaseDate: new Date('2024-01-16'),
+      gains: 0.0001,
+      gainsPercentage: 1.16,
+    },
+    {
+      tokenId: 'ct-3',
+      tokenName: 'Andrew_Allen',
+      tokenImage: 'https://i.pravatar.cc/150?img=7',
+      purchasePrice: 0.0069,
+      currentPrice: 0.007,
+      quantity: 1,
+      purchaseDate: new Date('2024-01-17'),
+      gains: 0.0001,
+      gainsPercentage: 1.16,
+    },
+  ]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   const purchaseToken = useCallback(async (
@@ -212,8 +247,8 @@ export function UserProvider({ children }: UserProviderProps) {
   const getTotalPortfolioValue = useCallback((): number => {
     return portfolio.reduce((total, token) => {
       return total + (token.currentPrice * token.quantity);
-    }, 0);
-  }, [portfolio]);
+    }, cashBalance);
+  }, [portfolio, cashBalance]);
 
   const getTotalGains = useCallback((): number => {
     return portfolio.reduce((total, token) => {

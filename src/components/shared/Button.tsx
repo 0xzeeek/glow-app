@@ -5,15 +5,20 @@ import {
   StyleSheet,
   ViewStyle,
   TextStyle,
+  View,
+  Image,
+  ImageSourcePropType,
 } from 'react-native';
 import { colors, fonts } from '@/theme';
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'filled';
   disabled?: boolean;
   style?: ViewStyle;
+  icon?: ImageSourcePropType;
+  iconStyle?: any;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -22,6 +27,8 @@ export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   disabled = false,
   style,
+  icon,
+  iconStyle,
 }) => {
   const isDisabled = disabled;
 
@@ -50,6 +57,15 @@ export const Button: React.FC<ButtonProps> = ({
     };
   };
 
+  const getIconStyle = () => {
+    const baseIconStyle = styles.icon;
+    
+    return {
+      ...baseIconStyle,
+      ...iconStyle,
+    };
+  };
+
   return (
     <TouchableOpacity
       style={getButtonStyle()}
@@ -57,7 +73,10 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={isDisabled}
       activeOpacity={0.8}
     >
-      <Text style={getTextStyle()}>{title}</Text>
+      <View style={styles.content}>
+        {icon && <Image source={icon} style={getIconStyle()} />}
+        <Text style={getTextStyle()}>{title}</Text>
+      </View>
     </TouchableOpacity>
   );
 };
@@ -68,7 +87,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 20,
-    width: '90%',
+    paddingHorizontal: 40,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
   // Variant styles
   primary: {
@@ -82,20 +106,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.neutral[0],
   },
+  filled: {
+    backgroundColor: colors.neutral[100],
+  },
   // State styles
   disabled: {
     opacity: 0.5,
   },
   text: {
     textAlign: 'center',
-    fontFamily: fonts.primary,
+    fontFamily: fonts.primaryMedium,
     fontSize: 16,
-    letterSpacing: 0,
+    letterSpacing: 0.5,
     lineHeight: 16,
     textTransform: 'uppercase',
   },
   disabledText: {
     opacity: 0.7,
+  },
+  icon: {
+    width: 20,
+    height: 20,
+    resizeMode: 'contain',
   },
 });
 
@@ -109,5 +141,8 @@ const textStyles = {
   },
   outline: {
     color: colors.text.secondary,
+  },
+  filled: {
+    color: colors.text.primary,
   },
 };

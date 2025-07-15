@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   cashAmount: {
     fontSize: 18,
-    fontFamily: fonts.primaryBold,
+    fontFamily: fonts.secondaryMedium,
     color: '#000000',
     letterSpacing: -0.5,
   },
