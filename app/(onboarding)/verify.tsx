@@ -18,11 +18,14 @@ import { fonts } from '../../src/theme/typography';
 import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
 import { BackgroundOnbordingMain } from '../../assets';
 import { Button } from '../../src/components/shared/Button';
+import { useLoginWithEmail, useEmbeddedSolanaWallet } from '@privy-io/expo';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function VerifyScreen() {
   const router = useRouter();
+  const { loginWithCode } = useLoginWithEmail()
+  const { create } = useEmbeddedSolanaWallet();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,7 +60,10 @@ export default function VerifyScreen() {
 
     setLoading(true);
     try {
-      // TODO: Implement actual verification logic
+      await loginWithCode({ code: otp, email });
+      if (create) {
+        await create();
+      }
       await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       router.replace('/(home)');
     } catch (error: any) {

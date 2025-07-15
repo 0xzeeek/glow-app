@@ -23,6 +23,7 @@ import { fonts } from '../assets';
 import { useDeepLinking } from '../src/hooks/useDeepLinking';
 import { AppProviders } from '../src/contexts';
 import { colors } from '@/theme/colors';
+import { PrivyProvider } from '@privy-io/expo';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -115,50 +116,61 @@ export default function RootLayout() {
     return null;
   }
 
+  const PRIVY_APP_ID = process.env.EXPO_PUBLIC_PRIVY_APP_ID;
+  const PRIVY_CLIENT_ID = process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID;
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <AppProviders>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerStyle: {
-                backgroundColor: colors.background.primary,
-              },
-              contentStyle: {
-                backgroundColor: colors.background.primary,
-              },
-              animation: 'slide_from_right',
-            }}
-          >
-            <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(home)"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_left',
-              }}
-            />
-            <Stack.Screen name="(referral)" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
-            <Stack.Screen name="(token)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(profile)"
-              options={{
-                headerShown: false,
+    <PrivyProvider
+      appId={PRIVY_APP_ID || ''}
+      clientId={PRIVY_CLIENT_ID || ''}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <QueryClientProvider client={queryClient}>
+          <AppProviders>
+            <StatusBar style="light" />
+            <Stack
+              screenOptions={{
+                headerStyle: {
+                  backgroundColor: colors.background.primary,
+                },
+                contentStyle: {
+                  backgroundColor: colors.background.primary,
+                },
                 animation: 'slide_from_right',
               }}
-            />
-            <Stack.Screen
-              name="(settings)"
-              options={{
-                headerShown: false,
-                animation: 'slide_from_right',
-              }}
-            />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-        </AppProviders>
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+            >
+              <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(home)"
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_left',
+                }}
+              />
+              <Stack.Screen
+                name="(referral)"
+                options={{ headerShown: false, animation: 'slide_from_bottom' }}
+              />
+              <Stack.Screen name="(token)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="(profile)"
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                }}
+              />
+              <Stack.Screen
+                name="(settings)"
+                options={{
+                  headerShown: false,
+                  animation: 'slide_from_right',
+                }}
+              />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+          </AppProviders>
+        </QueryClientProvider>
+      </GestureHandlerRootView>
+    </PrivyProvider>
   );
 }

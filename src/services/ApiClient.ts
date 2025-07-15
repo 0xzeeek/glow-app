@@ -194,6 +194,11 @@ class ApiClient {
     });
   }
 
+  // User balances
+  public async getUserUSDCBalance(wallet: string): Promise<{ balance: number }> {
+    return this.request<{ balance: number }>(`/users/${wallet}/usdc-balance`);
+  }
+
   // PnL data
   public async getUserPnL(wallet: string, token?: string): Promise<UserPnLResponse> {
     const params = token ? { token } : undefined;
@@ -319,6 +324,7 @@ export const queryKeys = {
   },
   users: {
     profile: (wallet: string) => ['users', wallet] as const,
+    usdcBalance: (wallet: string) => ['users', wallet, 'usdc-balance'] as const,
     pnl: (wallet: string) => ['users', wallet, 'pnl'] as const,
     aggregatePnl: (wallet: string) => ['users', wallet, 'pnl', 'aggregate'] as const,
   },

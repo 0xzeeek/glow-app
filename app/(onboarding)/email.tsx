@@ -3,12 +3,10 @@ import {
   View,
   Text,
   TextInput,
-  ActivityIndicator,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
-  TouchableOpacity,
   Pressable,
   Image,
   Keyboard,
@@ -21,15 +19,16 @@ import { fonts } from '../../src/theme/typography';
 import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
 import { BackgroundOnbordingMain, OnboardingEmail } from 'assets';
 import { Button } from 'src/components/shared/Button';
+import { useLoginWithEmail } from '@privy-io/expo';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function EmailScreen() {
   const router = useRouter();
+  const { sendCode } = useLoginWithEmail()
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const imageTranslateY = useState(new Animated.Value(0))[0];
   const contentTranslateY = useState(new Animated.Value(0))[0];
 
@@ -47,7 +46,6 @@ export default function EmailScreen() {
     const keyboardWillShow = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
       (e) => {
-        setKeyboardVisible(true);
         Animated.parallel([
           Animated.timing(imageTranslateY, {
             toValue: -300, // Move image up and out of view
@@ -66,7 +64,6 @@ export default function EmailScreen() {
     const keyboardWillHide = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
       () => {
-        setKeyboardVisible(false);
         Animated.parallel([
           Animated.timing(imageTranslateY, {
             toValue: 0,
@@ -101,6 +98,7 @@ export default function EmailScreen() {
     setLoading(true);
     try {
       await AsyncStorage.setItem('onboarding_email', email);
+      await sendCode({ email });
       router.push('/(onboarding)/verify');
     } catch (error: any) {
       console.error('Login error:', error);

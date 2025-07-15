@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { usePrivy, useEmbeddedSolanaWallet } from '@privy-io/expo';
+import { useUserBalance } from '../hooks';
 
 interface OwnedToken {
   tokenId: string;
@@ -37,6 +39,12 @@ interface UserContextType {
   // User balance
   cashBalance: number;
   setCashBalance: (balance: number) => void;
+  isLoadingBalance: boolean;
+  balanceError: Error | null;
+  refreshBalance: () => Promise<void>;
+  
+  // Wallet
+  walletAddress: string | null;
   
   // Portfolio
   portfolio: OwnedToken[];
@@ -60,50 +68,72 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  // User profile state
-  const [userName, setUserName] = useState('leo_lepicerie');
-  const [userEmail, setUserEmail] = useState('leolep@gmail.com');
-  const [profileImage, setProfileImage] = useState<string | null>("https://i.pravatar.cc/300?img=25");
-  const [memberSince] = useState(new Date('2025-08-04')); // Fixed join date to match screenshot
+  // Privy integration
+  const { user } = usePrivy();
+  const { wallets } = useEmbeddedSolanaWallet();
   
-  const [cashBalance, setCashBalance] = useState(449.75); // Balance to match screenshot
-  const [portfolio, setPortfolio] = useState<OwnedToken[]>([
-    // Sample tokens for testing - 3 Andrew_Allen tokens
-    {
-      tokenId: 'ct-1',
-      tokenName: 'Andrew_Allen',
-      tokenImage: 'https://i.pravatar.cc/150?img=7',
-      purchasePrice: 0.0069,
-      currentPrice: 0.007,
-      quantity: 10000,
-      purchaseDate: new Date('2024-01-15'),
-      gains: 0.0001,
-      gainsPercentage: 1.16,
-    },
-    {
-      tokenId: 'ct-2',
-      tokenName: 'Andrew_Allen',
-      tokenImage: 'https://i.pravatar.cc/150?img=7',
-      purchasePrice: 0.0069,
-      currentPrice: 0.007,
-      quantity: 1,
-      purchaseDate: new Date('2024-01-16'),
-      gains: 0.0001,
-      gainsPercentage: 1.16,
-    },
-    {
-      tokenId: 'ct-3',
-      tokenName: 'Andrew_Allen',
-      tokenImage: 'https://i.pravatar.cc/150?img=7',
-      purchasePrice: 0.0069,
-      currentPrice: 0.007,
-      quantity: 1,
-      purchaseDate: new Date('2024-01-17'),
-      gains: 0.0001,
-      gainsPercentage: 1.16,
-    },
-  ]);
+  // User profile state
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [memberSince] = useState(new Date());
+  
+  // Wallet state
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  
+  // Portfolio state
+  const [portfolio, setPortfolio] = useState<OwnedToken[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+
+  // Use TanStack Query for USDC balance
+  const { 
+    balance: usdcBalance, 
+    isLoading: isLoadingBalance, 
+    error: balanceError, 
+    refreshBalance 
+  } = useUserBalance(walletAddress);
+
+  // Extract wallet address from Privy wallets
+  useEffect(() => {
+    if (wallets && wallets.length > 0) {
+      // Get the first Solana wallet
+      const primaryWallet = wallets[0];
+      setWalletAddress(primaryWallet.address);
+    }
+  }, [wallets]);
+
+  // Extract user info from Privy user
+  useEffect(() => {
+    if (user) {
+      // Set user email if available
+      // The exact structure of the user object may vary based on login method
+      // We'll try to extract email from common fields
+      let userEmail = '';
+      
+      // Check for email in common Privy user fields
+      if (user && typeof user === 'object') {
+        // Handle different possible email field locations
+        const possibleEmail = (user as any).email?.address || 
+                             (user as any).email || 
+                             (user as any).google?.email || 
+                             (user as any).apple?.email || 
+                             '';
+        if (possibleEmail && typeof possibleEmail === 'string') {
+          userEmail = possibleEmail;
+        }
+      }
+      
+      if (userEmail) {
+        setUserEmail(userEmail);
+        // Set username from email
+        const emailUsername = userEmail.split('@')[0];
+        setUserName(emailUsername);
+      } else if (walletAddress) {
+        // Use shortened wallet address as username
+        setUserName(`${walletAddress.slice(0, 4)}...${walletAddress.slice(-4)}`);
+      }
+    }
+  }, [user, walletAddress]);
 
   const purchaseToken = useCallback(async (
     tokenId: string,
@@ -116,7 +146,7 @@ export function UserProvider({ children }: UserProviderProps) {
       const fee = amount * 0.05; // 5% fee
       const totalCost = amount + fee;
       
-      if (totalCost > cashBalance) {
+      if (totalCost > usdcBalance) {
         console.error('Insufficient balance');
         return false;
       }
@@ -136,8 +166,8 @@ export function UserProvider({ children }: UserProviderProps) {
         timestamp: new Date(),
       };
       
-      // Update balance
-      setCashBalance(prev => prev - totalCost);
+      // Note: In a real app, you would make an API call here to execute the purchase
+      // For now, we'll just update the local state
       
       // Update portfolio
       setPortfolio(prev => {
@@ -179,12 +209,15 @@ export function UserProvider({ children }: UserProviderProps) {
       // Add transaction
       setTransactions(prev => [...prev, transaction]);
       
+      // Refresh balance after transaction
+      await refreshBalance();
+      
       return true;
     } catch (error) {
       console.error('Purchase failed:', error);
       return false;
     }
-  }, [cashBalance]);
+  }, [usdcBalance, refreshBalance]);
 
   const sellToken = useCallback(async (
     tokenId: string,
@@ -216,8 +249,8 @@ export function UserProvider({ children }: UserProviderProps) {
         timestamp: new Date(),
       };
       
-      // Update balance
-      setCashBalance(prev => prev + netAmount);
+      // Note: In a real app, you would make an API call here to execute the sale
+      // For now, we'll just update the local state
       
       // Update portfolio
       setPortfolio(prev => {
@@ -236,12 +269,15 @@ export function UserProvider({ children }: UserProviderProps) {
       // Add transaction
       setTransactions(prev => [...prev, transaction]);
       
+      // Refresh balance after transaction
+      await refreshBalance();
+      
       return true;
     } catch (error) {
       console.error('Sale failed:', error);
       return false;
     }
-  }, [portfolio]);
+  }, [portfolio, refreshBalance]);
 
   const getTokenHoldings = useCallback((tokenId: string): OwnedToken | undefined => {
     return portfolio.find(t => t.tokenId === tokenId);
@@ -250,8 +286,8 @@ export function UserProvider({ children }: UserProviderProps) {
   const getTotalPortfolioValue = useCallback((): number => {
     return portfolio.reduce((total, token) => {
       return total + (token.currentPrice * token.quantity);
-    }, cashBalance);
-  }, [portfolio, cashBalance]);
+    }, usdcBalance);
+  }, [portfolio, usdcBalance]);
 
   const getTotalGains = useCallback((): number => {
     return portfolio.reduce((total, token) => {
@@ -266,15 +302,12 @@ export function UserProvider({ children }: UserProviderProps) {
     setUserName('');
     setUserEmail('');
     setProfileImage(null);
-    setCashBalance(0);
     setPortfolio([]);
     setTransactions([]);
+    setWalletAddress(null);
     
-    // In a real app, you would also:
-    // - Clear authentication tokens
-    // - Navigate to login screen
-    // - Call API to invalidate session
-    console.log('User signed out');
+    // Note: Actual sign out from Privy should be handled at the app level
+    console.log('User context cleared');
   }, []);
 
   // Update token prices and gains (in a real app, this would come from an API)
@@ -306,8 +339,17 @@ export function UserProvider({ children }: UserProviderProps) {
     setProfileImage,
     
     // Balance
-    cashBalance,
-    setCashBalance,
+    cashBalance: usdcBalance,
+    setCashBalance: () => {
+      // This is now managed by TanStack Query
+      console.warn('setCashBalance is deprecated. Balance is managed by TanStack Query.');
+    },
+    isLoadingBalance,
+    balanceError,
+    refreshBalance,
+    
+    // Wallet
+    walletAddress,
     
     // Portfolio & transactions
     portfolio,

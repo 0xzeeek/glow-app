@@ -9,13 +9,11 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <TokenDataProvider>
-      <UserProvider>
-        {children}
-      </UserProvider>
+      <UserProvider>{children}</UserProvider>
     </TokenDataProvider>
   );
 }
 
 // Re-export hooks for convenience
 export { useUser } from './UserContext';
-export { useTokenData } from './TokenDataContext'; 
+export { useTokenData } from './TokenDataContext';
