@@ -76,7 +76,7 @@ export default function TokenDetailScreen() {
         tokenId={tokenDetails.id}
         tokenPrice={parseFloat(tokenDetails.price.replace('$', ''))} 
       />
-      <BottomNav />
+      <BottomNav activeTab={null} />
     </View>
   );
 }

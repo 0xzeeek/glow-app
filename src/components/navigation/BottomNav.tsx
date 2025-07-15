@@ -6,7 +6,7 @@ import { Home, HomeSelected, Plus, PlusSelected, Profile as ProfileIcon } from '
 import { colors } from '@/theme/colors';
 
 interface BottomNavProps {
-  activeTab?: 'home' | 'add' | 'profile';
+  activeTab?: 'home' | 'add' | 'profile' | null;
 }
 
 export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
