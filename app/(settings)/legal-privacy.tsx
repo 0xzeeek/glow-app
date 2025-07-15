@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, fonts } from '../../src/theme';
-import DeleteAccountModal from '../../src/components/shared/DeleteAccountModal';
+import DeleteAccountModal from "../../src/components/shared/DeleteAccountModal";
 
 interface MenuItem {
   icon: string;

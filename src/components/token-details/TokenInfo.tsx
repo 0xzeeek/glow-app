@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, fonts } from '../../theme';
 
 interface TokenInfoProps {
   marketCap: string;
@@ -21,55 +22,51 @@ export default function TokenInfo({ marketCap, volume24h, holders, circulatingSu
     { label: 'Market Cap', value: marketCap },
     { label: '24h Volume', value: volume24h },
     { label: 'Holders', value: formatHolders(holders) },
-    { label: 'Circulating Supply', value: circulatingSupply },
+    { label: 'Circulating supply', value: circulatingSupply },
     { label: 'Created', value: createdAt },
   ];
   
   return (
     <View style={styles.container}>
       <Text style={styles.title}>TOKEN INFO</Text>
-      {infoItems.map((item, index) => (
-        <View key={item.label} style={[styles.infoRow, index === infoItems.length - 1 && styles.lastRow]}>
-          <Text style={styles.label}>{item.label}</Text>
-          <Text style={styles.value}>{item.value}</Text>
-        </View>
-      ))}
+      <View style={styles.infoList}>
+        {infoItems.map((item, index) => (
+          <View key={item.label} style={styles.infoRow}>
+            <Text style={styles.label}>{item.label}</Text>
+            <Text style={styles.value}>{item.value}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    paddingHorizontal: 24,
   },
   title: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#666666',
-    letterSpacing: 0.5,
+    fontFamily: fonts.primaryBold,
+    color: colors.neutral[500],
     marginBottom: 16,
+  },
+  infoList: {
+    gap: 14,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  lastRow: {
-    borderBottomWidth: 0,
+    alignItems: 'center',
   },
   label: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 16,
+    fontFamily: fonts.primaryMedium,
+    color: colors.neutral[500],
   },
   value: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
+    fontSize: 16,
+    fontFamily: fonts.secondary,
+    color: colors.text.primary,
   },
 }); 

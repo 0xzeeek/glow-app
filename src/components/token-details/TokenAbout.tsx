@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, fonts } from '../../theme';
 
 interface TokenAboutProps {
   description: string;
@@ -16,22 +17,17 @@ export default function TokenAbout({ description }: TokenAboutProps) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    paddingHorizontal: 24,
   },
   title: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#666666',
-    letterSpacing: 0.5,
+    fontFamily: fonts.primaryBold,
     marginBottom: 12,
+    color: colors.neutral[500],
   },
   description: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#333333',
+    fontSize: 16,
+    fontFamily: fonts.primaryMedium,
+    color: colors.text.primary,
   },
 }); 

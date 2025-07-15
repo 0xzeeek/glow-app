@@ -1,20 +1,36 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import TokenHeader from '../../src/components/token-details/TokenHeader';
-import TokenStats from '../../src/components/token-details/TokenStats';
-import TokenChart from '../../src/components/token-details/TokenChart';
+import TokenStatsChart from '../../src/components/token-details/TokenStatsChart';
 import TokenAbout from '../../src/components/token-details/TokenAbout';
 import TokenInfo from '../../src/components/token-details/TokenInfo';
 import TokenSocials from '../../src/components/token-details/TokenSocials';
 import FloatingBuyButton from '../../src/components/token-details/FloatingBuyButton';
 import BottomNav from '../../src/components/navigation/BottomNav';
-import { useTokenData } from '../../src/contexts';
+import { useTokenDetails } from '../../src/hooks';
+import { colors, fonts } from '../../src/theme';
 
 export default function TokenDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { getTokenDetails } = useTokenData();
-  const tokenDetails = getTokenDetails(id as string);
+  const { tokenDetails, topHolders, chartData, isLoading, error } = useTokenDetails(id as string);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.text.primary} />
+      </View>
+    );
+  }
+
+  if (error || !tokenDetails) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Unable to load token details</Text>
+        <Text style={styles.errorSubtext}>{error?.message || 'Please try again later'}</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -27,24 +43,31 @@ export default function TokenDetailScreen() {
           backgroundImage={tokenDetails.backgroundImage}
         />
         
-        <TokenStats
-          marketCap={tokenDetails.marketCap}
-          topHolders={tokenDetails.topHolders}
-        />
-        
-        <TokenChart chartData={tokenDetails.chartData} />
-        
-        <TokenAbout description={tokenDetails.description} />
-        
-        <TokenInfo
-          marketCap={tokenDetails.marketCap}
-          volume24h={tokenDetails.volume24h}
-          holders={tokenDetails.holders}
-          circulatingSupply={tokenDetails.circulatingSupply}
-          createdAt={tokenDetails.createdAt}
-        />
-        
-        <TokenSocials socialLinks={tokenDetails.socialLinks} />
+        <View style={styles.contentContainer}>
+          <TokenStatsChart
+            marketCap={tokenDetails.marketCap}
+            topHolders={topHolders}
+            chartData={chartData}
+          />
+          
+          <View style={styles.divider} />
+          
+          <TokenAbout description={tokenDetails.description} />
+          
+          <View style={styles.divider} />
+          
+          <TokenInfo
+            marketCap={tokenDetails.marketCap}
+            volume24h={tokenDetails.volume24h}
+            holders={tokenDetails.holders}
+            circulatingSupply={tokenDetails.circulatingSupply}
+            createdAt={tokenDetails.createdAt}
+          />
+          
+          <View style={styles.divider} />
+          
+          <TokenSocials socialLinks={tokenDetails.socialLinks} />
+        </View>
       </ScrollView>
       
       <FloatingBuyButton 
@@ -61,6 +84,54 @@ export default function TokenDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.primary,
+  },
+  contentContainer: {
+    marginTop: -80,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingTop: 24,
+    paddingBottom: 160,
+    shadowColor: colors.neutral[1000],
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    backgroundColor: colors.background.primary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.neutral[100],
+    marginHorizontal: 24,
+    marginVertical: 20,
+    marginLeft: -24,
+    marginRight: -24,
+    paddingLeft: 24,
+    paddingRight: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background.primary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background.primary,
+    paddingHorizontal: 24,
+  },
+  errorText: {
+    fontSize: 18,
+    fontFamily: fonts.primaryMedium,
+    color: colors.text.primary,
+    marginBottom: 8,
+  },
+  errorSubtext: {
+    fontSize: 14,
+    fontFamily: fonts.secondary,
+    color: colors.neutral[500],
+    textAlign: 'center',
   },
 }); 

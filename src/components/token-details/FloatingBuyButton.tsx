@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Button } from '../shared/Button';
 import BuyModal from '../shared/BuyModal';
 
 interface FloatingBuyButtonProps {
@@ -14,9 +15,14 @@ export default function FloatingBuyButton({ tokenName, tokenImage, tokenId, toke
   
   return (
     <>
-      <TouchableOpacity style={styles.button} onPress={() => setShowBuyModal(true)}>
-        <Text style={styles.buttonText}>BUY NOW</Text>
-      </TouchableOpacity>
+      <View style={styles.container}>
+        <Button 
+          title="BUY NOW" 
+          onPress={() => setShowBuyModal(true)}
+          variant="secondary"
+          style={styles.button}
+        />
+      </View>
       
       <BuyModal
         visible={showBuyModal}
@@ -31,25 +37,17 @@ export default function FloatingBuyButton({ tokenName, tokenImage, tokenId, toke
 }
 
 const styles = StyleSheet.create({
-  button: {
+  container: {
     position: 'absolute',
     bottom: 90,
     left: 16,
     right: 16,
-    backgroundColor: '#000000',
-    paddingVertical: 18,
-    borderRadius: 30,
-    alignItems: 'center',
+  },
+  button: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
     elevation: 8,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 1,
   },
 }); 
