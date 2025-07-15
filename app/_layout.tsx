@@ -22,6 +22,7 @@ import { userStore } from '../src/stores/userStore';
 import { fonts } from '../assets';
 import { useDeepLinking } from '../src/hooks/useDeepLinking';
 import { AppProviders } from '../src/contexts';
+import { colors } from '@/theme/colors';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -122,10 +123,10 @@ export default function RootLayout() {
           <Stack
             screenOptions={{
               headerStyle: {
-                backgroundColor: '#FFFFFF',
+                backgroundColor: colors.background.primary,
               },
               contentStyle: {
-                backgroundColor: '#FFFFFF',
+                backgroundColor: colors.background.primary,
               },
               animation: 'slide_from_right',
             }}
@@ -138,7 +139,7 @@ export default function RootLayout() {
                 animation: 'slide_from_left',
               }}
             />
-            <Stack.Screen name="(referral)" options={{ headerShown: false }} />
+            <Stack.Screen name="(referral)" options={{ headerShown: false, animation: 'slide_from_bottom' }} />
             <Stack.Screen name="(token)" options={{ headerShown: false }} />
             <Stack.Screen
               name="(profile)"

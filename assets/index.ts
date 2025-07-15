@@ -47,6 +47,7 @@ export { default as ProfileShare } from './icons/ui/profile/share.png';
 // Referral
 export { default as ReferralProfile } from './icons/ui/referral/profile.png';
 export { default as ReferralQuestion } from './icons/ui/referral/question.png';
+export { default as ReferralCircle } from './icons/ui/referral/circle.png';
 
 // Settings
 export { default as SettingsDelete } from './icons/ui/settings/delete.png';

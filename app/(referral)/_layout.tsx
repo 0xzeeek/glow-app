@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack } from 'expo-router';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
 import BottomNav from '@/components/navigation/BottomNav';
+import { colors } from '@/theme';
 
 export default function ReferralLayout() {
   return (
@@ -11,7 +12,7 @@ export default function ReferralLayout() {
           <Stack.Screen name="index" />
         </Stack>
       </View>
-      <BottomNav activeTab={null} />
+      <BottomNav activeTab="referral" />
     </SafeAreaView>
   );
 }
@@ -19,7 +20,7 @@ export default function ReferralLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   content: {
     flex: 1,
