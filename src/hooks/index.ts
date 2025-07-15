@@ -1,6 +1,7 @@
-export {
-  useWebSocket,
-  usePriceSubscription,
-  useBalanceSubscription,
+export { useDeepLinking } from './useDeepLinking';
+export { 
+  useWebSocket, 
+  usePriceSubscription, 
+  useBalanceSubscription 
 } from './useWebSocket';
-export { useDeepLinking } from './useDeepLinking'; 
+export { useEditProfile } from './useEditProfile'; 

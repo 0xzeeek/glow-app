@@ -29,6 +29,7 @@ interface UserContextType {
   userName: string;
   userEmail: string;
   profileImage: string | null;
+  memberSince: Date;
   setUserName: (name: string) => void;
   setUserEmail: (email: string) => void;
   setProfileImage: (image: string | null) => void;
@@ -49,6 +50,7 @@ interface UserContextType {
   getTokenHoldings: (tokenId: string) => OwnedToken | undefined;
   getTotalPortfolioValue: () => number;
   getTotalGains: () => number;
+  signOut: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -60,8 +62,9 @@ interface UserProviderProps {
 export function UserProvider({ children }: UserProviderProps) {
   // User profile state
   const [userName, setUserName] = useState('leo_lepicerie');
-  const [userEmail, setUserEmail] = useState('');
+  const [userEmail, setUserEmail] = useState('leolep@gmail.com');
   const [profileImage, setProfileImage] = useState<string | null>("https://i.pravatar.cc/300?img=25");
+  const [memberSince] = useState(new Date('2025-08-04')); // Fixed join date to match screenshot
   
   const [cashBalance, setCashBalance] = useState(449.75); // Balance to match screenshot
   const [portfolio, setPortfolio] = useState<OwnedToken[]>([
@@ -258,6 +261,22 @@ export function UserProvider({ children }: UserProviderProps) {
     }, 0);
   }, [portfolio]);
 
+  const signOut = useCallback(() => {
+    // Reset all user data
+    setUserName('');
+    setUserEmail('');
+    setProfileImage(null);
+    setCashBalance(0);
+    setPortfolio([]);
+    setTransactions([]);
+    
+    // In a real app, you would also:
+    // - Clear authentication tokens
+    // - Navigate to login screen
+    // - Call API to invalidate session
+    console.log('User signed out');
+  }, []);
+
   // Update token prices and gains (in a real app, this would come from an API)
   const updateTokenPrices = useCallback(() => {
     setPortfolio(prev => prev.map(token => {
@@ -281,6 +300,7 @@ export function UserProvider({ children }: UserProviderProps) {
     userName,
     userEmail,
     profileImage,
+    memberSince,
     setUserName,
     setUserEmail,
     setProfileImage,
@@ -297,6 +317,7 @@ export function UserProvider({ children }: UserProviderProps) {
     getTokenHoldings,
     getTotalPortfolioValue,
     getTotalGains,
+    signOut,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

@@ -49,12 +49,16 @@ export default function ProfileScreen() {
     router.push(`/(token)/${tokenId}`);
   };
 
+  const handleSettings = () => {
+    router.push('/(settings)');
+  };
+
   return (
     <>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.gradientBackground}>
           {/* Settings Icon */}
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
             <Image source={ProfileSettings} style={styles.settingsIcon} />
           </TouchableOpacity>
 

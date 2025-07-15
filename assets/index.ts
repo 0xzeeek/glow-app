@@ -55,6 +55,10 @@ export { default as SettingsPolicy } from './icons/ui/settings/policy.png';
 export { default as SettingsPrivacy } from './icons/ui/settings/privacy.png';
 export { default as SettingsSprial } from './icons/ui/settings/sprial.png';
 export { default as SettingsTerms } from './icons/ui/settings/terms.png';
+export { default as SettingsRate } from './icons/ui/settings/rate.png';
+export { default as SettingsNotifications } from './icons/ui/settings/notifications.png';
+export { default as SettingsLegal } from './icons/ui/settings/legal.png';
+export { default as SettingsSignOut } from './icons/ui/settings/sign-out.png';
 
 // Social
 export { default as SocialInstagramWhite } from './icons/ui/social/instagram-white.png';
