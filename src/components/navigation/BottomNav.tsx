@@ -6,7 +6,7 @@ import { Home, HomeSelected, Plus, PlusSelected, Profile as ProfileIcon } from '
 import { colors } from '@/theme/colors';
 
 interface BottomNavProps {
-  activeTab?: 'home' | 'add' | 'profile' | null;
+  activeTab?: 'home' | 'referral' | 'profile' | null;
 }
 
 export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
@@ -25,9 +25,10 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
     }
   };
 
-  const handleAddPress = () => {
-    // Add screen navigation when implemented
-    console.log('Add button pressed');
+  const handleReferralPress = () => {
+    if (activeTab !== 'referral') {
+      router.replace('/(referral)');
+    }
   };
 
   return (
@@ -35,8 +36,8 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
       <TouchableOpacity style={styles.navItem} onPress={handleHomePress}>
         <Image source={activeTab === 'home' ? HomeSelected : Home} style={styles.navIcon} />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem} onPress={handleAddPress}>
-        <Image source={activeTab === 'add' ? PlusSelected : Plus} style={styles.navIcon} />
+      <TouchableOpacity style={styles.navItem} onPress={handleReferralPress}>
+        <Image source={activeTab === 'referral' ? PlusSelected : Plus} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleProfilePress}>
         {profileImage ? (

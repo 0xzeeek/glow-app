@@ -6,6 +6,7 @@ import BuyModal from '../shared/BuyModal';
 import { Button } from '../shared/Button';
 import { fonts } from 'src/theme/typography';
 import { TokenLive } from 'assets';
+import { colors } from '@/theme/colors';
 
 interface FeaturedTokenProps {
   token: FeaturedTokenData;
@@ -89,16 +90,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
+    width: 114,
+    height: 114,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 57,
     borderWidth: 2,
-    borderColor: '#00FF88',
-    overflow: 'hidden',
+    borderColor: colors.green.black,
   },
   profileImage: {
-    width: '100%',
-    height: '100%',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   nameSection: {
     flex: 1,
@@ -111,15 +114,16 @@ const styles = StyleSheet.create({
   },
   tokenName: {
     fontSize: 30,
-    fontWeight: '300',
-    color: '#FFFFFF',
-    fontFamily: fonts.primary,
+    fontFamily: fonts.primaryMedium,
+    color: colors.text.secondary,
   },
   bottomSection: {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     width: '100%',
+    paddingLeft: 10,
   },
   marketCapSection: {
     width: 100,
@@ -127,17 +131,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   marketCapLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#00FF88',
+    fontSize: 14,
     marginBottom: 8,
-    fontFamily: fonts.primary,
+    color: colors.green.black,
+    fontFamily: fonts.primaryBold,
   },
   marketCapValue: {
-    fontSize: 15,
-    fontWeight: '300',
-    color: '#FFFFFF',
-    fontFamily: fonts.secondary,
+    fontSize: 18,
+    fontFamily: fonts.secondaryMedium,
+    color: colors.text.secondary,
   },
   buyButton: {
     width: 200,

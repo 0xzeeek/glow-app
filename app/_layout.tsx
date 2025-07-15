@@ -138,6 +138,7 @@ export default function RootLayout() {
                 animation: 'slide_from_left',
               }}
             />
+            <Stack.Screen name="(referral)" options={{ headerShown: false }} />
             <Stack.Screen name="(token)" options={{ headerShown: false }} />
             <Stack.Screen
               name="(profile)"
