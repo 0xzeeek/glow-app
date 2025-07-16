@@ -45,7 +45,7 @@ export default function EmailScreen() {
   useEffect(() => {
     const keyboardWillShow = Keyboard.addListener(
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-      (e) => {
+      (_e) => {
         Animated.parallel([
           Animated.timing(imageTranslateY, {
             toValue: -300, // Move image up and out of view

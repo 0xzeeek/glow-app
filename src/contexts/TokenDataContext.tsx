@@ -9,9 +9,9 @@ interface TokenDataContextType {
   creatorTokens: CreatorToken[];
   
   // Actions
-  getTokenById: (id: string) => CreatorToken | TopMover | FeaturedTokenData | undefined;
-  getTokenDetails: (id: string) => TokenDetails;
-  getTokenPrice: (id: string) => number;
+  getTokenByAddress: (address: string) => CreatorToken | TopMover | FeaturedTokenData | undefined;
+  getTokenDetails: (address: string) => TokenDetails;
+  getTokenPrice: (address: string) => number;
   searchTokens: (query: string) => (CreatorToken | TopMover)[];
   refreshTokenData: () => Promise<void>;
 }
@@ -24,37 +24,37 @@ interface TokenDataProviderProps {
 
 export function TokenDataProvider({ children }: TokenDataProviderProps) {
   const [topMoversData, setTopMoversData] = useState<TopMover[]>(topMovers);
-  const [featuredTokenData, setFeaturedTokenData] = useState<FeaturedTokenData>(featuredToken);
+  const [featuredTokenData] = useState<FeaturedTokenData>(featuredToken);
   const [creatorTokensData, setCreatorTokensData] = useState<CreatorToken[]>(creatorTokens);
 
-  const getTokenById = useCallback((id: string): CreatorToken | TopMover | FeaturedTokenData | undefined => {
+  const getTokenByAddress = useCallback((address: string): CreatorToken | TopMover | FeaturedTokenData | undefined => {
     // Check creator tokens
-    const creatorToken = creatorTokensData.find(token => token.id === id);
+    const creatorToken = creatorTokensData.find(token => token.address === address);
     if (creatorToken) return creatorToken;
     
     // Check top movers
-    const topMover = topMoversData.find(token => token.id === id);
+    const topMover = topMoversData.find(token => token.address === address);
     if (topMover) return topMover;
     
     // Check featured token
-    if (featuredTokenData.id === id) return featuredTokenData;
+    if (featuredTokenData.address === address) return featuredTokenData;
     
     return undefined;
   }, [creatorTokensData, topMoversData, featuredTokenData]);
 
-  const getTokenDetails = useCallback((id: string): TokenDetails => {
-    return getTokenDetailsById(id);
+  const getTokenDetails = useCallback((address: string): TokenDetails => {
+    return getTokenDetailsById(address);
   }, []);
 
-  const getTokenPrice = useCallback((id: string): number => {
-    const creatorToken = creatorTokensData.find(token => token.id === id);
+  const getTokenPrice = useCallback((address: string): number => {
+    const creatorToken = creatorTokensData.find(token => token.address === address);
     if (creatorToken) {
       // Extract price from string format "$0.007" to 0.007
       return parseFloat(creatorToken.price.replace('$', ''));
     }
     
     // For featured token and top movers, use a default or fetch from details
-    const details = getTokenDetailsById(id);
+    const details = getTokenDetailsById(address);
     return parseFloat(details.price.replace('$', ''));
   }, [creatorTokensData]);
 
@@ -107,7 +107,7 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     topMovers: topMoversData,
     featuredToken: featuredTokenData,
     creatorTokens: creatorTokensData,
-    getTokenById,
+    getTokenByAddress,
     getTokenDetails,
     getTokenPrice,
     searchTokens,

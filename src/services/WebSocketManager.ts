@@ -1,32 +1,9 @@
 import { 
-  WSConnectParams, 
   WSMessage, 
   PriceUpdate, 
   BalanceUpdate 
-} from '../types/solana-trading-backend';
-
-// btoa polyfill for React Native
-const btoa = (str: string): string => {
-  // Simple base64 encoding for React Native
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
-  let i = 0;
-  
-  while (i < str.length) {
-    const a = str.charCodeAt(i++);
-    const b = i < str.length ? str.charCodeAt(i++) : 0;
-    const c = i < str.length ? str.charCodeAt(i++) : 0;
-    
-    const bitmap = (a << 16) | (b << 8) | c;
-    
-    result += chars.charAt((bitmap >> 18) & 63);
-    result += chars.charAt((bitmap >> 12) & 63);
-    result += i - 2 < str.length ? chars.charAt((bitmap >> 6) & 63) : '=';
-    result += i - 1 < str.length ? chars.charAt(bitmap & 63) : '=';
-  }
-  
-  return result;
-};
+} from '../types';
+import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
 // Custom EventEmitter for React Native compatibility
 class EventEmitter {
@@ -106,7 +83,6 @@ export class WebSocketManager extends EventEmitter {
   private isConnecting = false;
   private shouldReconnect = true;
   private subscriptions = new Set<string>();
-  private connectParams: WSConnectParams | null = null;
 
   constructor(config: WebSocketConfig) {
     super();
@@ -120,13 +96,12 @@ export class WebSocketManager extends EventEmitter {
     };
   }
 
-  public connect(params: WSConnectParams): void {
+  public connect(): void {
     if (this.isConnecting || this.isConnected()) {
       console.log('WebSocket already connected or connecting');
       return;
     }
 
-    this.connectParams = params;
     this.shouldReconnect = true;
     this.performConnect();
   }
@@ -138,25 +113,8 @@ export class WebSocketManager extends EventEmitter {
     this.cleanup();
 
     try {
-      let wsUrl: string;
-      
-      if (this.config.useCloudflare && this.connectParams) {
-        // Cloudflare: wss://broadcast.domain.com/ws/TOKEN
-        // Token is wallet:signature:nonce base64 encoded
-        const token = btoa(`${this.connectParams.wallet}:${this.connectParams.signature}:${this.connectParams.nonce}`);
-        wsUrl = `${this.config.url}/ws/${token}`;
-      } else {
-        // AWS: Add auth params as query string
-        const url = new URL(this.config.url);
-        if (this.connectParams) {
-          url.searchParams.append('wallet', this.connectParams.wallet);
-          url.searchParams.append('signature', this.connectParams.signature);
-          url.searchParams.append('nonce', this.connectParams.nonce);
-        }
-        wsUrl = url.toString();
-      }
-
-      this.ws = new WebSocket(wsUrl);
+      // Simple connection without authentication
+      this.ws = new WebSocket(this.config.url);
       this.setupEventHandlers();
       this.startConnectionTimeout();
     } catch (error) {
@@ -184,7 +142,7 @@ export class WebSocketManager extends EventEmitter {
     };
 
     this.ws.onerror = (error) => {
-      this.handleError(new Error('WebSocket error'));
+      this.handleError(new Error('WebSocket error', { cause: error }));
     };
 
     this.ws.onmessage = (event) => {
@@ -221,11 +179,40 @@ export class WebSocketManager extends EventEmitter {
     
     if (this.shouldReconnect && this.reconnectAttempts < this.config.maxReconnectAttempts) {
       this.scheduleReconnect();
+    } else if (this.shouldReconnect && this.reconnectAttempts >= this.config.maxReconnectAttempts) {
+      // Report critical error when max reconnects reached
+      getErrorHandler().handleError(
+        new Error('WebSocket connection failed after maximum retry attempts'),
+        ErrorCategory.WEBSOCKET,
+        ErrorSeverity.HIGH,
+        { 
+          metadata: { 
+            reason,
+            maxAttempts: this.config.maxReconnectAttempts,
+            url: this.config.url 
+          } 
+        }
+      );
     }
   }
 
   private handleError(error: Error): void {
     console.error('WebSocket error:', error);
+    
+    // Report to error handler
+    getErrorHandler().handleError(
+      error,
+      ErrorCategory.WEBSOCKET,
+      ErrorSeverity.MEDIUM,
+      { 
+        metadata: { 
+          isConnected: this.ws?.readyState === WebSocket.OPEN,
+          reconnectAttempts: this.reconnectAttempts,
+          url: this.config.url 
+        } 
+      }
+    );
+    
     this.emit('error', error);
   }
 
@@ -239,9 +226,7 @@ export class WebSocketManager extends EventEmitter {
     
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
-      if (this.connectParams) {
-        this.performConnect();
-      }
+      this.performConnect();
     }, delay) as any;
   }
 

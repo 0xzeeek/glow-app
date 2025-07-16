@@ -2,11 +2,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApiClient, queryKeys } from '../services/ApiClient';
 import { 
   LatestPriceResponse, 
-  TokenMetadata, 
   UpdateTokenMetadataParams,
   GetPricesParams,
-  TokenPricesResponse 
-} from '../types/solana-trading-backend';
+} from '../types';
+import { getErrorHandler, ErrorCategory, ErrorSeverity } from '../services/ErrorHandler';
 
 // Hook for fetching latest token price
 export function useTokenPrice(tokenAddress: string, options?: { enabled?: boolean }) {
@@ -18,7 +17,7 @@ export function useTokenPrice(tokenAddress: string, options?: { enabled?: boolea
       return apiClient.getLatestPrice(tokenAddress);
     },
     enabled: options?.enabled ?? true,
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: false, // relying on websocket
     staleTime: 2000, // Consider stale after 2 seconds
   });
 }
@@ -69,6 +68,27 @@ export function useUpdateTokenMetadata(tokenAddress: string) {
     onSuccess: (data) => {
       // Update the cache with the new metadata
       queryClient.setQueryData(queryKeys.tokens.metadata(tokenAddress), data);
+      
+      // Add breadcrumb for tracking
+      getErrorHandler().addBreadcrumb(
+        'Token metadata updated',
+        'trading',
+        { tokenAddress, updatedFields: Object.keys(data) }
+      );
+    },
+    onError: (error) => {
+      // Provide context for token metadata errors
+      getErrorHandler().handleError(
+        error,
+        ErrorCategory.TRADING,
+        ErrorSeverity.MEDIUM,
+        { 
+          metadata: { 
+            action: 'updateTokenMetadata', 
+            tokenAddress 
+          } 
+        }
+      );
     },
   });
 }

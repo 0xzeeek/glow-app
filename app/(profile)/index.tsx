@@ -9,11 +9,12 @@ import { useUser } from '../../src/contexts/UserContext';
 import { Button } from '../../src/components/shared/Button';
 import DepositModal from '../../src/components/shared/DepositModal';
 import CashOutModal from '../../src/components/shared/CashOutModal';
+import { Profile } from '../../assets';
 
 export default function ProfileScreen() {
   const { 
-    profileImage, 
-    userName, 
+    image, 
+    username, 
     cashBalance, 
     portfolio, 
     getTotalPortfolioValue 
@@ -66,11 +67,11 @@ export default function ProfileScreen() {
           <View style={styles.profileSection}>
             <View style={styles.profileImageWrapper}>
               <Image 
-                source={{ uri: profileImage || 'https://i.pravatar.cc/300?img=15' }} 
+                source={{ uri: image || Profile }} 
                 style={styles.profileImage} 
               />
             </View>
-            <Text style={styles.username}>{userName || 'leo_lepicerie'}</Text>
+            <Text style={styles.username}>{username || ''}</Text>
           </View>
         </View>
 

@@ -8,12 +8,15 @@ import TokenInfo from '../../src/components/token-details/TokenInfo';
 import TokenSocials from '../../src/components/token-details/TokenSocials';
 import FloatingBuyButton from '../../src/components/token-details/FloatingBuyButton';
 import BottomNav from '../../src/components/navigation/BottomNav';
-import { useTokenDetails } from '../../src/hooks';
+import { useTokenDetails, useWebSocketPriceUpdates } from '../../src/hooks';
 import { colors, fonts } from '../../src/theme';
 
 export default function TokenDetailScreen() {
   const { id } = useLocalSearchParams();
   const { tokenDetails, topHolders, chartData, isLoading, error } = useTokenDetails(id as string);
+  
+  // Subscribe to real-time price updates for this token
+  useWebSocketPriceUpdates(id as string);
 
   if (isLoading) {
     return (
@@ -39,7 +42,7 @@ export default function TokenDetailScreen() {
           name={tokenDetails.name}
           price={tokenDetails.price}
           priceChange={tokenDetails.priceChange}
-          profileImage={tokenDetails.profileImage}
+          profileImage={tokenDetails.image}
           backgroundImage={tokenDetails.backgroundImage}
         />
         
@@ -72,8 +75,8 @@ export default function TokenDetailScreen() {
       
       <FloatingBuyButton 
         tokenName={tokenDetails.name}
-        tokenImage={tokenDetails.profileImage}
-        tokenId={tokenDetails.id}
+        tokenImage={tokenDetails.image}
+        tokenId={tokenDetails.address}
         tokenPrice={parseFloat(tokenDetails.price.replace('$', ''))} 
       />
       <BottomNav activeTab={null} />

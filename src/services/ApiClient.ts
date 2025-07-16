@@ -1,9 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
 import {
-  APIError,
-  HealthCheckResponse,
-  NonceResponse,
   LatestPriceResponse,
   TokenPricesResponse,
   GetPricesParams,
@@ -11,9 +8,8 @@ import {
   UpdateTokenMetadataParams,
   UserProfile,
   UpdateUserParams,
-  UserPnLResponse,
-  AggregatePnL,
-} from '../types/solana-trading-backend';
+} from '../types';
+import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
 interface ApiConfig {
   baseURL: string;
@@ -105,18 +101,43 @@ class ApiClient {
 
       // Handle abort errors
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new ApiError('Request timeout', 408);
+        const timeoutError = new ApiError('Request timeout', 408);
+        getErrorHandler().handleError(
+          timeoutError,
+          ErrorCategory.NETWORK,
+          ErrorSeverity.MEDIUM,
+          { metadata: { endpoint, method: fetchOptions.method || 'GET' } }
+        );
+        throw timeoutError;
       }
 
       // Handle network errors
       if (error instanceof TypeError && error.message === 'Network request failed') {
-        throw new ApiError('Network error', 0);
+        const networkError = new ApiError('Network error', 0);
+        getErrorHandler().handleError(
+          networkError,
+          ErrorCategory.NETWORK,
+          ErrorSeverity.HIGH,
+          { metadata: { endpoint, method: fetchOptions.method || 'GET' } }
+        );
+        throw networkError;
       }
 
       // Retry logic for certain errors
       if (retries > 0 && this.shouldRetry(error)) {
         await this.delay(1000); // Wait 1 second before retry
         return this.request<T>(endpoint, { ...options, retries: retries - 1 });
+      }
+
+      // Handle other API errors
+      if (error instanceof ApiError) {
+        const severity = error.status >= 500 ? ErrorSeverity.HIGH : ErrorSeverity.MEDIUM;
+        getErrorHandler().handleError(
+          error,
+          ErrorCategory.NETWORK,
+          severity,
+          { metadata: { endpoint, method: fetchOptions.method || 'GET', status: error.status } }
+        );
       }
 
       throw error;
@@ -139,17 +160,6 @@ class ApiClient {
   public cancelAllRequests(): void {
     this.abortControllers.forEach(controller => controller.abort());
     this.abortControllers.clear();
-  }
-
-  // Health check
-  public async checkHealth(): Promise<HealthCheckResponse> {
-    return this.request<HealthCheckResponse>('/health');
-  }
-
-  // Authentication
-  public async getNonce(wallet?: string): Promise<NonceResponse> {
-    const params = wallet ? { wallet } : undefined;
-    return this.request<NonceResponse>('/login/nonce', { params });
   }
 
   // Price data
@@ -197,16 +207,6 @@ class ApiClient {
   // User balances
   public async getUserUSDCBalance(wallet: string): Promise<{ balance: number }> {
     return this.request<{ balance: number }>(`/users/${wallet}/usdc-balance`);
-  }
-
-  // PnL data
-  public async getUserPnL(wallet: string, token?: string): Promise<UserPnLResponse> {
-    const params = token ? { token } : undefined;
-    return this.request<UserPnLResponse>(`/users/${wallet}/pnl`, { params });
-  }
-
-  public async getAggregatePnL(wallet: string): Promise<AggregatePnL> {
-    return this.request<AggregatePnL>(`/users/${wallet}/pnl/aggregate`);
   }
 
   // Historical prices
@@ -306,6 +306,16 @@ export const createQueryClient = (): QueryClient => {
       },
       mutations: {
         retry: false,
+        onError: (error) => {
+          // Import will be added at top of file
+          const errorHandler = getErrorHandler();
+          const category = error instanceof ApiError ? ErrorCategory.NETWORK : ErrorCategory.UNKNOWN;
+          const severity = error instanceof ApiError && error.status >= 500 
+            ? ErrorSeverity.HIGH 
+            : ErrorSeverity.MEDIUM;
+          
+          errorHandler.handleError(error, category, severity);
+        },
       },
     },
   });
@@ -313,7 +323,6 @@ export const createQueryClient = (): QueryClient => {
 
 // Query key factory for consistency
 export const queryKeys = {
-  health: ['health'] as const,
   prices: {
     latest: (token: string) => ['prices', token, 'latest'] as const,
     history: (token: string, params?: GetPricesParams) => 
@@ -321,11 +330,11 @@ export const queryKeys = {
   },
   tokens: {
     metadata: (token: string) => ['tokens', token] as const,
+    holders: (token: string) => ['tokens', token, 'holders'] as const,
+    chart: (token: string, timeframe?: string) => ['tokens', token, 'chart', timeframe] as const,
   },
   users: {
     profile: (wallet: string) => ['users', wallet] as const,
     usdcBalance: (wallet: string) => ['users', wallet, 'usdc-balance'] as const,
-    pnl: (wallet: string) => ['users', wallet, 'pnl'] as const,
-    aggregatePnl: (wallet: string) => ['users', wallet, 'pnl', 'aggregate'] as const,
   },
 }; 

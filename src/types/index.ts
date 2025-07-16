@@ -1,6 +1,50 @@
-/**
- * Solana Trading Backend Type Definitions
- */
+export interface TopMover {
+  address: string;
+  name: string;
+  image: string;
+  changePercent: number;
+}
+
+export interface FeaturedTokenData {
+  address: string;
+  name: string;
+  image: string;
+  status: string;
+  marketCap: string;
+  price: number;
+}
+
+export interface CreatorToken {
+  address: string;
+  creatorName: string;
+  avatar: string;
+  marketCap: string;
+  price: string;
+  changePercent: number;
+  chartData: number[];
+}
+
+
+export interface TokenDetails {
+  address: string;
+  name: string;
+  symbol: string;
+  price: string;
+  priceChange: number;
+  image: string;
+  backgroundImage: string;
+  marketCap: string;
+  volume24h: string;
+  holders: number;
+  circulatingSupply: string;
+  createdAt: string;
+  description: string;
+  socialLinks: {
+    platform: string;
+    handle: string;
+    icon: string;
+  }[];
+}
 
 export interface WSConnectParams {
   wallet: string;
@@ -54,28 +98,10 @@ export interface PricePoint {
 
 export interface UserProfile {
   wallet: string;
+  username: string;
+  email: string;
+  image: string;
   createdAt: number;
-  referredBy?: string;
-  profileUrl?: string;
-  lastLogin: number;
-}
-
-export interface TokenPnL {
-  token: string;
-  invested: number;
-  current: number;
-  profit: number;
-  profitPercent: number;
-  firstBuy: number;
-  lastUpdate: number;
-}
-
-export interface AggregatePnL {
-  totalInvested: number;
-  totalCurrent: number;
-  totalProfit: number;
-  profitPercent: number;
-  tokenCount: number;
 }
 
 export interface GetPricesParams {
@@ -95,16 +121,6 @@ export interface UpdateUserParams {
   profileUrl?: string;
 }
 
-export interface HealthCheckResponse {
-  status: 'ok';
-  timestamp: string;
-}
-
-export interface NonceResponse {
-  nonce: string;
-  expiresAt: number;
-}
-
 export interface LatestPriceResponse {
   token: string;
   price: number;
@@ -117,18 +133,6 @@ export interface TokenPricesResponse {
   prices: PricePoint[];
   range: string;
   count: number;
-}
-
-export interface UserPnLResponse {
-  wallet: string;
-  tokens: TokenPnL[];
-  timestamp: number;
-}
-
-export interface APIError {
-  error: string;
-  message: string;
-  statusCode: number;
 }
 
 export type TokenAddress = string;

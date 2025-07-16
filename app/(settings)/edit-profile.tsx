@@ -19,7 +19,7 @@ import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
 import { useEditProfile } from '../../src/hooks/useEditProfile';
-import { SettingsEdit } from '../../assets';
+import { Profile, SettingsEdit } from '../../assets';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -29,8 +29,6 @@ export default function EditProfileScreen() {
     localUserName,
     localEmail,
     localProfileImage,
-    isCheckingUsername,
-    isCheckingEmail,
     isUploadingImage,
     usernameError,
     emailError,
@@ -111,7 +109,7 @@ export default function EditProfileScreen() {
         <View style={styles.profileImageSection}>
           <View style={styles.profileImageContainer}>
             <Image 
-              source={{ uri: localProfileImage || 'https://i.pravatar.cc/300?img=15' }} 
+              source={{ uri: localProfileImage || Profile }} 
               style={styles.profileImage} 
             />
             {isUploadingImage && (

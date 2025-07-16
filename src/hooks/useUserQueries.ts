@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getApiClient, queryKeys } from '../services/ApiClient';
-import { UserProfile, UpdateUserParams, UserPnLResponse, AggregatePnL } from '../types/solana-trading-backend';
+import { UpdateUserParams } from '../types';
+import { getErrorHandler, ErrorCategory, ErrorSeverity } from '../services/ErrorHandler';
 
 // Hook for fetching user profile
 export function useUserProfile(walletAddress: string | null) {
@@ -28,7 +29,14 @@ export function useUpdateUserProfile(walletAddress: string | null) {
   return useMutation({
     mutationFn: async (data: UpdateUserParams) => {
       if (!walletAddress) {
-        throw new Error('No wallet address available');
+        const error = new Error('No wallet address available');
+        getErrorHandler().handleError(
+          error,
+          ErrorCategory.VALIDATION,
+          ErrorSeverity.MEDIUM,
+          { metadata: { action: 'updateUserProfile' } }
+        );
+        throw error;
       }
       return apiClient.updateUserProfile(walletAddress, data);
     },
@@ -36,52 +44,33 @@ export function useUpdateUserProfile(walletAddress: string | null) {
       if (walletAddress) {
         // Update the cache with the new profile data
         queryClient.setQueryData(queryKeys.users.profile(walletAddress), data);
+        
+        // Add breadcrumb for successful profile update
+        getErrorHandler().addBreadcrumb(
+          'User profile updated successfully',
+          'user',
+          { walletAddress, updatedFields: Object.keys(data) }
+        );
       }
+    },
+    onError: (error) => {
+      // Additional context for profile update errors
+      getErrorHandler().handleError(
+        error,
+        ErrorCategory.AUTH,
+        ErrorSeverity.MEDIUM,
+        { 
+          metadata: { 
+            action: 'updateUserProfile', 
+            walletAddress 
+          } 
+        }
+      );
     },
   });
 }
 
-// Hook for fetching user PnL
-export function useUserPnL(walletAddress: string | null, token?: string) {
-  const apiClient = getApiClient();
-
-  return useQuery({
-    queryKey: walletAddress 
-      ? ['users', walletAddress, 'pnl', token || 'all'] 
-      : ['users', 'no-wallet', 'pnl'],
-    queryFn: async () => {
-      if (!walletAddress) {
-        return null;
-      }
-      return apiClient.getUserPnL(walletAddress, token);
-    },
-    enabled: !!walletAddress,
-    refetchInterval: 60000, // Refresh every minute
-    staleTime: 30000, // 30 seconds
-  });
-}
-
-// Hook for fetching aggregate PnL
-export function useAggregatePnL(walletAddress: string | null) {
-  const apiClient = getApiClient();
-
-  return useQuery({
-    queryKey: walletAddress 
-      ? queryKeys.users.aggregatePnl(walletAddress) 
-      : ['users', 'no-wallet', 'pnl', 'aggregate'],
-    queryFn: async () => {
-      if (!walletAddress) {
-        return null;
-      }
-      return apiClient.getAggregatePnL(walletAddress);
-    },
-    enabled: !!walletAddress,
-    refetchInterval: 60000, // Refresh every minute
-    staleTime: 30000, // 30 seconds
-  });
-}
-
-// Hook for uploading user profile image
+// TODO: update this to the pattern we're using on the backend
 export function useUploadUserImage(walletAddress: string | null) {
   const queryClient = useQueryClient();
   const apiClient = getApiClient();

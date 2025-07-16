@@ -21,7 +21,7 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
   };
   
   const handleTokenPress = () => {
-    router.push(`/(token)/${token.id}`);
+    router.push(`/(token)/${token.address}`);
   };
   
   return (
@@ -61,7 +61,7 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
         onClose={() => setShowBuyModal(false)}
         tokenName={token.name}
         tokenImage={token.image}
-        tokenId={token.id}
+        tokenId={token.address}
         tokenPrice={token.price}
       />
     </>

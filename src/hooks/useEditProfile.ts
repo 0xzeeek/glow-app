@@ -21,8 +21,8 @@ interface UseEditProfileReturn {
   hasChanges: boolean;
 }
 
-// TODO: Replace these with actual API calls
 const checkUsernameExists = async (username: string): Promise<boolean> => {
+  // TODO: implement username check
   // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -31,6 +31,7 @@ const checkUsernameExists = async (username: string): Promise<boolean> => {
 };
 
 const checkEmailExists = async (email: string): Promise<boolean> => {
+  // TODO: implement email check
   // Simulate API call
   await new Promise(resolve => setTimeout(resolve, 500));
   
@@ -39,6 +40,7 @@ const checkEmailExists = async (email: string): Promise<boolean> => {
 };
 
 const uploadProfileImage = async (imageUri: string): Promise<string | null> => {
+  // TODO: implement image upload
   // Simulate API upload
   await new Promise(resolve => setTimeout(resolve, 1000));
   
@@ -54,17 +56,17 @@ const validateEmail = (email: string): boolean => {
 
 export function useEditProfile(): UseEditProfileReturn {
   const { 
-    userName, 
-    userEmail, 
-    profileImage,
-    setUserName, 
-    setUserEmail,
-    setProfileImage 
+    username, 
+    email, 
+    image,
+    setUsername, 
+    setEmail,
+    setImage 
   } = useUser();
 
-  const [localUserName, setLocalUserName] = useState(userName);
-  const [localEmail, setLocalEmail] = useState(userEmail);
-  const [localProfileImage, setLocalProfileImage] = useState(profileImage);
+  const [localUserName, setLocalUserName] = useState(username);
+  const [localEmail, setLocalEmail] = useState(email);
+  const [localProfileImage, setLocalProfileImage] = useState(image);
   
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
@@ -74,13 +76,13 @@ export function useEditProfile(): UseEditProfileReturn {
   const [emailError, setEmailError] = useState<string | null>(null);
 
   // Track original values to prevent unnecessary checks
-  const originalUsername = useRef(userName);
-  const originalEmail = useRef(userEmail);
+  const originalUsername = useRef(username);
+  const originalEmail = useRef(email);
 
   const hasChanges = 
-    localUserName !== userName ||
-    localEmail !== userEmail ||
-    localProfileImage !== profileImage;
+    localUserName !== username ||
+    localEmail !== email ||
+    localProfileImage !== image;
 
   const handleUsernameBlur = useCallback(async () => {
     // Clear previous error
@@ -186,12 +188,14 @@ export function useEditProfile(): UseEditProfileReturn {
     }
 
     try {
+
+      // TODO: call save user data api here
       // Save changes to context
-      setUserName(localUserName);
-      setUserEmail(localEmail);
+      setUsername(localUserName);
+      setEmail(localEmail);
       
-      if (localProfileImage !== profileImage) {
-        setProfileImage(localProfileImage);
+      if (localProfileImage !== image) {
+        setImage(localProfileImage);
       }
 
       // Update original values
@@ -208,12 +212,12 @@ export function useEditProfile(): UseEditProfileReturn {
     localUserName, 
     localEmail, 
     localProfileImage, 
-    profileImage,
+    image,
     usernameError, 
     emailError,
-    setUserName, 
-    setUserEmail, 
-    setProfileImage
+    setUsername, 
+    setEmail, 
+    setImage
   ]);
 
   return {

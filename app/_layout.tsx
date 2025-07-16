@@ -15,15 +15,13 @@ import {
   initializeApiClient,
   initializeErrorHandler,
   getWebSocketManager,
-  getOfflineManager,
 } from '../src/services';
 import { uiStore } from '../src/stores/uiStore';
-import { userStore } from '../src/stores/userStore';
 import { fonts } from '../assets';
-import { useDeepLinking } from '../src/hooks/useDeepLinking';
 import { AppProviders } from '../src/contexts';
 import { colors } from '@/theme/colors';
 import { PrivyProvider } from '@privy-io/expo';
+import ErrorBoundary from '../src/components/shared/ErrorBoundary';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -33,10 +31,9 @@ const queryClient = createQueryClient();
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
 
-  // Initialize deep linking
-  useDeepLinking();
-
   useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
     async function prepare() {
       try {
         // Load fonts
@@ -44,7 +41,7 @@ export default function RootLayout() {
 
         // Initialize services
         initializeApiClient({
-          baseURL: process.env.EXPO_PUBLIC_API_URL || 'https://api.glow.club',
+          baseURL: process.env.EXPO_PUBLIC_API_URL || '',
         });
 
         initializeErrorHandler({
@@ -52,54 +49,20 @@ export default function RootLayout() {
           enableInDev: false,
         });
 
-        // Initialize WebSocket manager
-        const wsManager = getWebSocketManager({
-          url: process.env.EXPO_PUBLIC_WS_URL || 'wss://ws.glow.club',
-          useCloudflare: process.env.EXPO_PUBLIC_USE_CLOUDFLARE === 'true',
+        // Initialize WebSocket manager (but don't connect yet)
+        // Connection will be established during authentication
+        getWebSocketManager({
+          url: process.env.EXPO_PUBLIC_WS_URL || '',
+          useCloudflare: process.env.EXPO_PUBLIC_USE_CLOUDFLARE === 'false',
         });
-
-        // Setup WebSocket event listeners
-        wsManager.on('connected', () => {
-          console.log('WebSocket connected');
-          uiStore.getState().setOnline(true);
-        });
-
-        wsManager.on('disconnected', reason => {
-          console.log('WebSocket disconnected:', reason);
-        });
-
-        wsManager.on('error', error => {
-          console.error('WebSocket error:', error);
-        });
-
-        // Initialize offline manager
-        getOfflineManager();
 
         // Setup network monitoring
-        const unsubscribe = NetInfo.addEventListener(state => {
+        unsubscribe = NetInfo.addEventListener(state => {
           const isConnected = state.isConnected ?? false;
           uiStore.getState().setOnline(isConnected);
-
-          // Reconnect WebSocket when network comes back
-          if (isConnected && !wsManager.isConnected()) {
-            const authState = userStore.getState();
-            if (authState.isAuthenticated && authState.wallet) {
-              // Reconnect with existing auth
-              // Note: In production, you'd need to refresh the nonce
-              console.log('Network restored, reconnecting WebSocket...');
-            }
-          }
         });
 
-        // Cleanup expired cache items
-        const offlineManager = getOfflineManager();
-        await offlineManager.clearExpiredItems();
-
         setIsReady(true);
-
-        return () => {
-          unsubscribe();
-        };
       } catch (e) {
         console.warn(e);
         setIsReady(true);
@@ -110,6 +73,10 @@ export default function RootLayout() {
     }
 
     prepare();
+
+    return () => {
+      unsubscribe?.();
+    };
   }, []);
 
   if (!isReady) {
@@ -126,49 +93,51 @@ export default function RootLayout() {
     >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
-          <AppProviders>
-            <StatusBar style="light" />
-            <Stack
-              screenOptions={{
-                headerStyle: {
-                  backgroundColor: colors.background.primary,
-                },
-                contentStyle: {
-                  backgroundColor: colors.background.primary,
-                },
-                animation: 'slide_from_right',
-              }}
-            >
-              <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(home)"
-                options={{
-                  headerShown: false,
-                  animation: 'slide_from_left',
-                }}
-              />
-              <Stack.Screen
-                name="(referral)"
-                options={{ headerShown: false, animation: 'slide_from_bottom' }}
-              />
-              <Stack.Screen name="(token)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="(profile)"
-                options={{
-                  headerShown: false,
+          <ErrorBoundary>
+            <AppProviders>
+              <StatusBar style="light" />
+              <Stack
+                screenOptions={{
+                  headerStyle: {
+                    backgroundColor: colors.background.primary,
+                  },
+                  contentStyle: {
+                    backgroundColor: colors.background.primary,
+                  },
                   animation: 'slide_from_right',
                 }}
-              />
-              <Stack.Screen
-                name="(settings)"
-                options={{
-                  headerShown: false,
-                  animation: 'slide_from_right',
-                }}
-              />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-          </AppProviders>
+              >
+                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(home)"
+                  options={{
+                    headerShown: false,
+                    animation: 'slide_from_left',
+                  }}
+                />
+                <Stack.Screen
+                  name="(referral)"
+                  options={{ headerShown: false, animation: 'slide_from_bottom' }}
+                />
+                <Stack.Screen name="(token)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="(profile)"
+                  options={{
+                    headerShown: false,
+                    animation: 'slide_from_right',
+                  }}
+                />
+                <Stack.Screen
+                  name="(settings)"
+                  options={{
+                    headerShown: false,
+                    animation: 'slide_from_right',
+                  }}
+                />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+            </AppProviders>
+          </ErrorBoundary>
         </QueryClientProvider>
       </GestureHandlerRootView>
     </PrivyProvider>

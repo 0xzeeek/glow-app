@@ -4,11 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Switch,
-  ViewStyle,
-  TextStyle,
-  ImageStyle,
   Alert,
   Linking,
   AppState,
@@ -17,7 +13,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Notifications from 'expo-notifications';
-import { colors, fonts } from '../../src/theme';
+import { colors } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function NotificationsScreen() {

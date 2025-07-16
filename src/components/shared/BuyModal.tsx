@@ -16,17 +16,17 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import PurchaseSuccess from './PurchaseSuccess';
 import { useUser } from '../../contexts';
-import { 
-  BackgroundOnbordingMain, 
-  CloseModal, 
+import {
+  BackgroundOnbordingMain,
+  CloseModal,
   DepositAppleButton,
   DepositDebitButton,
   DepositCryptoButton,
   DepositAppleIcon,
   DepositDebitIcon,
   DepositCryptoIcon,
-  DepositDelete, 
-  DepositSwipe 
+  DepositDelete,
+  DepositSwipe,
 } from '../../../assets';
 import { fonts } from '../../theme/typography';
 import { colors } from '../../theme/colors';
@@ -56,16 +56,17 @@ export default function BuyModal({
   const [amount, setAmount] = useState('100');
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'apple' | 'debit' | 'crypto'>('apple');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'apple' | 'debit' | 'crypto'>(
+    'apple'
+  );
   const [swipeAnimation] = useState(new Animated.Value(0));
   const [showSuccess, setShowSuccess] = useState(false);
-  const [swipeProgress] = useState(new Animated.Value(0));
 
   // Animation values for modal
   const [overlayOpacity] = useState(new Animated.Value(0));
   const [contentTranslateY] = useState(new Animated.Value(screenHeight));
   const [backgroundScale] = useState(new Animated.Value(1));
-  
+
   // Animation values for payment methods modal
   const [paymentOverlayOpacity] = useState(new Animated.Value(0));
   const [paymentContentTranslateY] = useState(new Animated.Value(300));
@@ -76,7 +77,7 @@ export default function BuyModal({
       // Reset animation values to ensure proper starting position
       overlayOpacity.setValue(0);
       contentTranslateY.setValue(screenHeight);
-      
+
       // Fade in overlay
       Animated.timing(overlayOpacity, {
         toValue: 1,
@@ -85,7 +86,7 @@ export default function BuyModal({
       }).start();
 
       // Slide up content
-      Animated.spring(contentTranslateY, {
+      Animated.spring(contentTranslateY, { 
         toValue: 0,
         tension: 65,
         friction: 11,
@@ -128,21 +129,21 @@ export default function BuyModal({
       }
     }
   }, [visible, onBackgroundScale, overlayOpacity, contentTranslateY, backgroundScale]);
-  
+
   // Handle payment modal animations
   React.useEffect(() => {
     if (showPaymentMethods) {
       // Reset animation values
       paymentOverlayOpacity.setValue(0);
       paymentContentTranslateY.setValue(300);
-      
+
       // Fade in overlay
       Animated.timing(paymentOverlayOpacity, {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }).start();
-      
+
       // Slide up content
       Animated.spring(paymentContentTranslateY, {
         toValue: 0,
@@ -157,7 +158,7 @@ export default function BuyModal({
         duration: 200,
         useNativeDriver: true,
       }).start();
-      
+
       // Slide down content
       Animated.timing(paymentContentTranslateY, {
         toValue: 300,
@@ -166,12 +167,12 @@ export default function BuyModal({
       }).start();
     }
   }, [showPaymentMethods, paymentOverlayOpacity, paymentContentTranslateY]);
-  
+
   const handleNumberPress = (num: string) => {
     if (num === '.' && amount.includes('.')) return;
-    
+
     setHasInteracted(true);
-    
+
     if (amount === '0' || amount === '100') {
       setAmount(num === '.' ? '0.' : num);
     } else {
@@ -181,7 +182,7 @@ export default function BuyModal({
 
   const handleDelete = () => {
     setHasInteracted(true);
-    
+
     if (amount.length > 1) {
       setAmount(amount.slice(0, -1));
     } else {
@@ -194,9 +195,9 @@ export default function BuyModal({
     setAmount(value);
   };
 
-  const numericAmount = parseFloat(amount) || 0;
-  const youGet = tokenPrice > 0 ? numericAmount / tokenPrice : 0;
-  const fee = numericAmount * 0.05; // 5% fee
+  // const numericAmount = parseFloat(amount) || 0;
+  // const youGet = tokenPrice > 0 ? numericAmount / tokenPrice : 0;
+  // const fee = numericAmount * 0.05; // 5% fee
 
   const handleShareGains = async () => {
     try {
@@ -209,7 +210,7 @@ export default function BuyModal({
       console.error('Error sharing:', error);
     }
   };
-  
+
   // Get the appropriate payment button image based on selection
   const getPaymentButtonImage = () => {
     switch (selectedPaymentMethod) {
@@ -223,7 +224,7 @@ export default function BuyModal({
         return DepositAppleButton;
     }
   };
-  
+
   const handleSelectPaymentMethod = (method: 'apple' | 'debit' | 'crypto') => {
     setSelectedPaymentMethod(method);
     setShowPaymentMethods(false);
@@ -319,7 +320,7 @@ export default function BuyModal({
     >
       {/* Overlay with fade animation only */}
       <TouchableWithoutFeedback onPress={handleCloseModal}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.modalOverlay,
             {
@@ -328,9 +329,9 @@ export default function BuyModal({
           ]}
         />
       </TouchableWithoutFeedback>
-      
+
       {/* Content with slide animation only */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.modalContent,
           {
@@ -339,12 +340,8 @@ export default function BuyModal({
         ]}
       >
         {/* Background Image */}
-        <Image 
-          source={BackgroundOnbordingMain} 
-          style={styles.backgroundImage} 
-          resizeMode="cover" 
-        />
-        
+        <Image source={BackgroundOnbordingMain} style={styles.backgroundImage} resizeMode="cover" />
+
         <SafeAreaView style={styles.safeArea}>
           {showSuccess ? (
             <PurchaseSuccess
@@ -356,185 +353,185 @@ export default function BuyModal({
             />
           ) : (
             <>
-                {/* Header */}
-                <View style={styles.header}>
-                  <Text style={styles.headerTitle}>BUY</Text>
-                  <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
-                    <Image source={CloseModal} style={styles.closeButtonIcon} />
+              {/* Header */}
+              <View style={styles.header}>
+                <Text style={styles.headerTitle}>BUY</Text>
+                <TouchableOpacity onPress={handleCloseModal} style={styles.closeButton}>
+                  <Image source={CloseModal} style={styles.closeButtonIcon} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Cash Balance */}
+              <TouchableOpacity style={styles.cashBalance}>
+                <Text style={styles.cashText}>Cash: ${cashBalance.toFixed(2)}</Text>
+                <Ionicons name="chevron-down" size={16} color="#999" />
+              </TouchableOpacity>
+
+              {/* Amount Display */}
+              <View style={styles.amountSection}>
+                <Text style={[styles.amountText, hasInteracted && styles.amountTextActive]}>
+                  ${amount}
+                </Text>
+              </View>
+
+              {/* Cash Type Button */}
+              <TouchableOpacity
+                style={styles.cashTypeButton}
+                activeOpacity={0.8}
+                onPress={() => setShowPaymentMethods(true)}
+              >
+                <Image source={getPaymentButtonImage()} style={styles.cashTypeButtonIcon} />
+              </TouchableOpacity>
+
+              {/* You Get - removed per screenshot */}
+
+              {/* Quick Amounts */}
+              <View style={styles.quickAmounts}>
+                {['30', '40', '50', '100'].map(value => (
+                  <TouchableOpacity
+                    key={value}
+                    style={styles.quickAmountButton}
+                    onPress={() => handleQuickAmount(value)}
+                  >
+                    <Text style={styles.quickAmountText}>${value}</Text>
                   </TouchableOpacity>
-                </View>
+                ))}
+              </View>
 
-                {/* Cash Balance */}
-                <TouchableOpacity style={styles.cashBalance}>
-                  <Text style={styles.cashText}>Cash: ${cashBalance.toFixed(2)}</Text>
-                  <Ionicons name="chevron-down" size={16} color="#999" />
-                </TouchableOpacity>
-
-                {/* Amount Display */}
-                <View style={styles.amountSection}>
-                  <Text style={[styles.amountText, hasInteracted && styles.amountTextActive]}>
-                    ${amount}
-                  </Text>
-                </View>
-
-                {/* Cash Type Button */}
-                <TouchableOpacity 
-                  style={styles.cashTypeButton} 
-                  activeOpacity={0.8}
-                  onPress={() => setShowPaymentMethods(true)}
-                >
-                  <Image source={getPaymentButtonImage()} style={styles.cashTypeButtonIcon} />
-                </TouchableOpacity>
-
-                {/* You Get - removed per screenshot */}
-
-                {/* Quick Amounts */}
-                <View style={styles.quickAmounts}>
-                  {['30', '40', '50', '100'].map(value => (
-                    <TouchableOpacity
-                      key={value}
-                      style={styles.quickAmountButton}
-                      onPress={() => handleQuickAmount(value)}
-                    >
-                      <Text style={styles.quickAmountText}>${value}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* Number Pad */}
-                <View style={styles.numberPad}>
-                  {[
-                    ['1', '2', '3'],
-                    ['4', '5', '6'],
-                    ['7', '8', '9'],
-                    ['.', '0', 'delete'],
-                  ].map((row, rowIndex) => (
-                    <View key={rowIndex} style={styles.numberRow}>
-                      {row.map(key => (
-                        <TouchableOpacity
-                          key={key}
-                          style={styles.numberButton}
-                          onPress={() => {
-                            if (key === 'delete') {
-                              handleDelete();
-                            } else {
-                              handleNumberPress(key);
-                            }
-                          }}
-                        >
-                          {key === 'delete' ? (
-                            <Image source={DepositDelete} style={styles.deleteIcon} />
-                          ) : (
-                            <Text style={styles.numberText}>{key}</Text>
-                          )}
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  ))}
-                </View>
-
-                {/* Swipe to Buy */}
-                <View style={styles.swipeContainer}>
-                  <View style={styles.swipeTrack}>
-                    {/* Green progress background */}
-                    <Animated.View
-                      style={[
-                        styles.swipeProgress,
-                        {
-                          width: swipeAnimation.interpolate({
-                            inputRange: [0, screenWidth - 140],
-                            outputRange: ['0%', '100%'],
-                            extrapolate: 'clamp',
-                          }),
-                        },
-                      ]}
-                    />
-                    <Animated.View
-                      style={[
-                        styles.swipeButton,
-                        {
-                          transform: [{ translateX: swipeAnimation }],
-                        },
-                      ]}
-                      {...panResponder.panHandlers}
-                    >
-                      <Image source={DepositSwipe} style={styles.swipeIcon} />
-                    </Animated.View>
-                    <Text style={styles.swipeText}>SWIPE TO BUY</Text>
+              {/* Number Pad */}
+              <View style={styles.numberPad}>
+                {[
+                  ['1', '2', '3'],
+                  ['4', '5', '6'],
+                  ['7', '8', '9'],
+                  ['.', '0', 'delete'],
+                ].map((row, rowIndex) => (
+                  <View key={rowIndex} style={styles.numberRow}>
+                    {row.map(key => (
+                      <TouchableOpacity
+                        key={key}
+                        style={styles.numberButton}
+                        onPress={() => {
+                          if (key === 'delete') {
+                            handleDelete();
+                          } else {
+                            handleNumberPress(key);
+                          }
+                        }}
+                      >
+                        {key === 'delete' ? (
+                          <Image source={DepositDelete} style={styles.deleteIcon} />
+                        ) : (
+                          <Text style={styles.numberText}>{key}</Text>
+                        )}
+                      </TouchableOpacity>
+                    ))}
                   </View>
+                ))}
+              </View>
+
+              {/* Swipe to Buy */}
+              <View style={styles.swipeContainer}>
+                <View style={styles.swipeTrack}>
+                  {/* Green progress background */}
+                  <Animated.View
+                    style={[
+                      styles.swipeProgress,
+                      {
+                        width: swipeAnimation.interpolate({
+                          inputRange: [0, screenWidth - 140],
+                          outputRange: ['0%', '100%'],
+                          extrapolate: 'clamp',
+                        }),
+                      },
+                    ]}
+                  />
+                  <Animated.View
+                    style={[
+                      styles.swipeButton,
+                      {
+                        transform: [{ translateX: swipeAnimation }],
+                      },
+                    ]}
+                    {...panResponder.panHandlers}
+                  >
+                    <Image source={DepositSwipe} style={styles.swipeIcon} />
+                  </Animated.View>
+                  <Text style={styles.swipeText}>SWIPE TO BUY</Text>
                 </View>
-              </>
-            )}
-          </SafeAreaView>
-        </Animated.View>
-        
-        {/* Payment Methods Modal */}
-        <Modal
-          visible={showPaymentMethods}
-          animationType="none"
-          transparent={true}
-          onRequestClose={() => setShowPaymentMethods(false)}
-        >
-          {/* Overlay with fade animation only */}
-          <TouchableWithoutFeedback onPress={() => setShowPaymentMethods(false)}>
-            <Animated.View 
-              style={[
-                styles.paymentMethodsOverlay,
-                {
-                  opacity: paymentOverlayOpacity,
-                },
-              ]}
-            />
-          </TouchableWithoutFeedback>
-          
-          {/* Content with slide animation only */}
-          <Animated.View 
+              </View>
+            </>
+          )}
+        </SafeAreaView>
+      </Animated.View>
+
+      {/* Payment Methods Modal */}
+      <Modal
+        visible={showPaymentMethods}
+        animationType="none"
+        transparent={true}
+        onRequestClose={() => setShowPaymentMethods(false)}
+      >
+        {/* Overlay with fade animation only */}
+        <TouchableWithoutFeedback onPress={() => setShowPaymentMethods(false)}>
+          <Animated.View
             style={[
-              styles.paymentMethodsContent,
+              styles.paymentMethodsOverlay,
               {
-                transform: [{ translateY: paymentContentTranslateY }],
+                opacity: paymentOverlayOpacity,
               },
             ]}
+          />
+        </TouchableWithoutFeedback>
+
+        {/* Content with slide animation only */}
+        <Animated.View
+          style={[
+            styles.paymentMethodsContent,
+            {
+              transform: [{ translateY: paymentContentTranslateY }],
+            },
+          ]}
+        >
+          {/* <View style={styles.paymentMethodsHandle} /> */}
+
+          <TouchableOpacity
+            style={styles.paymentMethodItem}
+            onPress={() => handleSelectPaymentMethod('apple')}
+            activeOpacity={0.7}
           >
-            {/* <View style={styles.paymentMethodsHandle} /> */}
-            
-            <TouchableOpacity
-              style={styles.paymentMethodItem}
-              onPress={() => handleSelectPaymentMethod('apple')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.paymentMethodIcon}>
-                <Image source={DepositAppleIcon} style={styles.paymentIcon} />
-              </View>
-              <Text style={styles.paymentMethodText}>APPLE PAY</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.paymentMethodItem}
-              onPress={() => handleSelectPaymentMethod('debit')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.paymentMethodIcon}>
-                <Image source={DepositDebitIcon} style={styles.paymentIcon} />
-              </View>
-              <Text style={styles.paymentMethodText}>DEBIT CARD</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.paymentMethodItem}
-              onPress={() => handleSelectPaymentMethod('crypto')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.paymentMethodIcon}>
-                <Image source={DepositCryptoIcon} style={styles.paymentIcon} />
-              </View>
-              <Text style={styles.paymentMethodText}>CRYPTO</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </Modal>
+            <View style={styles.paymentMethodIcon}>
+              <Image source={DepositAppleIcon} style={styles.paymentIcon} />
+            </View>
+            <Text style={styles.paymentMethodText}>APPLE PAY</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.paymentMethodItem}
+            onPress={() => handleSelectPaymentMethod('debit')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.paymentMethodIcon}>
+              <Image source={DepositDebitIcon} style={styles.paymentIcon} />
+            </View>
+            <Text style={styles.paymentMethodText}>DEBIT CARD</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.paymentMethodItem}
+            onPress={() => handleSelectPaymentMethod('crypto')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.paymentMethodIcon}>
+              <Image source={DepositCryptoIcon} style={styles.paymentIcon} />
+            </View>
+            <Text style={styles.paymentMethodText}>CRYPTO</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </Modal>
-    );
-  }
+    </Modal>
+  );
+}
 
 const styles = StyleSheet.create({
   modalOverlay: {
@@ -768,4 +765,4 @@ const styles = StyleSheet.create({
     fontFamily: fonts.primaryBold,
     letterSpacing: 1,
   },
-  });
+});

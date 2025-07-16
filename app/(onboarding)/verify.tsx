@@ -24,8 +24,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { loginWithCode } = useLoginWithEmail()
-  const { create } = useEmbeddedSolanaWallet();
+  const { loginWithCode, sendCode } = useLoginWithEmail()
+  const { create, wallets } = useEmbeddedSolanaWallet();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -61,8 +61,8 @@ export default function VerifyScreen() {
     setLoading(true);
     try {
       await loginWithCode({ code: otp, email });
-      if (create) {
-        await create();
+      if (wallets?.length === 0 && create) {
+        await create({ recoveryMethod: 'privy' });
       }
       await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       router.replace('/(home)');
@@ -73,9 +73,8 @@ export default function VerifyScreen() {
     }
   };
 
-  const handleResend = () => {
-    // TODO: Implement resend logic
-    console.log('Resend code');
+  const handleResend = async () => {
+    await sendCode({ email });
   };
 
   return (

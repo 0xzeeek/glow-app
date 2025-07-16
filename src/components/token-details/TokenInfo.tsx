@@ -30,7 +30,7 @@ export default function TokenInfo({ marketCap, volume24h, holders, circulatingSu
     <View style={styles.container}>
       <Text style={styles.title}>TOKEN INFO</Text>
       <View style={styles.infoList}>
-        {infoItems.map((item, index) => (
+        {infoItems.map((item) => (
           <View key={item.label} style={styles.infoRow}>
             <Text style={styles.label}>{item.label}</Text>
             <Text style={styles.value}>{item.value}</Text>

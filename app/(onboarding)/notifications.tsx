@@ -19,7 +19,7 @@ import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator
 import { colors } from '../../src/theme';
 import { fonts } from '../../src/theme/typography';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // Configure notifications
 Notifications.setNotificationHandler({

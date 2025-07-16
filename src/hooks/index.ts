@@ -1,24 +1,12 @@
-export { useDeepLinking } from './useDeepLinking';
-export { 
-  useWebSocket, 
-  usePriceSubscription, 
-  useBalanceSubscription 
-} from './useWebSocket';
 export { useEditProfile } from './useEditProfile';
-export { 
+export {
   useTokenDetails,
   fetchTokenDetails,
   fetchTopHolders,
-  fetchChartData
+  fetchChartData,
 } from './useTokenDetails';
 export { useUserBalance } from './useUserBalance';
-export {
-  useUserProfile,
-  useUpdateUserProfile,
-  useUserPnL,
-  useAggregatePnL,
-  useUploadUserImage,
-} from './useUserQueries';
+export { useUserProfile, useUpdateUserProfile, useUploadUserImage } from './useUserQueries';
 export {
   useTokenPrice,
   useTokenPriceHistory,
@@ -26,4 +14,6 @@ export {
   useUpdateTokenMetadata,
   useUploadTokenImage,
   useMultipleTokenPrices,
-} from './useTokenQueries'; 
+} from './useTokenQueries';
+export { useWebSocketBalanceUpdates } from './useWebSocketBalanceUpdates';
+export { useWebSocketPriceUpdates } from './useWebSocketPriceUpdates';

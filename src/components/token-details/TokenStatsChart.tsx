@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import Svg, { Path, Line, Circle } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { Token1, Token2, Token3, ReferralProfile } from '../../../assets';
-import { colors, fonts } from '../../theme';
+import { colors } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 
 const { width: screenWidth } = Dimensions.get('window');
 

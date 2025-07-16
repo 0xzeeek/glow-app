@@ -11,7 +11,7 @@ interface BottomNavProps {
 
 export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
   const router = useRouter();
-  const { profileImage } = useUser();
+  const { image } = useUser();
 
   const handleHomePress = () => {
     if (activeTab !== 'home') {
@@ -40,9 +40,9 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
         <Image source={activeTab === 'referral' ? PlusSelected : Plus} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleProfilePress}>
-        {profileImage ? (
+        {image ? (
           <Image
-            source={{ uri: profileImage }}
+            source={{ uri: image }}
             style={[styles.profileImage, activeTab === 'profile' && styles.activeProfileImage]}
           />
         ) : (

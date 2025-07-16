@@ -13,6 +13,7 @@ interface ErrorContext {
   userId?: string;
   action?: string;
   metadata?: Record<string, any>;
+  [key: string]: any;
 }
 
 export enum ErrorSeverity {
@@ -63,13 +64,6 @@ export class ErrorHandler {
           tracesSampleRate: __DEV__ ? 1.0 : 0.1,
           attachScreenshot: true,
           attachViewHierarchy: true,
-          beforeSend: (event, hint) => {
-            // Filter out certain errors
-            if (this.shouldFilterError(event, hint)) {
-              return null;
-            }
-            return event;
-          },
         });
       }
 
@@ -280,23 +274,6 @@ export class ErrorHandler {
       default:
         return 'error';
     }
-  }
-
-  // Filter certain errors from Sentry
-  private shouldFilterError(event: Sentry.Event, hint: Sentry.EventHint): boolean {
-    const error = hint.originalException;
-
-    // Filter network errors in development
-    if (__DEV__ && error instanceof TypeError && error.message.includes('Network request failed')) {
-      return true;
-    }
-
-    // Filter cancelled requests
-    if (error instanceof Error && error.name === 'AbortError') {
-      return true;
-    }
-
-    return false;
   }
 
   // Process queued errors

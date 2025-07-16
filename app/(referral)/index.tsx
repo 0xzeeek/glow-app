@@ -3,20 +3,17 @@ import {
   View,
   Text,
   StyleSheet,
-  ImageBackground,
   ScrollView,
   Dimensions,
   Image,
 } from 'react-native';
 import { Button } from '@/components/shared/Button';
-import { useUser } from '@/contexts/UserContext';
 import { colors, fonts } from '@/theme';
-import { ReferralCircle, ReferralProfile, ReferralQuestion } from '../../assets';
+import { ReferralCircle, ReferralQuestion } from '../../assets';
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ReferralScreen() {
-  const { profileImage } = useUser();
 
   const handleLearnMore = () => {
     console.log('Learn more pressed');

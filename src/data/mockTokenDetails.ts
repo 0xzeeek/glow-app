@@ -1,10 +1,10 @@
 export interface TokenDetails {
-  id: string;
+  address: string;
   name: string;
   symbol: string;
   price: string;
   priceChange: number;
-  profileImage: string;
+  image: string;
   backgroundImage: string;
   marketCap: string;
   volume24h: string;
@@ -30,19 +30,20 @@ export interface TokenDetails {
 import { topMovers, featuredToken, creatorTokens } from './mockTokens';
 
 export const mockTokenDetails: TokenDetails = {
-  id: '1',
+  address: '1',
   name: 'VisualBleed',
   symbol: 'VB',
   price: '$0.007',
   priceChange: 1.16,
-  profileImage: 'https://i.pravatar.cc/300?img=25',
+  image: 'https://i.pravatar.cc/300?img=25',
   backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2',
   marketCap: '$8.3M',
   volume24h: '$134,877',
   holders: 17000,
   circulatingSupply: '237,271',
   createdAt: '6 day / 2 months ago',
-  description: 'Born in a jet engine. Powered by energy drinks and 90 mode. Hold it if your heart Rate matches the Trams rate.',
+  description:
+    'Born in a jet engine. Powered by energy drinks and 90 mode. Hold it if your heart Rate matches the Trams rate.',
   topHolders: [
     { position: 1, avatar: 'https://i.pravatar.cc/150?img=1' },
     { position: 2, avatar: 'https://i.pravatar.cc/150?img=2' },
@@ -60,29 +61,29 @@ function generateMockChartData() {
   const data = [];
   const basePrice = 0.005;
   const now = Date.now();
-  
+
   for (let i = 0; i < 100; i++) {
     const variation = Math.random() * 0.004 - 0.002;
     data.push({
       timestamp: now - (100 - i) * 3600000,
-      price: basePrice + variation + (i * 0.00002),
+      price: basePrice + variation + i * 0.00002,
     });
   }
-  
+
   return data;
 }
 
 export function getTokenDetailsById(id: string): TokenDetails {
   // Check if it's a creator token
-  const creatorToken = creatorTokens.find(token => token.id === id);
+  const creatorToken = creatorTokens.find(token => token.address === id);
   if (creatorToken) {
     return {
-      id: creatorToken.id,
+      address: creatorToken.address,
       name: creatorToken.creatorName,
       symbol: creatorToken.creatorName.substring(0, 3).toUpperCase(),
       price: creatorToken.price,
       priceChange: creatorToken.changePercent,
-      profileImage: creatorToken.avatar,
+      image: creatorToken.avatar,
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2&random=' + id,
       marketCap: creatorToken.marketCap,
       volume24h: '$' + Math.floor(Math.random() * 500000 + 50000).toLocaleString(),
@@ -105,21 +106,22 @@ export function getTokenDetailsById(id: string): TokenDetails {
   }
 
   // Check if it's the featured token
-  if (featuredToken.id === id) {
+  if (featuredToken.address === id) {
     return {
-      id: featuredToken.id,
+      address: featuredToken.address,
       name: featuredToken.name,
       symbol: 'VB',
       price: '$0.007',
       priceChange: 1.16,
-      profileImage: featuredToken.image,
+      image: featuredToken.image,
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2&random=' + id,
       marketCap: featuredToken.marketCap,
       volume24h: '$134,877',
       holders: 17000,
       circulatingSupply: '237,271',
       createdAt: '6 days ago',
-      description: 'Born in a jet engine. Powered by energy drinks and 90 mode. Hold it if your heart Rate matches the Trams rate.',
+      description:
+        'Born in a jet engine. Powered by energy drinks and 90 mode. Hold it if your heart Rate matches the Trams rate.',
       topHolders: [
         { position: 1, avatar: 'https://i.pravatar.cc/150?img=1' },
         { position: 2, avatar: 'https://i.pravatar.cc/150?img=2' },
@@ -135,15 +137,15 @@ export function getTokenDetailsById(id: string): TokenDetails {
   }
 
   // Check if it's a top mover
-  const topMover = topMovers.find(token => token.id === id);
+  const topMover = topMovers.find(token => token.address === id);
   if (topMover) {
     return {
-      id: topMover.id,
+      address: topMover.address,
       name: topMover.name,
       symbol: topMover.name.substring(0, 3).toUpperCase(),
       price: '$0.00' + Math.floor(Math.random() * 99 + 1),
       priceChange: topMover.changePercent,
-      profileImage: topMover.image,
+      image: topMover.image,
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2&random=' + id,
       marketCap: '$' + Math.floor(Math.random() * 50 + 5) + 'M',
       volume24h: '$' + Math.floor(Math.random() * 200000 + 10000).toLocaleString(),
@@ -158,7 +160,11 @@ export function getTokenDetailsById(id: string): TokenDetails {
       ],
       socialLinks: [
         { platform: 'X', handle: `@${topMover.name.toLowerCase()}`, icon: 'logo-twitter' },
-        { platform: 'Instagram', handle: `@${topMover.name.toLowerCase()}`, icon: 'logo-instagram' },
+        {
+          platform: 'Instagram',
+          handle: `@${topMover.name.toLowerCase()}`,
+          icon: 'logo-instagram',
+        },
         { platform: 'YouTube', handle: `@${topMover.name.toLowerCase()}`, icon: 'logo-youtube' },
       ],
       chartData: generateMockChartData(),
@@ -167,4 +173,4 @@ export function getTokenDetailsById(id: string): TokenDetails {
 
   // Default fallback
   return mockTokenDetails;
-} 
+}

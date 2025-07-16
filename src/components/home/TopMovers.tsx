@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { TopMover } from '../../data/mockTokens';
+import { TopMover } from '@/types';
 import { colors } from '@/theme/colors';
 
 interface TopMoversProps {
@@ -21,7 +21,7 @@ export default function TopMovers({ data }: TopMoversProps) {
     return (
       <TouchableOpacity 
         style={styles.moverItem}
-        onPress={() => router.push(`/(token)/${item.id}`)}
+        onPress={() => router.push(`/(token)/${item.address}`)}
       >
         <View style={styles.avatarContainer} >
           <Image source={{ uri: item.image }} style={styles.profileImage} />
@@ -39,7 +39,7 @@ export default function TopMovers({ data }: TopMoversProps) {
         horizontal
         showsHorizontalScrollIndicator={false}
         data={sortedData}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.address}
         renderItem={renderItem}
         contentContainerStyle={styles.listContent}
       />

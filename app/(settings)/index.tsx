@@ -18,7 +18,7 @@ import {
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { userName, profileImage, signOut } = useUser();
+  const { username, image, signOut } = useUser();
   const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const handleBack = () => {
@@ -104,15 +104,15 @@ export default function SettingsScreen() {
         {/* Profile Section */}
         <TouchableOpacity style={styles.profileSection} onPress={handleEditProfile}>
           <View style={styles.profileLeft}>
-            {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            {image ? (
+              <Image source={{ uri: image }} style={styles.profileImage} />
             ) : (
               <View style={styles.profilePlaceholder}>
                 <Ionicons name="person" size={30} color={colors.neutral[600]} />
               </View>
             )}
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{userName || 'leo_lepicerie'}</Text>
+              <Text style={styles.profileName}>{username || ''}</Text>
               <Text style={styles.profileSubtitle}>edit profile</Text>
             </View>
           </View>

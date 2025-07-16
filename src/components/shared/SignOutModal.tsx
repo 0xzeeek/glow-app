@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   Animated,
-  Dimensions,
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -17,8 +16,6 @@ interface SignOutModalProps {
   onCancel: () => void;
   onSignOut: () => void;
 }
-
-const { height: screenHeight } = Dimensions.get('window');
 
 export default function SignOutModal({
   visible,

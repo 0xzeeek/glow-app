@@ -21,7 +21,7 @@ export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps
     if (onPress) {
       onPress();
     } else {
-      router.push(`/(token)/${token.id}`);
+      router.push(`/(token)/${token.address}`);
     }
   };
 
