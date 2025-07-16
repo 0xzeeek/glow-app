@@ -36,7 +36,7 @@ interface BuyModalProps {
   onClose: () => void;
   tokenName: string;
   tokenImage: string;
-  tokenId: string;
+  tokenAddress: string;
   tokenPrice: number;
   onBackgroundScale?: (scale: Animated.Value) => void; // Optional callback for background scale
 }
@@ -48,11 +48,11 @@ export default function BuyModal({
   onClose,
   tokenName,
   tokenImage,
-  tokenId,
+  tokenAddress,
   tokenPrice,
   onBackgroundScale,
 }: BuyModalProps) {
-  const { cashBalance, purchaseToken, getTokenHoldings } = useUser();
+  const { usdcBalance } = useUser();
   const [amount, setAmount] = useState('100');
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
@@ -201,8 +201,7 @@ export default function BuyModal({
 
   const handleShareGains = async () => {
     try {
-      const holding = getTokenHoldings(tokenId);
-      const gains = holding?.gainsPercentage || 0;
+      const gains = 100
       await Share.share({
         message: `I just gained +${gains.toFixed(2)}% on ${tokenName}! 🚀`,
       });
@@ -282,13 +281,9 @@ export default function BuyModal({
       if (gestureState.dx > screenWidth * 0.5) {
         // Complete the purchase without animating the button further
         const purchaseAmount = parseFloat(amount) || 0;
-        const success = await purchaseToken(
-          tokenId,
-          tokenName,
-          tokenImage,
-          purchaseAmount,
-          tokenPrice
-        );
+        // TODO: implement purchase token
+
+        const success = true;
 
         if (success) {
           setShowSuccess(true);
@@ -347,7 +342,7 @@ export default function BuyModal({
             <PurchaseSuccess
               tokenName={tokenName}
               tokenImage={tokenImage}
-              percentageGain={getTokenHoldings(tokenId)?.gainsPercentage || 0}
+              percentageGain={100} // TODO: hardcoded for now
               onShareGains={handleShareGains}
               onClose={handleCloseModal}
             />
@@ -363,7 +358,7 @@ export default function BuyModal({
 
               {/* Cash Balance */}
               <TouchableOpacity style={styles.cashBalance}>
-                <Text style={styles.cashText}>Cash: ${cashBalance.toFixed(2)}</Text>
+                <Text style={styles.cashText}>Cash: ${usdcBalance.toFixed(2)}</Text>
                 <Ionicons name="chevron-down" size={16} color="#999" />
               </TouchableOpacity>
 

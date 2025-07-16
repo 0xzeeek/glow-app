@@ -3,9 +3,11 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getWebSocketManager } from '../services';
 import { queryKeys } from '../services/ApiClient';
 import { PriceUpdate } from '../types';
+import { useTokenData } from '../contexts';
 
 export function useWebSocketPriceUpdates(tokenAddress: string | null) {
   const queryClient = useQueryClient();
+  const { updateTokenPrice } = useTokenData();
   const wsManagerRef = useRef<ReturnType<typeof getWebSocketManager> | null>(null);
   const isSubscribedRef = useRef(false);
 
@@ -34,11 +36,15 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
         // Handle price updates
         const handlePriceUpdate = (data: PriceUpdate) => {
           if (data.token === tokenAddress) {
+            // Update TokenDataContext with new price and 24h change
+            updateTokenPrice(tokenAddress, data.price, data.change24h);
+            
             // Update React Query cache for latest price
             queryClient.setQueryData(
               queryKeys.prices.latest(tokenAddress),
               {
                 price: data.price,
+                change24h: data.change24h,
                 timestamp: data.timestamp,
               }
             );
@@ -51,6 +57,7 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
                 return {
                   ...oldData,
                   price: `$${data.price.toFixed(3)}`, // Update price in the format used by TokenDetails
+                  priceChange: data.change24h, // Update the 24h change
                   currentPrice: data.price,
                   lastUpdated: data.timestamp,
                 };
@@ -67,12 +74,20 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
                     ? {
                         ...token,
                         currentPrice: data.price,
+                        changePercent: data.change24h,
                         lastUpdated: data.timestamp,
                       }
                     : token
                 );
               }
             );
+
+            // Invalidate wallet holdings queries to update USD values
+            queryClient.invalidateQueries({
+              queryKey: ['users'],
+              predicate: (query) => 
+                query.queryKey.includes('holdings'),
+            });
           }
         };
 
@@ -106,7 +121,8 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
           }
         };
       } catch (error) {
-        console.error('Failed to setup price subscription:', error);
+        // WebSocketManager might not be initialized yet (e.g., if WS URL is not configured)
+        console.log('WebSocket not available:', error);
       }
     };
 
@@ -115,7 +131,7 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
     return () => {
       cleanup?.();
     };
-  }, [tokenAddress, queryClient]);
+  }, [tokenAddress, queryClient, updateTokenPrice]);
 
   return {
     isConnected: wsManagerRef.current?.isConnected() ?? false,

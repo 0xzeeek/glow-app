@@ -54,6 +54,7 @@ export default function RootLayout() {
         getWebSocketManager({
           url: process.env.EXPO_PUBLIC_WS_URL || '',
           useCloudflare: process.env.EXPO_PUBLIC_USE_CLOUDFLARE === 'false',
+          heartbeatInterval: 60000, // Ping every 60 seconds (1 minute)
         });
 
         // Setup network monitoring

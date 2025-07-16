@@ -8,6 +8,7 @@ import {
   UpdateTokenMetadataParams,
   UserProfile,
   UpdateUserParams,
+  WalletHoldings,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
@@ -209,6 +210,11 @@ class ApiClient {
     return this.request<{ balance: number }>(`/users/${wallet}/usdc-balance`);
   }
 
+  // Wallet holdings
+  public async getWalletHoldings(wallet: string): Promise<WalletHoldings> {
+    return this.request<WalletHoldings>(`/wallets/${wallet}/balance`);
+  }
+
   // Historical prices
   public async getHistoricalPrices(
     mint: string, 
@@ -335,6 +341,6 @@ export const queryKeys = {
   },
   users: {
     profile: (wallet: string) => ['users', wallet] as const,
-    usdcBalance: (wallet: string) => ['users', wallet, 'usdc-balance'] as const,
+    holdings: (wallet: string) => ['wallets', wallet, 'balance'] as const,
   },
 }; 

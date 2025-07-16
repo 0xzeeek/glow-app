@@ -9,13 +9,13 @@ import { colors } from '@/theme/colors';
 
 export default function HeaderBar() {
   const router = useRouter();
-  const { cashBalance } = useUser();
+  const { totalUsdValue } = useUser();
   
   const handleDepositPress = () => {
     router.push('/(profile)');
   };
 
-  if (cashBalance > 0) {
+  if (totalUsdValue > 0) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
@@ -24,7 +24,7 @@ export default function HeaderBar() {
           </View>
           <TouchableOpacity style={styles.cashButton} onPress={handleDepositPress}>
             <Image source={DepositWallet} style={styles.walletIcon} />
-            <Text style={styles.cashAmount}>${cashBalance.toFixed(2)}</Text>
+            <Text style={styles.cashAmount}>${totalUsdValue.toFixed(2)}</Text>
             <Ionicons name="chevron-forward" size={16} color="#000" />
           </TouchableOpacity>
         </View>

@@ -2,7 +2,7 @@ export interface TopMover {
   address: string;
   name: string;
   image: string;
-  changePercent: number;
+  change24h: number;
 }
 
 export interface FeaturedTokenData {
@@ -20,7 +20,7 @@ export interface CreatorToken {
   avatar: string;
   marketCap: string;
   price: string;
-  changePercent: number;
+  change24h: number;
   chartData: number[];
 }
 
@@ -30,7 +30,7 @@ export interface TokenDetails {
   name: string;
   symbol: string;
   price: string;
-  priceChange: number;
+  change24h: number;
   image: string;
   backgroundImage: string;
   marketCap: string;
@@ -62,6 +62,7 @@ export interface PriceUpdate {
   type: 'PRICE_UPDATE';
   token: string;
   price: number;
+  change24h: number;  // 24-hour percentage change
   timestamp: number;
   slot?: number;
   txSignature?: string;
@@ -71,7 +72,7 @@ export interface BalanceUpdate {
   type: 'BALANCE_UPDATE';
   wallet: string;
   token: string;
-  balance: number;
+  amount: number;
   timestamp: number;
 }
 
@@ -138,4 +139,27 @@ export interface TokenPricesResponse {
 export type TokenAddress = string;
 export type WalletAddress = string;
 export type UnixTimestamp = number;
-export type TokenAmount = number; 
+export type TokenAmount = number;
+
+export interface TokenHolding {
+  address: string;
+  symbol: string;
+  name: string;
+  balance: number;
+  decimals: number;
+  usdValue: number;
+  totalSupply: number;
+  phase: string;
+  image: string;
+  createdAt: number;
+  description: string;
+  price: number;
+  marketCap: number;
+}
+
+export interface WalletHoldings {
+  wallet: string;
+  totalUsdValue: number;
+  tokens: TokenHolding[];
+  timestamp: number;
+} 

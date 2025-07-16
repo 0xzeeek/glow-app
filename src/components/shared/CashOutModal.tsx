@@ -13,17 +13,17 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { useUser } from '../../contexts';
-import { 
-  BackgroundOnbordingMain, 
-  CloseModal, 
+import {
+  BackgroundOnbordingMain,
+  CloseModal,
   DepositAppleButton,
   DepositDebitButton,
   DepositCryptoButton,
   DepositAppleIcon,
   DepositDebitIcon,
   DepositCryptoIcon,
-  DepositDelete, 
-  DepositSwipe 
+  DepositDelete,
+  DepositSwipe,
 } from '../../../assets';
 import { fonts } from '../../theme/typography';
 import { colors } from '../../theme/colors';
@@ -36,16 +36,15 @@ interface CashOutModalProps {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
-export default function CashOutModal({
-  visible,
-  onClose,
-  onBackgroundScale,
-}: CashOutModalProps) {
-  const { cashBalance, setCashBalance } = useUser();
-  const [amount, setAmount] = useState(Math.floor(cashBalance * 0.25).toString()); // Default to 25%
+export default function CashOutModal({ visible, onClose, onBackgroundScale }: CashOutModalProps) {
+  const { usdcBalance, refetchHoldings } = useUser();
+  // TODO: why are we defaulting to 25%?
+  const [amount, setAmount] = useState(Math.floor(usdcBalance * 0.25).toString()); // Default to 25%
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'apple' | 'debit' | 'crypto'>('debit');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'apple' | 'debit' | 'crypto'>(
+    'debit'
+  );
   const [swipeAnimation] = useState(new Animated.Value(0));
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -53,7 +52,7 @@ export default function CashOutModal({
   const [overlayOpacity] = useState(new Animated.Value(0));
   const [contentTranslateY] = useState(new Animated.Value(screenHeight));
   const [backgroundScale] = useState(new Animated.Value(1));
-  
+
   // Animation values for payment methods modal
   const [paymentOverlayOpacity] = useState(new Animated.Value(0));
   const [paymentContentTranslateY] = useState(new Animated.Value(300));
@@ -62,12 +61,12 @@ export default function CashOutModal({
   React.useEffect(() => {
     if (visible) {
       // Reset amount to 25% of current balance when modal opens
-      setAmount(Math.floor(cashBalance * 0.25).toString());
+      setAmount(Math.floor(usdcBalance * 0.25).toString());
       setHasInteracted(false);
-      
+
       overlayOpacity.setValue(0);
       contentTranslateY.setValue(screenHeight);
-      
+
       Animated.timing(overlayOpacity, {
         toValue: 1,
         duration: 300,
@@ -112,20 +111,20 @@ export default function CashOutModal({
         }).start();
       }
     }
-  }, [visible, onBackgroundScale, overlayOpacity, contentTranslateY, backgroundScale, cashBalance]);
-  
+  }, [visible, onBackgroundScale, overlayOpacity, contentTranslateY, backgroundScale, usdcBalance]);
+
   // Handle payment modal animations
   React.useEffect(() => {
     if (showPaymentMethods) {
       paymentOverlayOpacity.setValue(0);
       paymentContentTranslateY.setValue(300);
-      
+
       Animated.timing(paymentOverlayOpacity, {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }).start();
-      
+
       Animated.spring(paymentContentTranslateY, {
         toValue: 0,
         tension: 50,
@@ -138,7 +137,7 @@ export default function CashOutModal({
         duration: 200,
         useNativeDriver: true,
       }).start();
-      
+
       Animated.timing(paymentContentTranslateY, {
         toValue: 300,
         duration: 200,
@@ -146,12 +145,12 @@ export default function CashOutModal({
       }).start();
     }
   }, [showPaymentMethods, paymentOverlayOpacity, paymentContentTranslateY]);
-  
+
   const handleNumberPress = (num: string) => {
     if (num === '.' && amount.includes('.')) return;
-    
+
     setHasInteracted(true);
-    
+
     if (amount === '0' || !hasInteracted) {
       setAmount(num === '.' ? '0.' : num);
     } else {
@@ -161,7 +160,7 @@ export default function CashOutModal({
 
   const handleDelete = () => {
     setHasInteracted(true);
-    
+
     if (amount.length > 1) {
       setAmount(amount.slice(0, -1));
     } else {
@@ -171,12 +170,12 @@ export default function CashOutModal({
 
   const handlePercentageSelect = (percentage: number) => {
     setHasInteracted(true);
-    const calculatedAmount = Math.floor(cashBalance * percentage);
+    const calculatedAmount = Math.floor(usdcBalance * percentage);
     setAmount(calculatedAmount.toString());
   };
 
   const numericAmount = parseFloat(amount) || 0;
-  
+
   const getPaymentButtonImage = () => {
     switch (selectedPaymentMethod) {
       case 'apple':
@@ -189,7 +188,7 @@ export default function CashOutModal({
         return DepositDebitButton;
     }
   };
-  
+
   const handleSelectPaymentMethod = (method: 'apple' | 'debit' | 'crypto') => {
     setSelectedPaymentMethod(method);
     setShowPaymentMethods(false);
@@ -219,7 +218,7 @@ export default function CashOutModal({
         : []),
     ]).start(() => {
       setShowSuccess(false);
-      setAmount(Math.floor(cashBalance * 0.25).toString());
+      setAmount(Math.floor(usdcBalance * 0.25).toString());
       setHasInteracted(false);
       setSelectedPaymentMethod('debit');
       setShowPaymentMethods(false);
@@ -243,9 +242,9 @@ export default function CashOutModal({
       if (gestureState.dx > screenWidth * 0.5) {
         // Complete the cash out
         const cashOutAmount = parseFloat(amount) || 0;
-        
+
         // Ensure user doesn't cash out more than they have
-        if (cashOutAmount > cashBalance) {
+        if (cashOutAmount > usdcBalance) {
           alert('Insufficient balance');
           Animated.spring(swipeAnimation, {
             toValue: 0,
@@ -253,10 +252,10 @@ export default function CashOutModal({
           }).start();
           return;
         }
-        
-        setCashBalance(cashBalance - cashOutAmount);
+
+        refetchHoldings();
         setShowSuccess(true);
-        
+
         // Auto close after 2 seconds
         setTimeout(() => {
           handleCloseModal();
@@ -279,7 +278,7 @@ export default function CashOutModal({
       onRequestClose={handleCloseModal}
     >
       <TouchableWithoutFeedback onPress={handleCloseModal}>
-        <Animated.View 
+        <Animated.View
           style={[
             styles.modalOverlay,
             {
@@ -288,8 +287,8 @@ export default function CashOutModal({
           ]}
         />
       </TouchableWithoutFeedback>
-      
-      <Animated.View 
+
+      <Animated.View
         style={[
           styles.modalContent,
           {
@@ -297,12 +296,8 @@ export default function CashOutModal({
           },
         ]}
       >
-        <Image 
-          source={BackgroundOnbordingMain} 
-          style={styles.backgroundImage} 
-          resizeMode="cover" 
-        />
-        
+        <Image source={BackgroundOnbordingMain} style={styles.backgroundImage} resizeMode="cover" />
+
         <SafeAreaView style={styles.safeArea}>
           {showSuccess ? (
             <View style={styles.successContainer}>
@@ -325,7 +320,7 @@ export default function CashOutModal({
 
               {/* Cash Balance */}
               <View style={styles.cashBalance}>
-                <Text style={styles.cashText}>Available Balance: ${cashBalance.toFixed(2)}</Text>
+                <Text style={styles.cashText}>Available Balance: ${usdcBalance.toFixed(2)}</Text>
               </View>
 
               {/* Amount Display */}
@@ -336,8 +331,8 @@ export default function CashOutModal({
               </View>
 
               {/* Payment Method Button */}
-              <TouchableOpacity 
-                style={styles.cashTypeButton} 
+              <TouchableOpacity
+                style={styles.cashTypeButton}
                 activeOpacity={0.8}
                 onPress={() => setShowPaymentMethods(true)}
               >
@@ -346,7 +341,7 @@ export default function CashOutModal({
 
               {/* Percentage Buttons */}
               <View style={styles.quickAmounts}>
-                {[0.25, 0.50, 0.75, 1.00].map(percentage => (
+                {[0.25, 0.5, 0.75, 1.0].map(percentage => (
                   <TouchableOpacity
                     key={percentage}
                     style={styles.quickAmountButton}
@@ -422,7 +417,7 @@ export default function CashOutModal({
           )}
         </SafeAreaView>
       </Animated.View>
-      
+
       {/* Payment Methods Modal */}
       <Modal
         visible={showPaymentMethods}
@@ -431,7 +426,7 @@ export default function CashOutModal({
         onRequestClose={() => setShowPaymentMethods(false)}
       >
         <TouchableWithoutFeedback onPress={() => setShowPaymentMethods(false)}>
-          <Animated.View 
+          <Animated.View
             style={[
               styles.paymentMethodsOverlay,
               {
@@ -440,8 +435,8 @@ export default function CashOutModal({
             ]}
           />
         </TouchableWithoutFeedback>
-        
-        <Animated.View 
+
+        <Animated.View
           style={[
             styles.paymentMethodsContent,
             {
@@ -459,7 +454,7 @@ export default function CashOutModal({
             </View>
             <Text style={styles.paymentMethodText}>APPLE PAY</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.paymentMethodItem}
             onPress={() => handleSelectPaymentMethod('debit')}
@@ -470,7 +465,7 @@ export default function CashOutModal({
             </View>
             <Text style={styles.paymentMethodText}>BANK ACCOUNT</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={styles.paymentMethodItem}
             onPress={() => handleSelectPaymentMethod('crypto')}
@@ -735,4 +730,4 @@ const styles = StyleSheet.create({
     fontFamily: fonts.primaryBold,
     letterSpacing: 1,
   },
-}); 
+});

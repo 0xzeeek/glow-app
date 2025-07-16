@@ -61,7 +61,7 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
         onClose={() => setShowBuyModal(false)}
         tokenName={token.name}
         tokenImage={token.image}
-        tokenId={token.address}
+        tokenAddress={token.address}
         tokenPrice={token.price}
       />
     </>

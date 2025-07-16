@@ -41,9 +41,11 @@ export default function TokenDetailScreen() {
         <TokenHeader
           name={tokenDetails.name}
           price={tokenDetails.price}
-          priceChange={tokenDetails.priceChange}
+          priceChange={tokenDetails.change24h}
           profileImage={tokenDetails.image}
-          backgroundImage={tokenDetails.backgroundImage}
+          backgroundImage={tokenDetails.image}
+          address={tokenDetails.address}
+          symbol={tokenDetails.symbol}
         />
         
         <View style={styles.contentContainer}>
@@ -76,7 +78,7 @@ export default function TokenDetailScreen() {
       <FloatingBuyButton 
         tokenName={tokenDetails.name}
         tokenImage={tokenDetails.image}
-        tokenId={tokenDetails.address}
+        tokenAddress={tokenDetails.address}
         tokenPrice={parseFloat(tokenDetails.price.replace('$', ''))} 
       />
       <BottomNav activeTab={null} />

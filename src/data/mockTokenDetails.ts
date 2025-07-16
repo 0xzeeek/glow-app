@@ -3,7 +3,7 @@ export interface TokenDetails {
   name: string;
   symbol: string;
   price: string;
-  priceChange: number;
+  change24h: number;
   image: string;
   backgroundImage: string;
   marketCap: string;
@@ -34,7 +34,7 @@ export const mockTokenDetails: TokenDetails = {
   name: 'VisualBleed',
   symbol: 'VB',
   price: '$0.007',
-  priceChange: 1.16,
+  change24h: 1.16,
   image: 'https://i.pravatar.cc/300?img=25',
   backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2',
   marketCap: '$8.3M',
@@ -79,27 +79,27 @@ export function getTokenDetailsById(id: string): TokenDetails {
   if (creatorToken) {
     return {
       address: creatorToken.address,
-      name: creatorToken.creatorName,
-      symbol: creatorToken.creatorName.substring(0, 3).toUpperCase(),
+      name: creatorToken.name,
+      symbol: creatorToken.symbol,
       price: creatorToken.price,
-      priceChange: creatorToken.changePercent,
-      image: creatorToken.avatar,
+              change24h: creatorToken.change24h,
+      image: creatorToken.image,
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2&random=' + id,
       marketCap: creatorToken.marketCap,
       volume24h: '$' + Math.floor(Math.random() * 500000 + 50000).toLocaleString(),
       holders: Math.floor(Math.random() * 20000 + 5000),
       circulatingSupply: Math.floor(Math.random() * 500000 + 100000).toLocaleString(),
       createdAt: Math.floor(Math.random() * 60) + ' days ago',
-      description: `${creatorToken.creatorName} is a visionary creator building the future of web3. Join the community and be part of something amazing.`,
+      description: `${creatorToken.name} is a visionary creator building the future of web3. Join the community and be part of something amazing.`,
       topHolders: [
         { position: 1, avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}` },
         { position: 2, avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}` },
         { position: 3, avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70)}` },
       ],
       socialLinks: [
-        { platform: 'X', handle: `@${creatorToken.creatorName}`, icon: 'logo-twitter' },
-        { platform: 'Instagram', handle: `@${creatorToken.creatorName}`, icon: 'logo-instagram' },
-        { platform: 'YouTube', handle: `@${creatorToken.creatorName}`, icon: 'logo-youtube' },
+        { platform: 'X', handle: `@${creatorToken.name}`, icon: 'logo-twitter' },
+        { platform: 'Instagram', handle: `@${creatorToken.name}`, icon: 'logo-instagram' },
+        { platform: 'YouTube', handle: `@${creatorToken.name}`, icon: 'logo-youtube' },
       ],
       chartData: generateMockChartData(),
     };
@@ -112,7 +112,7 @@ export function getTokenDetailsById(id: string): TokenDetails {
       name: featuredToken.name,
       symbol: 'VB',
       price: '$0.007',
-      priceChange: 1.16,
+      change24h: 1.16,
       image: featuredToken.image,
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2&random=' + id,
       marketCap: featuredToken.marketCap,
@@ -142,9 +142,9 @@ export function getTokenDetailsById(id: string): TokenDetails {
     return {
       address: topMover.address,
       name: topMover.name,
-      symbol: topMover.name.substring(0, 3).toUpperCase(),
+      symbol: topMover.symbol,
       price: '$0.00' + Math.floor(Math.random() * 99 + 1),
-      priceChange: topMover.changePercent,
+              change24h: topMover.change24h,
       image: topMover.image,
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2&random=' + id,
       marketCap: '$' + Math.floor(Math.random() * 50 + 5) + 'M',

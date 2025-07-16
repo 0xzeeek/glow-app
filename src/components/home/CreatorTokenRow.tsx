@@ -13,9 +13,11 @@ interface CreatorTokenRowProps {
 
 export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps) {
   const router = useRouter();
-  const isPositive = token.changePercent >= 0;
+  const isPositive = token.change24h >= 0;
   const changeColor = isPositive ? '#00C853' : '#FF3366';
   const arrow = isPositive ? '▲' : '▼';
+
+  console.log(token);
 
   const handlePress = () => {
     if (onPress) {
@@ -27,12 +29,12 @@ export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <View style={styles.avatarContainer}>
-        <Image source={{ uri: token.avatar }} style={styles.avatar} />
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: token.image }} style={styles.image} />
       </View>
 
       <View style={styles.infoSection}>
-        <Text style={styles.creatorName}>{token.creatorName}</Text>
+        <Text style={styles.creatorName}>{token.name}</Text>
         <Text style={styles.marketCap}>{token.marketCap}</Text>
       </View>
 
@@ -43,7 +45,7 @@ export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps
       <View style={styles.priceSection}>
         <Text style={styles.price}>{token.price}</Text>
         <Text style={[styles.changePercent, { color: changeColor }]}>
-          {arrow} {Math.abs(token.changePercent)}%
+          {arrow} {Math.abs(token.change24h)}%
         </Text>
       </View>
     </TouchableOpacity>
@@ -57,7 +59,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 2,
   },
-  avatarContainer: {
+  imageContainer: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 50,
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginRight: 12,
   },
-  avatar: {
+  image: {
     width: 44,
     height: 44,
     borderRadius: 22,

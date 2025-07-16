@@ -41,7 +41,7 @@ export default function DepositModal({
   onClose,
   onBackgroundScale,
 }: DepositModalProps) {
-  const { cashBalance, setCashBalance } = useUser();
+  const { usdcBalance, refetchHoldings } = useUser();
   const [amount, setAmount] = useState('100');
   const [hasInteracted, setHasInteracted] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
@@ -237,8 +237,10 @@ export default function DepositModal({
     onPanResponderRelease: async (_, gestureState) => {
       if (gestureState.dx > screenWidth * 0.5) {
         // Complete the deposit
-        const depositAmount = parseFloat(amount) || 0;
-        setCashBalance(cashBalance + depositAmount);
+        // const depositAmount = parseFloat(amount) || 0;
+        // TODO: if we refetch right away the balance will be wrong
+        // TODO: figure out how to properly handle this
+        refetchHoldings();
         setShowSuccess(true);
 
         // Auto close after 2 seconds
@@ -309,7 +311,7 @@ export default function DepositModal({
 
               {/* Cash Balance */}
               <View style={styles.cashBalance}>
-                <Text style={styles.cashText}>Current Balance: ${cashBalance.toFixed(2)}</Text>
+                <Text style={styles.cashText}>Current Balance: ${usdcBalance.toFixed(2)}</Text>
               </View>
 
               {/* Amount Display */}

@@ -15,17 +15,20 @@ export default function ProfileScreen() {
   const { 
     image, 
     username, 
-    cashBalance, 
-    portfolio, 
-    getTotalPortfolioValue 
+    totalUsdValue,
+    usdcBalance,
+    tokenHoldings
   } = useUser();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showCashOutModal, setShowCashOutModal] = useState(false);
   const router = useRouter();
 
-  const totalPortfolioValue = getTotalPortfolioValue() + cashBalance;
-  const hasTokens = portfolio.length > 0;
-  const hasCash = cashBalance > 0;
+  // Use totalUsdValue from wallet holdings
+  const totalValue = totalUsdValue;
+  // Filter out USDC from token holdings
+  const nonUsdcTokens = tokenHoldings.filter(token => token.symbol !== 'USDC');
+  const hasTokens = nonUsdcTokens.length > 0;
+  const hasCash = usdcBalance > 0;
 
   const handleDeposit = () => {
     setShowDepositModal(true);
@@ -77,8 +80,8 @@ export default function ProfileScreen() {
 
         {/* Balance Section */}
         <View style={styles.balanceSection}>
-          <Text style={styles.balanceAmount}>${totalPortfolioValue.toFixed(2)}</Text>
-          <Text style={styles.buyingPowerText}>BUYING POWER ${Math.floor(cashBalance)}</Text>
+          <Text style={styles.balanceAmount}>${totalValue.toFixed(2)}</Text>
+          <Text style={styles.buyingPowerText}>BUYING POWER ${Math.floor(usdcBalance)}</Text>
 
           <View style={styles.buttonRow}>
             <Button
@@ -104,30 +107,27 @@ export default function ProfileScreen() {
           {hasTokens ? (
             <>
               <Text style={styles.holdingsTitle}>HOLDINGS</Text>
-              {portfolio.map((token) => (
+              {nonUsdcTokens.map((token) => (
                 <TouchableOpacity 
-                  key={token.tokenId}
+                  key={token.address}
                   style={styles.tokenRow}
-                  onPress={() => handleTokenPress(token.tokenId)}
+                  onPress={() => handleTokenPress(token.address)}
                   activeOpacity={0.7}
                 >
-                  <Image source={{ uri: token.tokenImage }} style={styles.tokenImage} />
+                  <View style={styles.tokenImageContainer}>
+                    <Image source={{ uri: token.image }} style={styles.tokenImage} />
+                  </View>
                   <View style={styles.tokenInfo}>
-                    <Text style={styles.tokenName}>{token.tokenName}</Text>
-                    <Text style={styles.tokenMarketCap}>$35M</Text>
+                    <Text style={styles.tokenName}>{token.name}</Text>
+                    <Text style={styles.tokenBalance}>{token.balance.toFixed(2)} {token.symbol}</Text>
                   </View>
                   <View style={styles.tokenValueSection}>
-                    <Text style={styles.tokenValue}>${(token.currentPrice * token.quantity).toFixed(3)}</Text>
-                    <Text style={[
-                      styles.tokenChange,
-                      token.gainsPercentage >= 0 ? styles.positiveChange : styles.negativeChange
-                    ]}>
-                      {token.gainsPercentage >= 0 ? '▲' : '▼'} {Math.abs(token.gainsPercentage).toFixed(2)}%
-                    </Text>
+                    <Text style={styles.tokenValue}>${token.usdValue.toFixed(2)}</Text>
+                    <Text style={styles.tokenPrice}>${token.price.toFixed(4)}</Text>
                   </View>
                   <TouchableOpacity 
                     style={styles.shareButton}
-                    onPress={() => handleShareToken(token.tokenName, token.gainsPercentage)}
+                    onPress={() => handleShareToken(token.name, 0)}
                   >
                     <Image source={ProfileShare} style={styles.shareIcon} />
                   </TouchableOpacity>
@@ -277,11 +277,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[100],
   },
-  tokenImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  tokenImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 1,
+    borderColor: colors.neutral[300],
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
+  },
+  tokenImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  tokenImageText: {
+    fontSize: 20,
+    fontFamily: fonts.primaryBold,
+    color: colors.text.primary,
   },
   tokenInfo: {
     flex: 1,
@@ -292,7 +306,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 4,
   },
-  tokenMarketCap: {
+  tokenBalance: {
     fontSize: 14,
     fontFamily: fonts.secondary,
     color: colors.neutral[500],
@@ -306,6 +320,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.primaryMedium,
     color: colors.text.primary,
     marginBottom: 4,
+  },
+  tokenPrice: {
+    fontSize: 14,
+    fontFamily: fonts.secondary,
+    color: colors.neutral[500],
   },
   tokenChange: {
     fontSize: 14,

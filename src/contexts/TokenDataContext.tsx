@@ -14,6 +14,7 @@ interface TokenDataContextType {
   getTokenPrice: (address: string) => number;
   searchTokens: (query: string) => (CreatorToken | TopMover)[];
   refreshTokenData: () => Promise<void>;
+  updateTokenPrice: (address: string, price: number, change24h: number) => void;
 }
 
 const TokenDataContext = createContext<TokenDataContextType | undefined>(undefined);
@@ -62,7 +63,7 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     const lowercaseQuery = query.toLowerCase();
     
     const matchingCreatorTokens = creatorTokensData.filter(token =>
-      token.creatorName.toLowerCase().includes(lowercaseQuery)
+      token.name.toLowerCase().includes(lowercaseQuery)
     );
     
     const matchingTopMovers = topMoversData.filter(token =>
@@ -71,6 +72,32 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     
     return [...matchingCreatorTokens, ...matchingTopMovers];
   }, [creatorTokensData, topMoversData]);
+
+  const updateTokenPrice = useCallback((address: string, price: number, change24h: number) => {
+    // Update creator tokens
+    setCreatorTokensData(prev => prev.map(token => 
+      token.address === address 
+        ? {
+            ...token,
+            price: `$${price.toFixed(4)}`,
+            changePercent: change24h,
+            // Update chart data to reflect new price (add to end)
+            chartData: [...token.chartData.slice(1), price * 1000] // Normalize for chart display
+          }
+        : token
+    ));
+    
+    // Update top movers and re-sort by change percentage
+    setTopMoversData(prev => {
+      const updated = prev.map(token => 
+        token.address === address 
+          ? { ...token, changePercent: change24h }
+          : token
+      );
+      // Sort by absolute change percentage (biggest movers first)
+      return [...updated].sort((a, b) => Math.abs(b.change24h) - Math.abs(a.change24h));
+    });
+  }, []);
 
   const refreshTokenData = useCallback(async () => {
     // In a real app, this would fetch from an API
@@ -112,6 +139,7 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     getTokenPrice,
     searchTokens,
     refreshTokenData,
+    updateTokenPrice,
   };
 
   return <TokenDataContext.Provider value={value}>{children}</TokenDataContext.Provider>;

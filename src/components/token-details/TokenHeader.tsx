@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { TokenEye, TokenShare, SocialXWhite, SocialYoutubeWhite, SocialInstagramWhite } from '../../../assets';
 import { colors, fonts } from '../../theme';
+import { useWatchlistContext } from '../../contexts';
 
 interface TokenHeaderProps {
   name: string;
@@ -11,11 +12,22 @@ interface TokenHeaderProps {
   priceChange: number;
   profileImage: string;
   backgroundImage: string;
+  address: string;
 }
 
-export default function TokenHeader({ name, price, priceChange, profileImage, backgroundImage }: TokenHeaderProps) {
+export default function TokenHeader({ name, price, priceChange, profileImage, backgroundImage, address }: TokenHeaderProps) {
   const router = useRouter();
+  const { isInWatchlist, toggleWatchlist } = useWatchlistContext();
   const isPositive = priceChange >= 0;
+  const isWatched = isInWatchlist(address);
+  
+  const handleWatchlistToggle = async () => {
+    try {
+      await toggleWatchlist(address);
+    } catch (error) {
+      console.error('Error toggling watchlist:', error);
+    }
+  };
   
   return (
     <ImageBackground source={{ uri: backgroundImage }} style={styles.container}>
@@ -28,8 +40,14 @@ export default function TokenHeader({ name, price, priceChange, profileImage, ba
             
             <View style={styles.rightSection}>
               <View style={styles.topIcons}>
-                <TouchableOpacity style={styles.iconButton}>
-                  <Image source={TokenEye} style={styles.icon} />
+                <TouchableOpacity style={styles.iconButton} onPress={handleWatchlistToggle}>
+                  <Image 
+                    source={TokenEye} 
+                    style={[
+                      styles.icon, 
+                      isWatched && styles.watchedIcon
+                    ]} 
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
                   <Image source={TokenShare} style={styles.icon} />
@@ -107,6 +125,9 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     resizeMode: 'contain',
+  },
+  watchedIcon: {
+    tintColor: colors.green.black,
   },
   tokenInfo: {
     flex: 1,

@@ -6,11 +6,11 @@ import BuyModal from '../shared/BuyModal';
 interface FloatingBuyButtonProps {
   tokenName: string;
   tokenImage: string;
-  tokenId: string;
+  tokenAddress: string;
   tokenPrice: number;
 }
 
-export default function FloatingBuyButton({ tokenName, tokenImage, tokenId, tokenPrice }: FloatingBuyButtonProps) {
+export default function FloatingBuyButton({ tokenName, tokenImage, tokenAddress, tokenPrice }: FloatingBuyButtonProps) {
   const [showBuyModal, setShowBuyModal] = useState(false);
   
   return (
@@ -29,7 +29,7 @@ export default function FloatingBuyButton({ tokenName, tokenImage, tokenId, toke
         onClose={() => setShowBuyModal(false)}
         tokenName={tokenName}
         tokenImage={tokenImage}
-        tokenId={tokenId}
+        tokenAddress={tokenAddress}
         tokenPrice={tokenPrice}
       />
     </>

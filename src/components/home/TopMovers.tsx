@@ -11,13 +11,13 @@ interface TopMoversProps {
 export default function TopMovers({ data }: TopMoversProps) {
   const router = useRouter();
   // Sort data from highest to lowest percentage change
-  const sortedData = [...data].sort((a, b) => b.changePercent - a.changePercent);
+  const sortedData = [...data].sort((a, b) => b.change24h - a.change24h);
   
   const renderItem = ({ item }: { item: TopMover }) => {
-    const isPositive = item.changePercent >= 0;
-    const changeColor = isPositive ? '#00C853' : '#FF3366';
+    const isPositive = item.change24h >= 0;
     const arrow = isPositive ? '▲' : '▼';
-    
+    const changeColor = isPositive ? '#0ACA30' : '#FF3366';
+
     return (
       <TouchableOpacity 
         style={styles.moverItem}
@@ -27,7 +27,7 @@ export default function TopMovers({ data }: TopMoversProps) {
           <Image source={{ uri: item.image }} style={styles.profileImage} />
         </View>
         <Text style={[styles.changeText, { color: changeColor }]}>
-          {arrow} {Math.abs(item.changePercent)}%
+          {arrow} {Math.abs(item.change24h)}%
         </Text>
       </TouchableOpacity>
     );

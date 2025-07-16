@@ -113,11 +113,13 @@ export class WebSocketManager extends EventEmitter {
     this.cleanup();
 
     try {
+      console.log(`WebSocket: Attempting to connect to ${this.config.url}`);
       // Simple connection without authentication
       this.ws = new WebSocket(this.config.url);
       this.setupEventHandlers();
       this.startConnectionTimeout();
     } catch (error) {
+      console.error('WebSocket: Failed to create WebSocket instance:', error);
       this.handleError(error as Error);
       this.isConnecting = false;
     }
@@ -127,6 +129,7 @@ export class WebSocketManager extends EventEmitter {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
+      console.log('WebSocket: Connected successfully');
       this.clearConnectionTimeout();
       this.isConnecting = false;
       this.reconnectAttempts = 0;
@@ -138,11 +141,15 @@ export class WebSocketManager extends EventEmitter {
     };
 
     this.ws.onclose = (event) => {
+      console.log(`WebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
       this.handleDisconnect(event.reason || 'Connection closed');
     };
 
     this.ws.onerror = (error) => {
-      this.handleError(new Error('WebSocket error', { cause: error }));
+      console.error('WebSocket: Error event received:', error);
+      // In React Native, the error event doesn't provide much detail
+      // The actual error details usually come through the onclose event
+      this.handleError(new Error('WebSocket connection error'));
     };
 
     this.ws.onmessage = (event) => {

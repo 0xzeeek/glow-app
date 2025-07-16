@@ -137,7 +137,7 @@ function getMockTokenData(tokenId: string) {
       name: 'VisualBleed',
       symbol: 'VB',
       price: '$0.007',
-      priceChange: 1.16,
+      change24h: 1.16,
       image: 'https://i.pravatar.cc/300?img=25',
       backgroundImage: 'https://picsum.photos/800/600?grayscale&blur=2',
       marketCap: '$8.3M',

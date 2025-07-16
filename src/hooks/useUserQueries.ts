@@ -112,3 +112,22 @@ export function useUploadUserImage(walletAddress: string | null) {
     },
   });
 } 
+
+// Hook for fetching wallet holdings
+export function useWalletHoldings(walletAddress: string | null) {
+  const apiClient = getApiClient();
+
+  return useQuery({
+    queryKey: walletAddress ? queryKeys.users.holdings(walletAddress) : ['users', 'no-wallet', 'holdings'],
+    queryFn: async () => {
+      if (!walletAddress) {
+        return null;
+      }
+      return apiClient.getWalletHoldings(walletAddress);
+    },
+    enabled: !!walletAddress,
+    staleTime: 30 * 1000, // 30 seconds - more frequent updates for balance
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    // refetchInterval: 60 * 1000, // Refetch every minute // TODO: use websocket for this
+  });
+} 

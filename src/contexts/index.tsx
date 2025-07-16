@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { UserProvider } from './UserContext';
 import { TokenDataProvider } from './TokenDataContext';
+import { WatchlistProvider } from './WatchlistContext';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -9,11 +10,16 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <TokenDataProvider>
-      <UserProvider>{children}</UserProvider>
+      <UserProvider>
+        <WatchlistProvider>
+          {children}
+        </WatchlistProvider>
+      </UserProvider>
     </TokenDataProvider>
   );
 }
 
 // Re-export hooks for convenience
-export { useUser } from './UserContext';
-export { useTokenData } from './TokenDataContext';
+export { UserProvider, useUser } from './UserContext';
+export { TokenDataProvider, useTokenData } from './TokenDataContext';
+export { WatchlistProvider, useWatchlistContext } from './WatchlistContext';
