@@ -165,14 +165,14 @@ class ApiClient {
 
   // Price data
   public async getLatestPrice(token: string): Promise<LatestPriceResponse> {
-    return this.request<LatestPriceResponse>(`/prices/${token}/latest`);
+    return this.request<LatestPriceResponse>(`/tokens/${token}/price`);
   }
 
   public async getTokenPrices(
     token: string,
     params?: GetPricesParams
   ): Promise<TokenPricesResponse> {
-    return this.request<TokenPricesResponse>(`/prices/${token}`, { params });
+    return this.request<TokenPricesResponse>(`/tokens/${token}/prices`, { params });
   }
 
   // Token metadata

@@ -55,9 +55,16 @@ export function UserProvider({ children }: UserProviderProps) {
   const { user, logout: privySignOut } = usePrivy();
   const { wallets } = useEmbeddedSolanaWallet();
 
-  const { data: userProfile } = useUserProfile(wallets?.[0]?.address || null);
+  // const { data: userProfile } = useUserProfile(wallets?.[0]?.address || null);
+  // TODO: remove hardcoded wallet address
+  const { data: userProfile } = useUserProfile('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
 
-  useWebSocketBalanceUpdates(wallets?.[0]?.address || null);
+  console.log('userProfile', userProfile);
+
+  // useWebSocketBalanceUpdates(wallets?.[0]?.address || null);
+  // TODO: remove hardcoded wallet address
+
+  useWebSocketBalanceUpdates('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
 
   // User profile state
   const [username, setUsernameState] = useState('');
@@ -89,6 +96,7 @@ export function UserProvider({ children }: UserProviderProps) {
       // Get the first Solana wallet
       const primaryWallet = wallets[0];
       // setWalletAddress(primaryWallet.address);
+      // TODO: remove hardcoded wallet address
       setWalletAddress('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
 
       // Set user context for error tracking

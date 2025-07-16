@@ -45,7 +45,6 @@ export default function TokenDetailScreen() {
           profileImage={tokenDetails.image}
           backgroundImage={tokenDetails.image}
           address={tokenDetails.address}
-          symbol={tokenDetails.symbol}
         />
         
         <View style={styles.contentContainer}>
