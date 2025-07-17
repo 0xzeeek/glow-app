@@ -6,10 +6,12 @@ import { ProfileSettings, ProfileExplore, ProfileDepositWhite, ProfileDeposit, P
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
+import { useCountingAnimation } from '../../src/hooks';
 import { Button } from '../../src/components/shared/Button';
 import DepositModal from '../../src/components/shared/DepositModal';
 import CashOutModal from '../../src/components/shared/CashOutModal';
 import { Profile } from '../../assets';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
 export default function ProfileScreen() {
   const { 
@@ -25,10 +27,21 @@ export default function ProfileScreen() {
 
   // Use totalUsdValue from wallet holdings
   const totalValue = totalUsdValue;
+  // Use the counting animation hook for the total value
+  const { displayValue, bounceScale } = useCountingAnimation(totalValue, {
+    duration: 1000,      // Slightly slower for bigger numbers
+    enableBounce: true
+  });
+  
   // Filter out USDC from token holdings
   const nonUsdcTokens = tokenHoldings.filter(token => token.symbol !== 'USDC');
   const hasTokens = nonUsdcTokens.length > 0;
   const hasCash = usdcBalance > 0;
+
+  // Animated style for the balance amount
+  const animatedBalanceStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bounceScale.value }],
+  }));
 
   const handleDeposit = () => {
     setShowDepositModal(true);
@@ -80,7 +93,9 @@ export default function ProfileScreen() {
 
         {/* Balance Section */}
         <View style={styles.balanceSection}>
-          <Text style={styles.balanceAmount}>${totalValue.toFixed(2)}</Text>
+          <Animated.Text style={[styles.balanceAmount, animatedBalanceStyle]}>
+            ${displayValue.toFixed(2)}
+          </Animated.Text>
           <Text style={styles.buyingPowerText}>BUYING POWER ${Math.floor(usdcBalance)}</Text>
 
           <View style={styles.buttonRow}>

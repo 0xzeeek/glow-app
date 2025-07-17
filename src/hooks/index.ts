@@ -6,3 +6,4 @@ export * from './useWebSocketPriceUpdates';
 export * from './useWebSocketBalanceUpdates';
 export * from './useWatchlist';
 export * from './useGlobalWebSocketUpdates';
+export * from './useCountingAnimation';
