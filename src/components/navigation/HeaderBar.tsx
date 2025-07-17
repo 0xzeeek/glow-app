@@ -35,7 +35,7 @@ export default function HeaderBar() {
           <Animated.View style={[styles.cashButtonWrapper, animatedButtonStyle]}>
             <TouchableOpacity style={styles.cashButton} onPress={handleDepositPress}>
               <Image source={DepositWallet} style={styles.walletIcon} />
-              <Text style={styles.cashAmount}>${displayValue.toFixed(2)}</Text>
+              <Text style={styles.cashAmount}>${displayValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
               <Ionicons name="chevron-forward" size={16} color="#000" />
             </TouchableOpacity>
           </Animated.View>

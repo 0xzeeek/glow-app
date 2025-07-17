@@ -94,7 +94,7 @@ export default function ProfileScreen() {
         {/* Balance Section */}
         <View style={styles.balanceSection}>
           <Animated.Text style={[styles.balanceAmount, animatedBalanceStyle]}>
-            ${displayValue.toFixed(2)}
+            ${displayValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </Animated.Text>
           <Text style={styles.buyingPowerText}>BUYING POWER ${Math.floor(usdcBalance)}</Text>
 
