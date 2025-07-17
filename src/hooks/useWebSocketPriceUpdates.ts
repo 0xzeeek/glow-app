@@ -22,16 +22,7 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
         const wsManager = getWebSocketManager();
         wsManagerRef.current = wsManager;
 
-        // Connect if not already connected
-        if (!wsManager.isConnected()) {
-          wsManager.connect();
-        }
-
-        // Subscribe if connected
-        if (wsManager.isConnected() && !isSubscribedRef.current) {
-          wsManager.subscribeToPrice(tokenAddress);
-          isSubscribedRef.current = true;
-        }
+        // Don't need to connect - it's already connected from _layout.tsx
 
         // Handle price updates
         const handlePriceUpdate = (data: PriceUpdate) => {
@@ -103,6 +94,12 @@ export function useWebSocketPriceUpdates(tokenAddress: string | null) {
         const handleDisconnected = () => {
           isSubscribedRef.current = false;
         };
+
+        // Subscribe immediately if already connected
+        if (wsManager.isConnected() && !isSubscribedRef.current) {
+          wsManager.subscribeToPrice(tokenAddress);
+          isSubscribedRef.current = true;
+        }
 
         wsManager.on('priceUpdate', handlePriceUpdate);
         wsManager.on('connected', handleConnected);

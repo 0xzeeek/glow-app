@@ -83,6 +83,7 @@ export class WebSocketManager extends EventEmitter {
   private isConnecting = false;
   private shouldReconnect = true;
   private subscriptions = new Set<string>();
+  private messageQueue: any[] = []; // Add message queue
 
   constructor(config: WebSocketConfig) {
     super();
@@ -136,8 +137,24 @@ export class WebSocketManager extends EventEmitter {
       this.emit('connected');
       this.startHeartbeat();
       
-      // Resubscribe to previous subscriptions
-      this.resubscribe();
+      // Clear subscriptions before flushing queue to avoid duplicates
+      const previousSubscriptions = new Set(this.subscriptions);
+      this.subscriptions.clear();
+      
+      // Send any queued messages (this will rebuild subscriptions)
+      this.flushMessageQueue();
+      
+      // Only resubscribe to subscriptions that weren't in the queue
+      previousSubscriptions.forEach(subscription => {
+        if (!this.subscriptions.has(subscription)) {
+          const [type, identifier] = subscription.split(':');
+          if (type === 'price') {
+            this.subscribeToPrice(identifier);
+          } else if (type === 'balance') {
+            this.subscribeToBalance(identifier);
+          }
+        }
+      });
     };
 
     this.ws.onclose = (event) => {
@@ -270,6 +287,22 @@ export class WebSocketManager extends EventEmitter {
     }
   }
 
+  private flushMessageQueue(): void {
+    if (this.messageQueue.length > 0) {
+      console.log(`WebSocket: Sending ${this.messageQueue.length} queued messages`);
+      const messages = [...this.messageQueue];
+      this.messageQueue = [];
+      
+      messages.forEach(message => {
+        try {
+          this.ws!.send(JSON.stringify(message));
+        } catch (error) {
+          console.error('Failed to send queued message:', error);
+        }
+      });
+    }
+  }
+
   private resubscribe(): void {
     // Resubscribe to all previous subscriptions
     this.subscriptions.forEach(subscription => {
@@ -320,7 +353,9 @@ export class WebSocketManager extends EventEmitter {
 
   public send(data: any): void {
     if (!this.isConnected()) {
-      console.warn('WebSocket not connected, queuing message');
+      // Queue the message instead of discarding it
+      this.messageQueue.push(data);
+      console.log(`WebSocket: Queued message, ${this.messageQueue.length} messages in queue`);
       return;
     }
 
@@ -341,6 +376,9 @@ export class WebSocketManager extends EventEmitter {
     this.isConnecting = false;
     this.stopHeartbeat();
     this.clearConnectionTimeout();
+    
+    // Clear message queue on cleanup
+    this.messageQueue = [];
     
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);

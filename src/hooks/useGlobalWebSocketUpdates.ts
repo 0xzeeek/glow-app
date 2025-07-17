@@ -17,32 +17,37 @@ export function useGlobalWebSocketUpdates() {
         const wsManager = getWebSocketManager();
         wsManagerRef.current = wsManager;
 
-        // Connect if not already connected
-        if (!wsManager.isConnected()) {
-          wsManager.connect();
+        // Don't need to connect - it's already connected from _layout.tsx
+
+        // Function to perform subscriptions
+        const performSubscriptions = () => {
+          // Collect all unique token addresses
+          const allTokens = new Set<string>();
+          
+          topMovers.forEach(token => allTokens.add(token.address));
+          creatorTokens.forEach(token => allTokens.add(token.address));
+
+          // Subscribe to tokens that aren't already subscribed
+          allTokens.forEach(address => {
+            if (!subscribedTokensRef.current.has(address)) {
+              wsManager.subscribeToPrice(address);
+              subscribedTokensRef.current.add(address);
+            }
+          });
+
+          // Unsubscribe from tokens that are no longer visible
+          subscribedTokensRef.current.forEach(address => {
+            if (!allTokens.has(address)) {
+              wsManager.unsubscribeFromPrice(address);
+              subscribedTokensRef.current.delete(address);
+            }
+          });
+        };
+
+        // Only subscribe if already connected, otherwise wait for connection
+        if (wsManager.isConnected()) {
+          performSubscriptions();
         }
-
-        // Collect all unique token addresses
-        const allTokens = new Set<string>();
-        
-        topMovers.forEach(token => allTokens.add(token.address));
-        creatorTokens.forEach(token => allTokens.add(token.address));
-
-        // Subscribe to tokens that aren't already subscribed
-        allTokens.forEach(address => {
-          if (!subscribedTokensRef.current.has(address)) {
-            wsManager.subscribeToPrice(address);
-            subscribedTokensRef.current.add(address);
-          }
-        });
-
-        // Unsubscribe from tokens that are no longer visible
-        subscribedTokensRef.current.forEach(address => {
-          if (!allTokens.has(address)) {
-            wsManager.unsubscribeFromPrice(address);
-            subscribedTokensRef.current.delete(address);
-          }
-        });
 
         // Handle price updates for all tokens
         const handlePriceUpdate = (data: PriceUpdate) => {
@@ -52,10 +57,8 @@ export function useGlobalWebSocketUpdates() {
 
         // Handle connection events
         const handleConnected = () => {
-          // Re-subscribe to all tokens when WebSocket reconnects
-          subscribedTokensRef.current.forEach(address => {
-            wsManager.subscribeToPrice(address);
-          });
+          // Perform subscriptions when WebSocket connects
+          performSubscriptions();
         };
 
         const handleDisconnected = () => {

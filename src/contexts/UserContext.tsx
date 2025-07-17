@@ -14,7 +14,7 @@ import {
   useWalletHoldings,
 } from '../hooks';
 import { getErrorHandler } from '../services/ErrorHandler';
-import { WalletHoldings, TokenHolding } from '../types';
+import { WalletBalance, TokenHolding } from '../types';
 
 interface UserContextType {
   // User profile
@@ -24,7 +24,7 @@ interface UserContextType {
   memberSince: Date;
 
   // Wallet Data
-  walletHoldings: WalletHoldings | null;
+  walletBalance: WalletBalance | null;
   isLoadingHoldings: boolean;
   holdingsError: Error | null;
 
@@ -108,7 +108,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   // Use TanStack Query for wallet holdings
   const {
-    data: walletHoldings,
+    data: walletBalance,
     isLoading: isLoadingHoldings,
     error: holdingsError,
     refetch: refetchHoldings,
@@ -139,21 +139,21 @@ export function UserProvider({ children }: UserProviderProps) {
 
   // Memoize USDC balance calculation
   const usdcBalance = useMemo(() => {
-    return walletHoldings?.tokens.find(t => t.symbol === 'USDC')?.balance || 0;
-  }, [walletHoldings?.tokens]);
+    return walletBalance?.tokens.find(t => t.symbol === 'USDC')?.balance || 0;
+  }, [walletBalance?.tokens]);
 
   // Calculate total USD value from individual token values
   const calculatedTotalUsdValue = useMemo(() => {
-    const value = walletHoldings?.tokens.reduce((total, token) => {
+    const value = walletBalance?.tokens.reduce((total, token) => {
       return total + (token.usdValue || 0);
     }, 0) || 0;
     return value;
-  }, [walletHoldings?.tokens]);
+  }, [walletBalance?.tokens]);
 
   // Memoize token holdings
   const tokenHoldings = useMemo(() => {
-    return walletHoldings?.tokens || [];
-  }, [walletHoldings?.tokens]);
+    return walletBalance?.tokens || [];
+  }, [walletBalance?.tokens]);
 
   // Memoize the entire context value
   const value: UserContextType = useMemo(() => ({
@@ -167,7 +167,7 @@ export function UserProvider({ children }: UserProviderProps) {
     walletAddress,
 
     // Wallet Data
-    walletHoldings: walletHoldings || null,
+    walletBalance: walletBalance || null,
     isLoadingHoldings,
     holdingsError: holdingsError as Error | null,
 
@@ -188,7 +188,7 @@ export function UserProvider({ children }: UserProviderProps) {
     image,
     memberSince,
     walletAddress,
-    walletHoldings,
+    walletBalance,
     isLoadingHoldings,
     holdingsError,
     usdcBalance,

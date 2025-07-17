@@ -138,7 +138,14 @@ export default function ProfileScreen() {
                   </View>
                   <View style={styles.tokenValueSection}>
                     <Text style={styles.tokenValue}>${token.usdValue.toFixed(2)}</Text>
-                    <Text style={styles.tokenPrice}>${token.price.toFixed(4)}</Text>
+                    {token.pnlPercentage !== undefined && (
+                      <Text style={[
+                        styles.tokenPnl,
+                        token.pnlPercentage >= 0 ? styles.positiveChange : styles.negativeChange
+                      ]}>
+                        {token.pnlPercentage >= 0 ? '▲' : '▼'} {Math.abs(token.pnlPercentage).toFixed(2)}%
+                      </Text>
+                    )}
                   </View>
                   <TouchableOpacity 
                     style={styles.shareButton}
@@ -336,7 +343,7 @@ const styles = StyleSheet.create({
     color: colors.text.primary,
     marginBottom: 4,
   },
-  tokenPrice: {
+  tokenPnl: {
     fontSize: 14,
     fontFamily: fonts.secondary,
     color: colors.neutral[500],

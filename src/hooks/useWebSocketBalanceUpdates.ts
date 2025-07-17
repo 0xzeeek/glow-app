@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getWebSocketManager, getApiClient } from '../services';
+import { getWebSocketManager } from '../services';
 import { queryKeys } from '../services/ApiClient';
-import { BalanceUpdate, WalletHoldings } from '../types';
-import { TOKEN_ADDRESSES } from '../utils/constants';
+import { BalanceUpdate, WalletBalance } from '../types';
+import { TOKEN_ADDRESSES, calculatePnlPercentage } from '../utils';
 
 export function useWebSocketBalanceUpdates(walletAddress: string | null) {
   const queryClient = useQueryClient();
@@ -21,16 +21,7 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
         const wsManager = getWebSocketManager();
         wsManagerRef.current = wsManager;
 
-        // Connect if not already connected
-        if (!wsManager.isConnected()) {
-          wsManager.connect();
-        }
-
-        // Subscribe if connected
-        if (wsManager.isConnected() && !isSubscribedRef.current) {
-          wsManager.subscribeToBalance(walletAddress);
-          isSubscribedRef.current = true;
-        }
+        // Don't need to connect - it's already connected from _layout.tsx
 
         // Handle balance updates
         const handleBalanceUpdate = async (data: BalanceUpdate) => {
@@ -38,7 +29,7 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
             console.log('data', data);
 
             // Get current holdings from cache
-            const currentData = queryClient.getQueryData<WalletHoldings>(
+            const currentData = queryClient.getQueryData<WalletBalance>(
               queryKeys.users.holdings(walletAddress)
             );
 
@@ -87,11 +78,19 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
               newUsdValue = newBalance * token.price;
             }
 
+            // Calculate PnL percentage if pnlData exists
+            const newPnlPercentage = calculatePnlPercentage(
+              newBalance,
+              token.price,
+              token.pnlData
+            );
+
             // Update the token in the array
             updatedTokens[tokenIndex] = {
               ...token,
               balance: newBalance,
               usdValue: newUsdValue,
+              pnlPercentage: newPnlPercentage,
             };
 
             console.log('updatedTokens', updatedTokens);
@@ -123,6 +122,12 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
         const handleDisconnected = () => {
           isSubscribedRef.current = false;
         };
+
+        // Subscribe immediately if already connected
+        if (wsManager.isConnected() && !isSubscribedRef.current) {
+          wsManager.subscribeToBalance(walletAddress);
+          isSubscribedRef.current = true;
+        }
 
         wsManager.on('balanceUpdate', handleBalanceUpdate);
         wsManager.on('connected', handleConnected);

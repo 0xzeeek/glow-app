@@ -1,11 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getApiClient, queryKeys } from '../services/ApiClient';
 import { 
   LatestPriceResponse, 
-  UpdateTokenMetadataParams,
   GetPricesParams,
 } from '../types';
-import { getErrorHandler, ErrorCategory, ErrorSeverity } from '../services/ErrorHandler';
 
 // Hook for fetching latest token price
 export function useTokenPrice(tokenAddress: string, options?: { enabled?: boolean }) {
@@ -53,80 +51,6 @@ export function useTokenMetadata(tokenAddress: string, options?: { enabled?: boo
     enabled: options?.enabled ?? true,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
-  });
-}
-
-// Hook for updating token metadata
-export function useUpdateTokenMetadata(tokenAddress: string) {
-  const queryClient = useQueryClient();
-  const apiClient = getApiClient();
-
-  return useMutation({
-    mutationFn: async (data: UpdateTokenMetadataParams) => {
-      return apiClient.updateTokenMetadata(tokenAddress, data);
-    },
-    onSuccess: (data) => {
-      // Update the cache with the new metadata
-      queryClient.setQueryData(queryKeys.tokens.metadata(tokenAddress), data);
-      
-      // Add breadcrumb for tracking
-      getErrorHandler().addBreadcrumb(
-        'Token metadata updated',
-        'trading',
-        { tokenAddress, updatedFields: Object.keys(data) }
-      );
-    },
-    onError: (error) => {
-      // Provide context for token metadata errors
-      getErrorHandler().handleError(
-        error,
-        ErrorCategory.TRADING,
-        ErrorSeverity.MEDIUM,
-        { 
-          metadata: { 
-            action: 'updateTokenMetadata', 
-            tokenAddress 
-          } 
-        }
-      );
-    },
-  });
-}
-
-// Hook for uploading token image
-export function useUploadTokenImage(tokenAddress: string) {
-  const queryClient = useQueryClient();
-  const apiClient = getApiClient();
-
-  return useMutation({
-    mutationFn: async (imageFile: File | Blob) => {
-      // Get upload URL
-      const { uploadUrl, publicUrl } = await apiClient.getTokenImageUploadUrl(tokenAddress);
-
-      // Upload the image
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: imageFile,
-        headers: {
-          'Content-Type': imageFile.type || 'image/jpeg',
-        },
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      // Update the metadata with the new image URL
-      const updatedMetadata = await apiClient.updateTokenMetadata(tokenAddress, {
-        imageUrl: publicUrl,
-      });
-
-      return updatedMetadata;
-    },
-    onSuccess: (data) => {
-      // Update the metadata cache
-      queryClient.setQueryData(queryKeys.tokens.metadata(tokenAddress), data);
-    },
   });
 }
 

@@ -33,6 +33,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let wsManager: ReturnType<typeof getWebSocketManager> | undefined;
 
     async function prepare() {
       try {
@@ -49,18 +50,25 @@ export default function RootLayout() {
           enableInDev: false,
         });
 
-        // Initialize WebSocket manager (but don't connect yet)
-        // Connection will be established during authentication
-        getWebSocketManager({
+        // Initialize WebSocket manager and connect
+        wsManager = getWebSocketManager({
           url: process.env.EXPO_PUBLIC_WS_URL || '',
           useCloudflare: process.env.EXPO_PUBLIC_USE_CLOUDFLARE === 'false',
           heartbeatInterval: 60000, // Ping every 60 seconds (1 minute)
         });
 
+        // Connect WebSocket immediately on app load
+        wsManager.connect();
+
         // Setup network monitoring
         unsubscribe = NetInfo.addEventListener(state => {
           const isConnected = state.isConnected ?? false;
           uiStore.getState().setOnline(isConnected);
+          
+          // Reconnect WebSocket when network comes back
+          if (isConnected && wsManager && !wsManager.isConnected()) {
+            wsManager.connect();
+          }
         });
 
         setIsReady(true);
@@ -77,6 +85,8 @@ export default function RootLayout() {
 
     return () => {
       unsubscribe?.();
+      // Disconnect WebSocket on cleanup
+      wsManager?.disconnect();
     };
   }, []);
 

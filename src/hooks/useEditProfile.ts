@@ -1,87 +1,92 @@
 import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useUser } from '../contexts/UserContext';
+import { getApiClient } from '../services/ApiClient';
+import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 interface UseEditProfileReturn {
   localUserName: string;
-  localEmail: string;
   localProfileImage: string | null;
   isCheckingUsername: boolean;
-  isCheckingEmail: boolean;
   isUploadingImage: boolean;
   usernameError: string | null;
-  emailError: string | null;
   setLocalUserName: (username: string) => void;
-  setLocalEmail: (email: string) => void;
   setLocalProfileImage: (imageUri: string | null) => void;
   handleUsernameBlur: () => Promise<void>;
-  handleEmailBlur: () => Promise<void>;
   handleImageChange: (imageUri: string) => Promise<void>;
   saveChanges: () => Promise<boolean>;
   hasChanges: boolean;
 }
 
-const checkUsernameExists = async (username: string): Promise<boolean> => {
-  // TODO: implement username check
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // For demo: return true if username is 'taken'
-  return username.toLowerCase() === 'taken';
+const resizeImage = async (imageUri: string): Promise<string> => {
+  try { 
+    // Resize image to max 800x800 while maintaining aspect ratio
+    // This will only resize if the image is larger than 800x800
+    const manipulatorResult = await ImageManipulator.manipulateAsync(
+      imageUri,
+      [{ resize: { width: 800, height: 800 } }],
+      { 
+        compress: 0.8,
+        format: ImageManipulator.SaveFormat.JPEG // JPEG is more efficient for photos
+      }
+    );
+    
+    return manipulatorResult.uri;
+  } catch (error) {
+    console.error('Error resizing image:', error);
+    // If resize fails, return original image
+    return imageUri;
+  }
 };
 
-const checkEmailExists = async (email: string): Promise<boolean> => {
-  // TODO: implement email check
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // For demo: return true if email is 'taken@example.com'
-  return email.toLowerCase() === 'taken@example.com';
-};
-
-const uploadProfileImage = async (imageUri: string): Promise<string | null> => {
-  // TODO: implement image upload
-  // Simulate API upload
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // In real implementation, this would return the uploaded image URL
-  console.log('Uploading image:', imageUri);
-  return imageUri; // Return the same URI for now
-};
-
-const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+const uploadProfileImage = async (imageUri: string, wallet: string): Promise<string | null> => {
+  try {
+    // Resize image first to reduce file size
+    const resizedImageUri = await resizeImage(imageUri);
+    
+    // Read the resized image file and convert to base64
+    const base64 = await FileSystem.readAsStringAsync(resizedImageUri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    
+    // Get API client and upload image
+    const apiClient = getApiClient();
+    const response = await apiClient.uploadUserImage(wallet, base64);
+    
+    if (response.ok && response.image) {
+      return response.image;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    return null;
+  }
 };
 
 export function useEditProfile(): UseEditProfileReturn {
   const { 
     username, 
-    email, 
     image,
+    walletAddress,
     setUsername, 
-    setEmail,
     setImage 
   } = useUser();
 
   const [localUserName, setLocalUserName] = useState(username);
-  const [localEmail, setLocalEmail] = useState(email);
   const [localProfileImage, setLocalProfileImage] = useState(image);
   
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   
   const [usernameError, setUsernameError] = useState<string | null>(null);
-  const [emailError, setEmailError] = useState<string | null>(null);
 
   // Track original values to prevent unnecessary checks
   const originalUsername = useRef(username);
-  const originalEmail = useRef(email);
 
   const hasChanges = 
     localUserName !== username ||
-    localEmail !== email ||
     localProfileImage !== image;
 
   const handleUsernameBlur = useCallback(async () => {
@@ -107,8 +112,9 @@ export function useEditProfile(): UseEditProfileReturn {
     // Check if username exists
     setIsCheckingUsername(true);
     try {
-      const exists = await checkUsernameExists(localUserName);
-      if (exists) {
+      const apiClient = getApiClient();
+      const response = await apiClient.checkUsernameExists(localUserName);
+      if (!response.available) {
         setUsernameError('Username is already taken');
       }
     } catch (error) {
@@ -119,44 +125,19 @@ export function useEditProfile(): UseEditProfileReturn {
     }
   }, [localUserName]);
 
-  const handleEmailBlur = useCallback(async () => {
-    // Clear previous error
-    setEmailError(null);
-
-    // Skip if email hasn't changed or is empty
-    if (!localEmail || localEmail === originalEmail.current) {
-      return;
-    }
-
-    // Validate email format
-    if (!validateEmail(localEmail)) {
-      setEmailError('Please enter a valid email address');
-      return;
-    }
-
-    // Check if email exists
-    setIsCheckingEmail(true);
-    try {
-      const exists = await checkEmailExists(localEmail);
-      if (exists) {
-        setEmailError('Email is already in use');
-      }
-    } catch (error) {
-      console.error('Error checking email:', error);
-      setEmailError('Error checking email availability');
-    } finally {
-      setIsCheckingEmail(false);
-    }
-  }, [localEmail]);
-
   const handleImageChange = useCallback(async (imageUri: string) => {
+    if (!walletAddress) {
+      Alert.alert('Error', 'Wallet address not found');
+      return;
+    }
+    
     setIsUploadingImage(true);
     try {
       // Upload image to backend
-      const uploadedUrl = await uploadProfileImage(imageUri);
+      const image = await uploadProfileImage(imageUri, walletAddress);
       
-      if (uploadedUrl) {
-        setLocalProfileImage(uploadedUrl);
+      if (image) {
+        setLocalProfileImage(image);
         Alert.alert('Success', 'Profile picture updated successfully');
       } else {
         Alert.alert('Error', 'Failed to upload profile picture');
@@ -167,11 +148,11 @@ export function useEditProfile(): UseEditProfileReturn {
     } finally {
       setIsUploadingImage(false);
     }
-  }, []);
+  }, [walletAddress]);
 
   const saveChanges = useCallback(async (): Promise<boolean> => {
     // Validate before saving
-    if (usernameError || emailError) {
+    if (usernameError) {
       Alert.alert('Validation Error', 'Please fix the errors before saving');
       return false;
     }
@@ -182,17 +163,17 @@ export function useEditProfile(): UseEditProfileReturn {
       return false;
     }
 
-    if (!localEmail || !validateEmail(localEmail)) {
-      setEmailError('Valid email is required');
+    if (!walletAddress) {
+      Alert.alert('Error', 'Wallet address not found');
       return false;
     }
 
     try {
+      const apiClient = getApiClient();
+      await apiClient.updateUser(walletAddress, localUserName);
 
-      // TODO: call save user data api here
       // Save changes to context
       setUsername(localUserName);
-      setEmail(localEmail);
       
       if (localProfileImage !== image) {
         setImage(localProfileImage);
@@ -200,7 +181,6 @@ export function useEditProfile(): UseEditProfileReturn {
 
       // Update original values
       originalUsername.current = localUserName;
-      originalEmail.current = localEmail;
 
       return true;
     } catch (error) {
@@ -210,30 +190,23 @@ export function useEditProfile(): UseEditProfileReturn {
     }
   }, [
     localUserName, 
-    localEmail, 
     localProfileImage, 
     image,
+    walletAddress,
     usernameError, 
-    emailError,
     setUsername, 
-    setEmail, 
     setImage
   ]);
 
   return {
     localUserName,
-    localEmail,
     localProfileImage,
     isCheckingUsername,
-    isCheckingEmail,
     isUploadingImage,
     usernameError,
-    emailError,
     setLocalUserName,
-    setLocalEmail,
     setLocalProfileImage,
     handleUsernameBlur,
-    handleEmailBlur,
     handleImageChange,
     saveChanges,
     hasChanges,

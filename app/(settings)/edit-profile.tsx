@@ -27,15 +27,11 @@ export default function EditProfileScreen() {
   
   const {
     localUserName,
-    localEmail,
     localProfileImage,
     isUploadingImage,
     usernameError,
-    emailError,
     setLocalUserName,
-    setLocalEmail,
     handleUsernameBlur,
-    handleEmailBlur,
     handleImageChange,
     saveChanges,
     hasChanges,
@@ -150,30 +146,6 @@ export default function EditProfileScreen() {
             </View>
             {usernameError && (
               <Text style={styles.errorText}>{usernameError}</Text>
-            )}
-          </View>
-
-          {/* Email Field */}
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>E-MAIL</Text>
-            <View style={[
-              styles.inputContainer,
-              emailError && styles.inputError
-            ]}>
-              <TextInput
-                style={styles.input}
-                value={localEmail}
-                onChangeText={setLocalEmail}
-                onBlur={handleEmailBlur}
-                placeholder="Enter email"
-                placeholderTextColor={colors.neutral[500]}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-            {emailError && (
-              <Text style={styles.errorText}>{emailError}</Text>
             )}
           </View>
 

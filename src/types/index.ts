@@ -117,11 +117,6 @@ export interface UpdateTokenMetadataParams {
   description?: string;
 }
 
-export interface UpdateUserParams {
-  referredBy?: string;
-  profileUrl?: string;
-}
-
 export interface LatestPriceResponse {
   token: string;
   price: number;
@@ -148,18 +143,29 @@ export interface TokenHolding {
   balance: number;
   decimals: number;
   usdValue: number;
-  totalSupply: number;
-  phase: string;
-  image: string;
-  createdAt: number;
-  description: string;
   price: number;
-  marketCap: number;
+  totalSupply?: number;
+  marketCap?: number;
+  phase?: string;
+  image: string;
+  ammPool?: string;
+  createdAt: number;
+  transitionedAt?: number;
+  description: string;
+  pnlPercentage?: number;
+  pnlData?: {
+    avgBuyPrice: number;
+    totalSpentUsd: number;
+    realizedPnL: number;
+    totalBought: number;
+    totalSold: number;
+  };
 }
 
-export interface WalletHoldings {
+export interface WalletBalance {
   wallet: string;
   totalUsdValue: number;
+  totalPnLPercentage?: number;
   tokens: TokenHolding[];
   timestamp: number;
 } 

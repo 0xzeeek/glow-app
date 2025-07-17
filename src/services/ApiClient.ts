@@ -5,10 +5,8 @@ import {
   TokenPricesResponse,
   GetPricesParams,
   TokenMetadata,
-  UpdateTokenMetadataParams,
   UserProfile,
-  UpdateUserParams,
-  WalletHoldings,
+  WalletBalance,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
@@ -180,39 +178,22 @@ class ApiClient {
     return this.request<TokenMetadata>(`/tokens/${token}`);
   }
 
-  public async updateTokenMetadata(
-    token: string,
-    data: UpdateTokenMetadataParams
-  ): Promise<TokenMetadata> {
-    return this.request<TokenMetadata>(`/tokens/${token}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    });
-  }
-
   // User profile
   public async getUserProfile(wallet: string): Promise<UserProfile> {
     return this.request<UserProfile>(`/users/${wallet}`);
   }
 
-  public async updateUserProfile(
-    wallet: string,
-    data: UpdateUserParams
-  ): Promise<UserProfile> {
+  // Update username using PUT endpoint
+  public async updateUser(wallet: string, username: string): Promise<UserProfile> {
     return this.request<UserProfile>(`/users/${wallet}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
+      method: 'PUT',
+      body: JSON.stringify({ username }),
     });
   }
 
-  // User balances
-  public async getUserUSDCBalance(wallet: string): Promise<{ balance: number }> {
-    return this.request<{ balance: number }>(`/users/${wallet}/usdc-balance`);
-  }
-
-  // Wallet holdings
-  public async getWalletHoldings(wallet: string): Promise<WalletHoldings> {
-    return this.request<WalletHoldings>(`/wallets/${wallet}/balance`);
+  // Wallet balance
+  public async getWalletBalance(wallet: string): Promise<WalletBalance> {
+    return this.request<WalletBalance>(`/wallets/${wallet}/balance`);
   }
 
   // Historical prices
@@ -225,42 +206,23 @@ class ApiClient {
     });
   }
 
-  // Image uploads
-  public async getTokenImageUploadUrl(mint: string): Promise<{
-    uploadUrl: string;
-    publicUrl: string;
-    key: string;
-    expiresIn: number;
-  }> {
-    return this.request(`/tokens/${mint}/image`, {
-      method: 'POST'
-    });
-  }
-
-  public async getUserImageUploadUrl(wallet: string): Promise<{
-    uploadUrl: string;
-    publicUrl: string;
-    key: string;
-    expiresIn: number;
+  // Upload user profile image
+  public async uploadUserImage(wallet: string, imageData: string): Promise<{
+    ok: boolean;
+    image: string;
   }> {
     return this.request(`/users/${wallet}/image`, {
-      method: 'POST'
+      method: 'POST',
+      body: JSON.stringify({ image: imageData }),
     });
   }
 
-  // Set auth token
-  public setAuthToken(token: string): void {
-    this.defaultHeaders.Authorization = `Bearer ${token}`;
-  }
-
-  // Remove auth token
-  public clearAuthToken(): void {
-    delete this.defaultHeaders.Authorization;
-  }
-
-  // Update base URL (useful for environment switching)
-  public updateBaseURL(url: string): void {
-    this.baseURL = url.replace(/\/$/, '');
+  public async checkUsernameExists(username: string): Promise<{
+    available: boolean;
+  }> {
+    return this.request(`/users/check/${username}`, {
+      method: 'GET'
+    });
   }
 }
 
