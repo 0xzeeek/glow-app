@@ -10,10 +10,11 @@ import FloatingBuyButton from '../../src/components/token-details/FloatingBuyBut
 import BottomNav from '../../src/components/navigation/BottomNav';
 import { useTokenDetails, useWebSocketPriceUpdates } from '../../src/hooks';
 import { colors, fonts } from '../../src/theme';
+import { formatMarketCap } from '../../src/utils';
 
 export default function TokenDetailScreen() {
   const { id } = useLocalSearchParams();
-  const { tokenDetails, topHolders, chartData, isLoading, error } = useTokenDetails(id as string);
+  const { tokenDetails, topHolders, chartData, isLoading, isChartLoading, error, selectedRange, setSelectedRange, availableRanges } = useTokenDetails(id as string);
   
   // Subscribe to real-time price updates for this token
   useWebSocketPriceUpdates(id as string);
@@ -40,7 +41,7 @@ export default function TokenDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <TokenHeader
           name={tokenDetails.name}
-          price={tokenDetails.price}
+          price={`$${tokenDetails.price.toFixed(4)}`}
           priceChange={tokenDetails.change24h}
           profileImage={tokenDetails.image}
           backgroundImage={tokenDetails.image}
@@ -49,9 +50,13 @@ export default function TokenDetailScreen() {
         
         <View style={styles.contentContainer}>
           <TokenStatsChart
-            marketCap={tokenDetails.marketCap}
+            marketCap={formatMarketCap(tokenDetails.marketCap)}
             topHolders={topHolders}
             chartData={chartData}
+            selectedRange={selectedRange}
+            onRangeChange={setSelectedRange}
+            isLoading={isChartLoading}
+            availableRanges={availableRanges}
           />
           
           <View style={styles.divider} />
@@ -61,16 +66,23 @@ export default function TokenDetailScreen() {
           <View style={styles.divider} />
           
           <TokenInfo
-            marketCap={tokenDetails.marketCap}
-            volume24h={tokenDetails.volume24h}
-            holders={tokenDetails.holders}
-            circulatingSupply={tokenDetails.circulatingSupply}
-            createdAt={tokenDetails.createdAt}
+            marketCap={formatMarketCap(tokenDetails.marketCap)}
+            volume24h="N/A" // Not available in Token type
+            holders={0} // Not available in Token type, using 0 as default
+            circulatingSupply={tokenDetails.totalSupply ? tokenDetails.totalSupply.toLocaleString() : 'N/A'}
+            createdAt={new Date(tokenDetails.createdAt).toLocaleDateString()}
           />
           
           <View style={styles.divider} />
           
-          <TokenSocials socialLinks={tokenDetails.socialLinks} />
+          <TokenSocials 
+            socialLinks={[
+              tokenDetails.x && { platform: 'X', handle: tokenDetails.x, icon: 'logo-twitter' },
+              tokenDetails.instagram && { platform: 'Instagram', handle: tokenDetails.instagram, icon: 'logo-instagram' },
+              tokenDetails.youtube && { platform: 'YouTube', handle: tokenDetails.youtube, icon: 'logo-youtube' },
+              tokenDetails.tiktok && { platform: 'TikTok', handle: tokenDetails.tiktok, icon: 'logo-tiktok' },
+            ].filter(Boolean) as any[]}
+          />
         </View>
       </ScrollView>
       
@@ -78,7 +90,7 @@ export default function TokenDetailScreen() {
         tokenName={tokenDetails.name}
         tokenImage={tokenDetails.image}
         tokenAddress={tokenDetails.address}
-        tokenPrice={parseFloat(tokenDetails.price.replace('$', ''))} 
+        tokenPrice={tokenDetails.price}
       />
       <BottomNav activeTab={null} />
     </View>

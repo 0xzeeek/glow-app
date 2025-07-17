@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { TopMover } from '@/types';
+import { Token } from '@/types';
 import { colors } from '@/theme/colors';
+import { CHART_COLORS } from '@/utils/constants';
 
 interface TopMoversProps {
-  data: TopMover[];
+  data: Token[];
 }
 
 export default function TopMovers({ data }: TopMoversProps) {
@@ -13,10 +14,10 @@ export default function TopMovers({ data }: TopMoversProps) {
   // Sort data from highest to lowest percentage change
   const sortedData = [...data].sort((a, b) => b.change24h - a.change24h);
   
-  const renderItem = ({ item }: { item: TopMover }) => {
+  const renderItem = ({ item }: { item: Token }) => {
     const isPositive = item.change24h >= 0;
     const arrow = isPositive ? '▲' : '▼';
-    const changeColor = isPositive ? '#0ACA30' : '#FF3366';
+    const changeColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
 
     return (
       <TouchableOpacity 

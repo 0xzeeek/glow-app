@@ -1,49 +1,26 @@
-export interface TopMover {
+export interface Token {
   address: string;
-  name: string;
-  image: string;
-  change24h: number;
-}
-
-export interface FeaturedTokenData {
-  address: string;
-  name: string;
-  image: string;
-  status: string;
-  marketCap: string;
-  price: number;
-}
-
-export interface CreatorToken {
-  address: string;
-  creatorName: string;
-  avatar: string;
-  marketCap: string;
-  price: string;
-  change24h: number;
-  chartData: number[];
-}
-
-
-export interface TokenDetails {
-  address: string;
-  name: string;
   symbol: string;
-  price: string;
-  change24h: number;
-  image: string;
-  backgroundImage: string;
-  marketCap: string;
-  volume24h: string;
-  holders: number;
-  circulatingSupply: string;
-  createdAt: string;
+  name: string;
+  decimals: number;
   description: string;
-  socialLinks: {
-    platform: string;
-    handle: string;
-    icon: string;
-  }[];
+  price: number;
+  change24h: number;
+  marketCap: number;
+  totalSupply: number;
+  image: string;
+  video: string;
+  youtube?: string;
+  tiktok?: string;
+  instagram?: string;
+  x?: string;
+  kick?: string;
+  website?: string;
+  phase: 'bonding' | 'amm';
+  ammPool?: string;
+  createdAt: number;
+  transitionedAt?: number;
+  lastUpdated?: number;
 }
 
 export interface WSConnectParams {
@@ -106,8 +83,7 @@ export interface UserProfile {
 }
 
 export interface GetPricesParams {
-  range?: '1h' | '24h' | '7d' | '30d';
-  resolution?: '1m' | '5m' | '15m' | '1h' | '1d';
+  range: '1h' | '1d' | '7d' | '30d' | 'all';
 }
 
 export interface UpdateTokenMetadataParams {

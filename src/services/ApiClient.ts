@@ -7,6 +7,7 @@ import {
   TokenMetadata,
   UserProfile,
   WalletBalance,
+  Token,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
@@ -178,6 +179,12 @@ class ApiClient {
     return this.request<TokenMetadata>(`/tokens/${token}`);
   }
 
+  // Get all tokens
+  public async getAllTokens(): Promise<Token[]> {
+    const response = await this.request<{ count: number; tokens: Token[] }>('/tokens');
+    return response.tokens;
+  }
+
   // User profile
   public async getUserProfile(wallet: string): Promise<UserProfile> {
     return this.request<UserProfile>(`/users/${wallet}`);
@@ -297,6 +304,7 @@ export const queryKeys = {
       ['prices', token, 'history', params] as const,
   },
   tokens: {
+    all: () => ['tokens', 'all'] as const,
     metadata: (token: string) => ['tokens', token] as const,
     holders: (token: string) => ['tokens', token, 'holders'] as const,
     chart: (token: string, timeframe?: string) => ['tokens', token, 'chart', timeframe] as const,

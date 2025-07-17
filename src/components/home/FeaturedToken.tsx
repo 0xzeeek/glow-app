@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
-import { FeaturedTokenData } from '../../data/mockTokens';
+import { Token } from '@/types';
 import BuyModal from '../shared/BuyModal';
 import { Button } from '../shared/Button';
 import { fonts } from 'src/theme/typography';
 import { TokenLive } from 'assets';
 import { colors } from '@/theme/colors';
+import { formatMarketCap } from '@/utils';
 
 interface FeaturedTokenProps {
-  token: FeaturedTokenData;
+  token: Token;
 }
 
 export default function FeaturedToken({ token }: FeaturedTokenProps) {
@@ -40,14 +41,14 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
 
               <View style={styles.nameSection}>
                   <Image source={TokenLive} style={styles.liveIcon} />
-                <Text style={styles.tokenName}>VisualBleed</Text>
+                <Text style={styles.tokenName}>{token.name}</Text>
               </View>
             </TouchableOpacity>
 
             <View style={styles.bottomSection}>
               <TouchableOpacity style={styles.marketCapSection} onPress={handleTokenPress} activeOpacity={0.8}>
                 <Text style={styles.marketCapLabel}>MARKET CAP</Text>
-                <Text style={styles.marketCapValue}>{token.marketCap}</Text>
+                <Text style={styles.marketCapValue}>{formatMarketCap(token.marketCap)}</Text>
               </TouchableOpacity>
               
               <Button title="BUY NOW" onPress={handleBuyPress} style={styles.buyButton} />

@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import Svg, { Path, Circle } from 'react-native-svg';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import Svg, { Path, Circle, G } from 'react-native-svg';
 import { Token1, Token2, Token3, ReferralProfile } from '../../../assets';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
+import { interpolateChartData } from '@/utils';
+import { CHART_COLORS } from '@/utils/constants';
 
 const { width: screenWidth } = Dimensions.get('window');
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 interface TokenStatsChartProps {
   marketCap: string;
@@ -17,12 +20,86 @@ interface TokenStatsChartProps {
     timestamp: number;
     price: number;
   }[];
+  selectedRange?: '1h' | '1d' | '7d' | '30d' | 'all';
+  onRangeChange?: (range: '1h' | '1d' | '7d' | '30d' | 'all') => void;
+  isLoading?: boolean;
+  availableRanges?: Record<'1h' | '1d' | '7d' | '30d' | 'all', boolean>;
 }
 
-const timeframes = ['LIVE', '4H', '1D', '1W', '1M', 'MAX'];
+const timeframes: Array<{ label: string; value: '1h' | '1d' | '7d' | '30d' | 'all' }> = [
+  { label: '1H', value: '1h' },
+  { label: '1D', value: '1d' },
+  { label: '7D', value: '7d' },
+  { label: '30D', value: '30d' },
+  { label: 'ALL', value: 'all' },
+];
 
-export default function TokenStatsChart({ marketCap, topHolders, chartData }: TokenStatsChartProps) {
-  const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
+export default function TokenStatsChart({ 
+  marketCap, 
+  topHolders, 
+  chartData,
+  selectedRange = '1d',
+  onRangeChange,
+  isLoading = false,
+  availableRanges = { '1h': true, '1d': true, '7d': true, '30d': true, 'all': true }
+}: TokenStatsChartProps) {
+  const handleTimeframeChange = (value: '1h' | '1d' | '7d' | '30d' | 'all') => {
+    if (onRangeChange && availableRanges[value]) {
+      onRangeChange(value);
+    }
+  };
+  
+  // Keep track of displayed data and transition state
+  const [displayedData, setDisplayedData] = useState(() => 
+    interpolateChartData(chartData, 200)
+  );
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionData, setTransitionData] = useState(displayedData);
+  
+  // Animation value for smooth transitions
+  const animationValue = useRef(new Animated.Value(0)).current;
+  
+  // Update displayed data with smooth transition when new data arrives
+  useEffect(() => {
+    if (chartData.length > 0 && !isLoading) {
+      const newData = interpolateChartData(chartData, 200);
+      
+      // Start transition
+      setIsTransitioning(true);
+      animationValue.setValue(0);
+      
+      // Create interpolated data points for smooth transition
+      const startData = [...displayedData];
+      const endData = [...newData];
+      
+      // Animate from 0 to 1
+      Animated.timing(animationValue, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: false,
+      }).start(() => {
+        setDisplayedData(newData);
+        setTransitionData(newData);
+        setIsTransitioning(false);
+      });
+      
+      // Update transition data during animation
+      const listener = animationValue.addListener(({ value }) => {
+        const interpolatedPoints = startData.map((startPoint, index) => {
+          const endPoint = endData[index] || startPoint;
+          return {
+            timestamp: startPoint.timestamp,
+            price: startPoint.price + (endPoint.price - startPoint.price) * value,
+          };
+        });
+        setTransitionData(interpolatedPoints);
+      });
+      
+      return () => {
+        animationValue.removeListener(listener);
+      };
+    }
+  }, [chartData, isLoading]);
   
   // Get position badge images
   const positionIcons = [Token1, Token2, Token3];
@@ -32,13 +109,16 @@ export default function TokenStatsChart({ marketCap, topHolders, chartData }: To
   const chartHeight = 150;
   const padding = 10;
   
-  const prices = chartData.map(d => d.price);
+  // Use transition data when animating, otherwise use displayed data
+  const dataToRender = isTransitioning ? transitionData : displayedData;
+  
+  const prices = dataToRender.map(d => d.price);
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice || 1;
   
-  const points = chartData.map((data, index) => {
-    const x = (index / (chartData.length - 1)) * (chartWidth - padding * 2) + padding;
+  const points = dataToRender.map((data, index) => {
+    const x = (index / (dataToRender.length - 1)) * (chartWidth - padding * 2) + padding;
     const y = chartHeight - padding - ((data.price - minPrice) / priceRange) * (chartHeight - padding * 2);
     return { x, y };
   });
@@ -46,6 +126,18 @@ export default function TokenStatsChart({ marketCap, topHolders, chartData }: To
   const pathData = points
     .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
     .join(' ');
+  
+  // Determine chart color based on price change
+  const firstPrice = dataToRender[0]?.price || 0;
+  const lastPrice = dataToRender[dataToRender.length - 1]?.price || 0;
+  const isPositive = lastPrice >= firstPrice;
+  const chartColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
+  
+  // Calculate the last point for the circle
+  const lastPoint = points.length > 0 ? {
+    x: points[points.length - 1].x,
+    y: points[points.length - 1].y
+  } : null;
   
   // Create placeholder holders if needed
   const displayHolders = topHolders.length > 0 
@@ -82,48 +174,53 @@ export default function TokenStatsChart({ marketCap, topHolders, chartData }: To
         </View>
       </View>
       
+      {/* Chart */}
       <View style={styles.chartContainer}>
-        <Svg width={chartWidth} height={chartHeight}>
-          {/* Chart line */}
-          <Path
-            d={pathData}
-            fill="none"
-            stroke={colors.green.white}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Circle at the end of the chart */}
-          {points.length > 0 && (
-            <Circle
-              cx={points[points.length - 1].x}
-              cy={points[points.length - 1].y}
-              r="3"
-              fill="white"
-              stroke={colors.green.white}
+        {dataToRender.length > 0 ? (
+          <Svg width={chartWidth} height={chartHeight}>
+            <Path
+              d={pathData}
+              fill="none"
+              stroke={chartColor}
               strokeWidth="2"
             />
-          )}
-        </Svg>
+            {/* Add dots for latest price */}
+            {points.length > 0 && (
+              <Circle
+                cx={points[points.length - 1].x}
+                cy={points[points.length - 1].y}
+                r="4"
+                fill={chartColor}
+              />
+            )}
+          </Svg>
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>No data available</Text>
+          </View>
+        )}
       </View>
       
       <View style={styles.timeframeContainer}>
         {timeframes.map((timeframe) => (
           <TouchableOpacity
-            key={timeframe}
+            key={timeframe.value}
             style={[
               styles.timeframeButton,
-              selectedTimeframe === timeframe && styles.timeframeButtonActive,
+              selectedRange === timeframe.value && styles.timeframeButtonActive,
+              !availableRanges[timeframe.value] && styles.timeframeButtonDisabled,
             ]}
-            onPress={() => setSelectedTimeframe(timeframe)}
+            onPress={() => handleTimeframeChange(timeframe.value)}
+            disabled={!availableRanges[timeframe.value]}
           >
             <Text
               style={[
                 styles.timeframeText,
-                selectedTimeframe === timeframe && styles.timeframeTextActive,
+                selectedRange === timeframe.value && styles.timeframeTextActive,
+                !availableRanges[timeframe.value] && styles.timeframeTextDisabled,
               ]}
             >
-              {timeframe}
+              {timeframe.label}
             </Text>
           </TouchableOpacity>
         ))}
@@ -199,24 +296,43 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 16,
   },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataText: {
+    fontSize: 16,
+    fontFamily: fonts.secondaryMedium,
+    color: colors.neutral[500],
+  },
   timeframeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   timeframeButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: colors.neutral[100],
     borderRadius: 20,
   },
   timeframeButtonActive: {
-    backgroundColor: colors.neutral[200],
+    backgroundColor: colors.text.primary,
+  },
+  timeframeButtonDisabled: {
+    backgroundColor: colors.neutral[50],
+    opacity: 0.5,
   },
   timeframeText: {
-    fontSize: 11,
-    fontFamily: fonts.secondaryMedium,
-    color: colors.neutral[500],
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text.primary,
+    fontFamily: fonts.primaryMedium,
   },
   timeframeTextActive: {
-    color: colors.text.primary,
+    color: colors.text.secondary,
+  },
+  timeframeTextDisabled: {
+    color: colors.neutral[400],
   },
 }); 

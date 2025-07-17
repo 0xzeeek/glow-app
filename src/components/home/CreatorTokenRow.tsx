@@ -2,19 +2,32 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import TokenChartMini from '../shared/TokenChartMini';
-import { CreatorToken } from '../../data/mockTokens';
+import { Token } from '@/types';
 import { fonts } from 'src/theme/typography';
 import { colors } from '@/theme/colors';
+import { formatMarketCap } from '@/utils';
+import { CHART_COLORS } from '@/utils/constants';
 
 interface CreatorTokenRowProps {
-  token: CreatorToken;
+  token: Token;
+  chartData?: number[];
   onPress?: () => void;
 }
 
-export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps) {
+export default function CreatorTokenRow({ token, chartData, onPress }: CreatorTokenRowProps) {
   const router = useRouter();
-  const isPositive = token.change24h >= 0;
-  const changeColor = isPositive ? '#00C853' : '#FF3366';
+  
+  // Determine color based on chart data if available, otherwise fall back to change24h
+  let isPositive = token.change24h >= 0;
+  let changeColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
+  
+  if (chartData && chartData.length > 0) {
+    const firstPrice = chartData[0];
+    const lastPrice = chartData[chartData.length - 1];
+    isPositive = lastPrice >= firstPrice;
+    changeColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
+  }
+  
   const arrow = isPositive ? '▲' : '▼';
 
   const handlePress = () => {
@@ -33,15 +46,17 @@ export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps
 
       <View style={styles.infoSection}>
         <Text style={styles.creatorName}>{token.name}</Text>
-        <Text style={styles.marketCap}>{token.marketCap}</Text>
+        <Text style={styles.marketCap}>{formatMarketCap(token.marketCap)}</Text>
       </View>
 
-      <View style={styles.chartSection}>
-        <TokenChartMini data={token.chartData} color={changeColor} width={50} height={24} />
-      </View>
+      {chartData && chartData.length > 0 && (
+        <View style={styles.chartSection}>
+          <TokenChartMini data={chartData} color={changeColor} width={50} height={24} />
+        </View>
+      )}
 
       <View style={styles.priceSection}>
-        <Text style={styles.price}>{token.price}</Text>
+        <Text style={styles.price}>${token.price.toFixed(4)}</Text>
         <Text style={[styles.changePercent, { color: changeColor }]}>
           {arrow} {Math.abs(token.change24h)}%
         </Text>
