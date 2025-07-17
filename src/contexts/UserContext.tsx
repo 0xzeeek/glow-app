@@ -59,13 +59,6 @@ export function UserProvider({ children }: UserProviderProps) {
   // TODO: remove hardcoded wallet address
   const { data: userProfile } = useUserProfile('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
 
-  console.log('userProfile', userProfile);
-
-  // useWebSocketBalanceUpdates(wallets?.[0]?.address || null);
-  // TODO: remove hardcoded wallet address
-
-  useWebSocketBalanceUpdates('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
-
   // User profile state
   const [username, setUsernameState] = useState('');
   const [email, setEmailState] = useState('');
@@ -79,7 +72,6 @@ export function UserProvider({ children }: UserProviderProps) {
 
   useEffect(() => {
     if (userProfile) {
-      console.log('userProfile', userProfile);
       setUsernameState(userProfile.username);
       setEmailState(userProfile.email);
       setImageState(userProfile.image);
@@ -150,11 +142,12 @@ export function UserProvider({ children }: UserProviderProps) {
     return walletHoldings?.tokens.find(t => t.symbol === 'USDC')?.balance || 0;
   }, [walletHoldings?.tokens]);
 
-  // Memoize total USD value calculation
+  // Calculate total USD value from individual token values
   const calculatedTotalUsdValue = useMemo(() => {
-    return walletHoldings?.tokens.reduce((total, token) => {
+    const value = walletHoldings?.tokens.reduce((total, token) => {
       return total + (token.usdValue || 0);
     }, 0) || 0;
+    return value;
   }, [walletHoldings?.tokens]);
 
   // Memoize token holdings

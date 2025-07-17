@@ -1,19 +1,82 @@
 import { PlusWallet, Logo, DepositWallet } from 'assets';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { fonts } from '../../theme/typography';
 import { useUser } from '../../contexts';
 import { colors } from '@/theme/colors';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  withSequence,
+  Easing,
+} from 'react-native-reanimated';
 
 export default function HeaderBar() {
   const router = useRouter();
   const { totalUsdValue } = useUser();
   
+  // State for the displayed value during animation
+  const [displayValue, setDisplayValue] = useState(totalUsdValue);
+  const previousValueRef = useRef(totalUsdValue);
+  
+  // Animation values
+  const bounceScale = useSharedValue(1);
+  
+  // Counter animation function
+  const animateValue = (from: number, to: number, duration: number) => {
+    const startTime = Date.now();
+    const difference = to - from;
+    
+    const updateValue = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function for smooth animation
+      const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+      
+      const currentValue = from + (difference * easedProgress);
+      setDisplayValue(currentValue);
+      
+      if (progress < 1) {
+        requestAnimationFrame(updateValue);
+      } else {
+        // Trigger bounce when animation completes
+        bounceScale.value = withSequence(
+          withSpring(1.12, { damping: 8, stiffness: 200 }),
+          withSpring(1, { damping: 10, stiffness: 150 })
+        );
+      }
+    };
+    
+    requestAnimationFrame(updateValue);
+  };
+  
+  // Detect value changes
+  useEffect(() => {
+    if (totalUsdValue > previousValueRef.current && previousValueRef.current > 0) {
+      // Animate the counter
+      animateValue(previousValueRef.current, totalUsdValue, 800);
+    } else if (totalUsdValue !== previousValueRef.current) {
+      // For decreases or initial load, just update immediately
+      setDisplayValue(totalUsdValue);
+    }
+    
+    previousValueRef.current = totalUsdValue;
+  }, [totalUsdValue, bounceScale]);
+  
   const handleDepositPress = () => {
     router.push('/(profile)');
   };
+  
+  // Animated styles
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: bounceScale.value }],
+  }));
 
   if (totalUsdValue > 0) {
     return (
@@ -22,11 +85,13 @@ export default function HeaderBar() {
           <View style={styles.logoContainer}>
             <Image source={Logo} style={styles.logo} />
           </View>
-          <TouchableOpacity style={styles.cashButton} onPress={handleDepositPress}>
-            <Image source={DepositWallet} style={styles.walletIcon} />
-            <Text style={styles.cashAmount}>${totalUsdValue.toFixed(2)}</Text>
-            <Ionicons name="chevron-forward" size={16} color="#000" />
-          </TouchableOpacity>
+          <Animated.View style={[styles.cashButtonWrapper, animatedButtonStyle]}>
+            <TouchableOpacity style={styles.cashButton} onPress={handleDepositPress}>
+              <Image source={DepositWallet} style={styles.walletIcon} />
+              <Text style={styles.cashAmount}>${displayValue.toFixed(2)}</Text>
+              <Ionicons name="chevron-forward" size={16} color="#000" />
+            </TouchableOpacity>
+          </Animated.View>
         </View>
       </SafeAreaView>
     );
@@ -112,5 +177,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.secondaryMedium,
     color: '#000000',
     letterSpacing: -0.5,
+  },
+  cashButtonWrapper: {
+    // Wrapper for animation transforms
   },
 }); 

@@ -17,8 +17,6 @@ export default function CreatorTokenRow({ token, onPress }: CreatorTokenRowProps
   const changeColor = isPositive ? '#00C853' : '#FF3366';
   const arrow = isPositive ? '▲' : '▼';
 
-  console.log(token);
-
   const handlePress = () => {
     if (onPress) {
       onPress();

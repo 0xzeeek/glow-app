@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getWebSocketManager, getApiClient } from '../services';
 import { queryKeys } from '../services/ApiClient';
-import { BalanceUpdate } from '../types';
+import { BalanceUpdate, WalletHoldings } from '../types';
 import { TOKEN_ADDRESSES } from '../utils/constants';
 
 export function useWebSocketBalanceUpdates(walletAddress: string | null) {
@@ -35,50 +35,78 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
         // Handle balance updates
         const handleBalanceUpdate = async (data: BalanceUpdate) => {
           if (data.wallet === walletAddress) {
-            let usdValue = 0;
+            console.log('data', data);
 
-            // Check if the token is USDC
-            if (data.token === TOKEN_ADDRESSES.USDC) {
-              // For USDC, the amount is already in USD (accounting for decimals)
-              usdValue = data.amount;
-            } else {
-              // For other tokens, fetch the current price and calculate USD value
-              try {
-                const apiClient = getApiClient();
-                const priceData = await apiClient.getLatestPrice(data.token);
-                // Calculate USD value: token amount * token price
-                usdValue = data.amount * priceData.price;
-              } catch (error) {
-                console.error('Failed to fetch token price for balance calculation:', error);
-                // If we can't get the price, we can't update the balance
-                return;
-              }
-            }
-
-            // Get current balance from cache
-            const currentData = queryClient.getQueryData<{ balance: number }>(
+            // Get current holdings from cache
+            const currentData = queryClient.getQueryData<WalletHoldings>(
               queryKeys.users.holdings(walletAddress)
             );
-            const currentBalance = currentData?.balance || 0;
 
-            // Update React Query cache with the new balance
-            // The amount can be positive (deposit) or negative (withdrawal)
-            const newBalance = Math.max(0, currentBalance + usdValue); // Ensure balance doesn't go negative
-            
-            queryClient.setQueryData(
-              queryKeys.users.holdings(walletAddress),
-              { balance: newBalance }
-            );
+            if (!currentData) {
+              // If we don't have existing data, invalidate to fetch fresh data
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.users.holdings(walletAddress),
+              });
+              return;
+            }
 
-            // Also update any other relevant caches
-            queryClient.invalidateQueries({
-              queryKey: queryKeys.users.holdings(walletAddress),
-              refetchType: 'none', // Don't refetch, we just updated the cache
-            });
+            // Find the token in current holdings
+            const tokenIndex = currentData.tokens.findIndex(t => t.address === data.token);
 
-            // Invalidate wallet holdings to get fresh data
-            queryClient.invalidateQueries({
-              queryKey: queryKeys.users.holdings(walletAddress),
+            if (tokenIndex === -1) {
+              // New token not in holdings - refetch everything
+              queryClient.invalidateQueries({
+                queryKey: queryKeys.users.holdings(walletAddress),
+              });
+              return;
+            }
+
+            // Update the specific token balance
+            const updatedTokens = [...currentData.tokens];
+            const token = updatedTokens[tokenIndex];
+
+            console.log('updatedTokensOnUpdate', updatedTokens);
+
+            // WebSocket sends human-readable amounts (e.g., 0.5 for $0.50)
+            const normalizedAmount = data.amount;
+
+            console.log('normalizedAmount', normalizedAmount);
+
+            // Update token balance (amount is the change, not the new balance)
+            const newBalance = Math.max(0, token.balance + normalizedAmount);
+
+            console.log('newBalance', newBalance);
+
+            // Calculate new USD value for this token
+            let newUsdValue = 0;
+            if (data.token === TOKEN_ADDRESSES.USDC) {
+              // For USDC, price is $1, so USD value = balance
+              newUsdValue = newBalance * 1;
+            } else {
+              // For other tokens, calculate USD value using current price
+              newUsdValue = newBalance * token.price;
+            }
+
+            // Update the token in the array
+            updatedTokens[tokenIndex] = {
+              ...token,
+              balance: newBalance,
+              usdValue: newUsdValue,
+            };
+
+            console.log('updatedTokens', updatedTokens);
+
+            // Recalculate total USD value
+            const newTotalUsdValue = updatedTokens.reduce((total, t) => total + t.usdValue, 0);
+
+            console.log('newTotalUsdValue', newTotalUsdValue);
+
+            // Update cache with new data
+            queryClient.setQueryData(queryKeys.users.holdings(walletAddress), {
+              ...currentData,
+              tokens: updatedTokens,
+              totalUsdValue: newTotalUsdValue,
+              timestamp: Date.now(),
             });
           }
         };
@@ -128,4 +156,4 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
   return {
     isConnected: wsManagerRef.current?.isConnected() ?? false,
   };
-} 
+}
