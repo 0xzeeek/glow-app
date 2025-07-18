@@ -2,7 +2,6 @@ import { useQuery, useQueries } from '@tanstack/react-query';
 import { getApiClient, queryKeys } from '../services/ApiClient';
 import { 
   LatestPriceResponse, 
-  GetPricesParams,
 } from '../types';
 
 // Hook for fetching latest token price

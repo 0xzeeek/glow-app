@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
-import Svg, { Path, Circle, G } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { Token1, Token2, Token3, ReferralProfile } from '../../../assets';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { interpolateChartData } from '@/utils';
 import { CHART_COLORS } from '@/utils/constants';
+import { TopHolder } from '@/types';
 
 const { width: screenWidth } = Dimensions.get('window');
-const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 interface TokenStatsChartProps {
   marketCap: string;
-  topHolders: {
-    position: number;
-    avatar: string;
-  }[];
+  topHolders: TopHolder[];
   chartData: {
     timestamp: number;
     price: number;
@@ -99,6 +96,7 @@ export default function TokenStatsChart({
         animationValue.removeListener(listener);
       };
     }
+    return undefined;
   }, [chartData, isLoading]);
   
   // Get position badge images
@@ -133,19 +131,13 @@ export default function TokenStatsChart({
   const isPositive = lastPrice >= firstPrice;
   const chartColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
   
-  // Calculate the last point for the circle
-  const lastPoint = points.length > 0 ? {
-    x: points[points.length - 1].x,
-    y: points[points.length - 1].y
-  } : null;
-  
   // Create placeholder holders if needed
   const displayHolders = topHolders.length > 0 
     ? topHolders.slice(0, 3)
     : [
-        { position: 1, avatar: '' },
-        { position: 2, avatar: '' },
-        { position: 3, avatar: '' }
+        { position: 1, image: '', wallet: '', holdings: 0, percentage: 0 },
+        { position: 2, image: '', wallet: '', holdings: 0, percentage: 0 },
+        { position: 3, image: '', wallet: '', holdings: 0, percentage: 0 }
       ];
   
   return (
@@ -165,7 +157,7 @@ export default function TokenStatsChart({
               <View key={holder.position} style={styles.holderWrapper}>
                 <Image source={positionIcons[index]} style={styles.positionBadge} />
                 <Image 
-                  source={holder.avatar ? { uri: holder.avatar } : ReferralProfile} 
+                  source={holder.image ? { uri: holder.image } : ReferralProfile} 
                   style={styles.holderAvatar} 
                 />
               </View>

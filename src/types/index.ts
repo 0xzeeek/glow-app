@@ -143,3 +143,11 @@ export interface WalletBalance {
   tokens: TokenHolding[];
   timestamp: number;
 } 
+
+export interface TopHolder {
+  position: number;
+  image: string;
+  wallet: string;
+  holdings: number;
+  percentage: number;
+}

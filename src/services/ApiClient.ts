@@ -1,5 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { persistQueryClient } from '@tanstack/react-query-persist-client';
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import {
   LatestPriceResponse,
   TokenPricesResponse,
@@ -261,13 +264,19 @@ export const getApiClient = (): ApiClient => {
   return apiClient;
 };
 
+// AsyncStorage persister configuration
+const asyncStoragePersister = createAsyncStoragePersister({
+  storage: AsyncStorage,
+  throttleTime: 1000, // Throttle writes to prevent excessive storage operations
+});
+
 // TanStack Query configuration
 export const createQueryClient = (): QueryClient => {
-  return new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 1000 * 60 * 5, // 5 minutes
-        gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+        staleTime: 1000 * 60 * 5, // 5 minutes - data is fresh for 5 minutes
+        gcTime: 1000 * 60 * 60 * 24, // 24 hours - keep data in cache for 24 hours
         retry: (failureCount, error) => {
           if (error instanceof ApiError) {
             // Don't retry on 4xx errors
@@ -278,6 +287,10 @@ export const createQueryClient = (): QueryClient => {
           return failureCount < 3;
         },
         retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+        // Important: Always refetch on mount to ensure fresh data
+        refetchOnMount: true,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
       },
       mutations: {
         retry: false,
@@ -294,6 +307,24 @@ export const createQueryClient = (): QueryClient => {
       },
     },
   });
+
+  // Set up persistence
+  persistQueryClient({
+    queryClient,
+    persister: asyncStoragePersister,
+    maxAge: 1000 * 60 * 60 * 24, // 24 hours - persist data for 24 hours
+    hydrateOptions: {
+      // This ensures queries are marked as stale when restored from storage
+      // so they'll refetch automatically when components mount
+      defaultOptions: {
+        queries: {
+          gcTime: 1000 * 60 * 60 * 24, // 24 hours
+        },
+      },
+    },
+  });
+
+  return queryClient;
 };
 
 // Query key factory for consistency

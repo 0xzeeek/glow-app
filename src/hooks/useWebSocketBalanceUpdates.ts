@@ -26,7 +26,6 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
         // Handle balance updates
         const handleBalanceUpdate = async (data: BalanceUpdate) => {
           if (data.wallet === walletAddress) {
-            console.log('data', data);
 
             // Get current holdings from cache
             const currentData = queryClient.getQueryData<WalletBalance>(

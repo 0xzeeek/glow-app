@@ -1,17 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { getApiClient, queryKeys } from '../services/ApiClient';
-import { Token } from '../types';
-import { useTokenPriceHistory } from './useTokenQueries';
+import { Token, TopHolder } from '../types';
 import { useTokenData } from '../contexts';
-
-interface TopHolder {
-  position: number;
-  avatar: string;
-  address: string;
-  holdings: number;
-  percentage: number;
-}
 
 interface ChartDataPoint {
   timestamp: number;
@@ -98,8 +89,8 @@ export function useTokenDetails(tokenId: string): UseTokenDetailsReturn {
             // Transform the response to match our interface
             return response.holders.slice(0, 3).map((holder: any, index: number) => ({
               position: index + 1,
-              avatar: holder.profileImage || '',
-              address: holder.address,
+              image: holder.image || '',
+              wallet: holder.wallet,
               holdings: holder.holdings,
               percentage: holder.percentage,
             }));
@@ -153,8 +144,8 @@ export async function fetchTopHolders(tokenId: string): Promise<TopHolder[]> {
   const response = await apiClient.request<{ holders: any[] }>(`/tokens/${tokenId}/holders`);
   return response.holders.slice(0, 3).map((holder: any, index: number) => ({
     position: index + 1,
-    avatar: holder.profileImage || '',
-    address: holder.address,
+    image: holder.image || '',
+    wallet: holder.wallet,
     holdings: holder.holdings,
     percentage: holder.percentage,
   }));
