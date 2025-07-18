@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
   },
   inputError: {
-    borderColor: '#FF3B30',
+    borderColor: colors.red.black,
   },
   input: {
     fontSize: 18,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     fontFamily: fonts.secondary,
-    color: '#FF3B30',
+    color: colors.red.black,
     marginTop: 8,
     marginLeft: 4,
   },

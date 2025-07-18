@@ -101,7 +101,6 @@ export default function HomeScreen() {
         change24h: changeMap[token.address] || 0
       }))
       .sort((a, b) => b.change24h - a.change24h)
-      .slice(0, 10);
   }, [allTokens, changeMap]);
 
   // Track which tokens are visible on screen
@@ -200,7 +199,7 @@ export default function HomeScreen() {
       <FlatList
         data={nonWatchlistTokens}
         renderItem={renderItem}
-        keyExtractor={item => item.address}
+        keyExtractor={(item, index) => `${item.address}-${index}`}
         ListHeaderComponent={ListHeaderComponent}
         ListFooterComponent={renderFooter}
         onEndReached={handleEndReached}
