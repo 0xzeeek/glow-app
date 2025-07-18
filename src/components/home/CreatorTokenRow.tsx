@@ -5,20 +5,21 @@ import TokenChartMini from '../shared/TokenChartMini';
 import { Token } from '@/types';
 import { fonts } from 'src/theme/typography';
 import { colors } from '@/theme/colors';
-import { formatMarketCap } from '@/utils';
+import { formatMarketCap, formatPercentage, formatPrice } from '@/utils';
 import { CHART_COLORS } from '@/utils/constants';
 
 interface CreatorTokenRowProps {
   token: Token;
   chartData?: number[];
+  change24h?: number;
   onPress?: () => void;
 }
 
-export default function CreatorTokenRow({ token, chartData, onPress }: CreatorTokenRowProps) {
+export default function CreatorTokenRow({ token, chartData, change24h, onPress }: CreatorTokenRowProps) {
   const router = useRouter();
   
-  // Determine color based on chart data if available, otherwise fall back to change24h
-  let isPositive = token.change24h >= 0;
+  // Determine color based on chart data if available, otherwise fall back to change24h prop
+  let isPositive = (change24h ?? 0) >= 0;
   let changeColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
   
   if (chartData && chartData.length > 0) {
@@ -29,6 +30,9 @@ export default function CreatorTokenRow({ token, chartData, onPress }: CreatorTo
   }
   
   const arrow = isPositive ? '▲' : '▼';
+  
+  // Use calculated change or fall back to 0
+  const displayChange = change24h ?? 0;
 
   const handlePress = () => {
     if (onPress) {
@@ -56,9 +60,9 @@ export default function CreatorTokenRow({ token, chartData, onPress }: CreatorTo
       )}
 
       <View style={styles.priceSection}>
-        <Text style={styles.price}>${token.price.toFixed(4)}</Text>
+        <Text style={styles.price}>${formatPrice(token.price)}</Text>
         <Text style={[styles.changePercent, { color: changeColor }]}>
-          {arrow} {Math.abs(token.change24h)}%
+          {arrow} {formatPercentage(Math.abs(displayChange))}%
         </Text>
       </View>
     </TouchableOpacity>

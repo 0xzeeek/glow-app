@@ -5,7 +5,6 @@ export interface Token {
   decimals: number;
   description: string;
   price: number;
-  change24h: number;
   marketCap: number;
   totalSupply: number;
   image: string;
@@ -39,7 +38,6 @@ export interface PriceUpdate {
   type: 'PRICE_UPDATE';
   token: string;
   price: number;
-  change24h: number;  // 24-hour percentage change
   timestamp: number;
   slot?: number;
   txSignature?: string;

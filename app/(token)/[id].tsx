@@ -8,16 +8,16 @@ import TokenInfo from '../../src/components/token-details/TokenInfo';
 import TokenSocials from '../../src/components/token-details/TokenSocials';
 import FloatingBuyButton from '../../src/components/token-details/FloatingBuyButton';
 import BottomNav from '../../src/components/navigation/BottomNav';
-import { useTokenDetails, useWebSocketPriceUpdates } from '../../src/hooks';
+import { useTokenDetails } from '../../src/hooks';
 import { colors, fonts } from '../../src/theme';
-import { formatMarketCap } from '../../src/utils';
+import { formatMarketCap, calculatePriceChange, formatPrice } from '../../src/utils';
 
 export default function TokenDetailScreen() {
   const { id } = useLocalSearchParams();
   const { tokenDetails, topHolders, chartData, isLoading, isChartLoading, error, selectedRange, setSelectedRange, availableRanges } = useTokenDetails(id as string);
   
-  // Subscribe to real-time price updates for this token
-  useWebSocketPriceUpdates(id as string);
+  // Calculate price change from chart data
+  const priceChange = chartData.length > 0 ? calculatePriceChange(chartData) : 0;
 
   if (isLoading) {
     return (
@@ -41,10 +41,10 @@ export default function TokenDetailScreen() {
       <ScrollView showsVerticalScrollIndicator={false}>
         <TokenHeader
           name={tokenDetails.name}
-          price={`$${tokenDetails.price.toFixed(4)}`}
-          priceChange={tokenDetails.change24h}
+          price={`$${formatPrice(tokenDetails.price)}`}
+          priceChange={priceChange}
           profileImage={tokenDetails.image}
-          backgroundImage={tokenDetails.image}
+          backgroundImage={tokenDetails.video}
           address={tokenDetails.address}
         />
         

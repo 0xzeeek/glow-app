@@ -39,7 +39,25 @@ export function calculatePnlPercentage(
 } 
 
 export const formatPrice = (price: number): string => {
-  return price.toFixed(4);
+  if (price === 0) return '0.0000';
+  
+  // For very small prices (less than 0.0001), use more decimal places
+  if (price < 0.0001) {
+    return price.toFixed(8);
+  }
+  
+  // For small prices (less than 1), use 4 decimal places
+  if (price < 1) {
+    return price.toFixed(4);
+  }
+  
+  // For prices between 1 and 1000, use 2 decimal places
+  if (price < 1000) {
+    return price.toFixed(2);
+  }
+  
+  // For large prices, use comma formatting with no decimals
+  return price.toLocaleString('en-US', { maximumFractionDigits: 0 });
 };
 
 export const formatMarketCap = (marketCap: number): string => {
@@ -53,6 +71,23 @@ export const formatMarketCap = (marketCap: number): string => {
 
 export const formatNumber = (num: number): string => {
   return num.toLocaleString();
+};
+
+export const formatPercentage = (percentage: number, decimals: number = 2): string => {
+  return percentage.toFixed(decimals);
+};
+
+export const calculatePriceChange = (priceData: { price: number }[]): number => {
+  if (!priceData || priceData.length === 0) return 0;
+  
+  const firstPrice = priceData[0].price;
+  const lastPrice = priceData[priceData.length - 1].price;
+  
+  if (firstPrice === 0) return 0;
+  
+  // Return with reasonable precision
+  const change = ((lastPrice - firstPrice) / firstPrice) * 100;
+  return Math.round(change * 100) / 100; // Round to 2 decimal places
 };
 
 interface ChartPoint {

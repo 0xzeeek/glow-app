@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Animated } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 interface TokenChartMiniProps {
@@ -15,6 +15,24 @@ export default function TokenChartMini({
   width = 60, 
   height = 30 
 }: TokenChartMiniProps) {
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  
+  // Smooth transition when data changes
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 0.7,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [data]);
+  
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -30,7 +48,7 @@ export default function TokenChartMini({
     .join(' ');
   
   return (
-    <View style={[styles.container, { width, height }]}>
+    <Animated.View style={[styles.container, { width, height, opacity: fadeAnim }]}>
       <Svg width={width} height={height}>
         <Path
           d={pathData}
@@ -41,7 +59,7 @@ export default function TokenChartMini({
           strokeLinejoin="round"
         />
       </Svg>
-    </View>
+    </Animated.View>
   );
 }
 
