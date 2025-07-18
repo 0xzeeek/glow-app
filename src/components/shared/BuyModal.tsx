@@ -538,6 +538,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    // TODO: update this color
     backgroundColor: '#0B0B0B',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -590,7 +591,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   cashText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 14,
     fontFamily: fonts.secondaryMedium,
     marginRight: 8,
@@ -607,10 +608,10 @@ const styles = StyleSheet.create({
     letterSpacing: -2,
   },
   amountTextActive: {
-    color: '#FFF',
+    color: colors.text.secondary,
   },
   applePayText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 16,
     fontFamily: fonts.secondaryMedium,
   },
@@ -637,7 +638,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   quickAmountText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 16,
     fontFamily: fonts.secondaryMedium,
   },
@@ -661,7 +662,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 28,
-    color: '#FFF',
+    color: colors.text.secondary,
     fontFamily: fonts.secondary,
   },
   deleteIcon: {
@@ -688,7 +689,7 @@ const styles = StyleSheet.create({
     left: 2,
     width: 60,
     height: 52,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background.primary,
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
@@ -699,7 +700,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
   swipeText: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: colors.neutral[500],
     fontSize: 14,
     fontFamily: fonts.primaryBold,
     letterSpacing: 2,
@@ -723,6 +724,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    // TODO: update this color
     backgroundColor: '#1A1A1A',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -733,7 +735,7 @@ const styles = StyleSheet.create({
   paymentMethodsHandle: {
     width: 40,
     height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: colors.neutral[300],
     borderRadius: 2,
     marginBottom: 30,
     alignSelf: 'center',
@@ -755,7 +757,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentMethodText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 16,
     fontFamily: fonts.primaryBold,
     letterSpacing: 1,

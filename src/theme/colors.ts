@@ -33,6 +33,10 @@ export const colors = {
     black: "#04FF58",
     white: "#0ACA30",
   },
+  red: {
+    black: "#FF3366",
+    white: "#FF0000",
+  },
   
   // Special effects
   overlay: 'rgba(0, 0, 0, 0.5)',

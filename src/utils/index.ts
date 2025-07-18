@@ -74,6 +74,12 @@ export const formatNumber = (num: number): string => {
 };
 
 export const formatPercentage = (percentage: number, decimals: number = 2): string => {
+  if (percentage >= 1_000_000) {
+    return (percentage / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (percentage >= 1_000) {
+    return (percentage / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
   return percentage.toFixed(decimals);
 };
 

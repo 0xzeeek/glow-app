@@ -1,72 +1,101 @@
-import React, { useMemo } from 'react';
-import { View, FlatList, StyleSheet, ScrollView, Text, ActivityIndicator } from 'react-native';
+import React, { useMemo, useCallback, useState, useRef } from 'react';
+import { View, FlatList, StyleSheet, Text, ActivityIndicator, ViewToken, RefreshControl } from 'react-native';
 import HeaderBar from '../../src/components/navigation/HeaderBar';
 import TopMovers from '../../src/components/home/TopMovers';
 import FeaturedToken from '../../src/components/home/FeaturedToken';
 import CreatorTokenRow from '../../src/components/home/CreatorTokenRow';
 import BottomNav from '../../src/components/navigation/BottomNav';
 import { useTokenData, useWatchlistContext } from '../../src/contexts';
-import { useMultipleToken24hPrices } from '../../src/hooks';
+import { useMultipleToken24hPrices, useVisibleTokenSubscriptions } from '../../src/hooks';
 import { fonts } from '@/theme/typography';
 import { colors } from '@/theme/colors';
 import { interpolateChartData, calculatePriceChange } from '@/utils';
+import { Token } from '@/types';
 
 export default function HomeScreen() {
-  const { featuredToken, creatorTokens, isLoading } = useTokenData();
+  const { 
+    featuredToken, 
+    creatorTokens, 
+    allTokens,
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refreshTokenData,
+    updateTokenPrice,
+  } = useTokenData();
   const { watchlist } = useWatchlistContext();
+  const [visibleTokens, setVisibleTokens] = useState<Token[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const allTokens = useMemo(
-    () => [...creatorTokens, ...(featuredToken ? [featuredToken] : [])],
-    [creatorTokens, featuredToken]
-  );
-
-  // Filter tokens based on watchlist - now using allTokens
+  // Filter tokens based on watchlist
   const watchlistTokens = useMemo(
     () => allTokens.filter(token => watchlist.includes(token.address)),
     [allTokens, watchlist]
   );
 
-  // Filter out watchlisted tokens from the creators list - still only from creatorTokens
+  // Filter out watchlisted tokens from the creators list
   const nonWatchlistTokens = useMemo(
     () => creatorTokens.filter(token => !watchlist.includes(token.address)),
     [creatorTokens, watchlist]
   );
 
-  // Fetch 24h price data for ALL tokens (including featured)
-  const tokenAddresses = useMemo(() => 
-    allTokens.map(token => token.address),
-    [allTokens]
-  );
-  const priceDataQueries = useMultipleToken24hPrices(tokenAddresses);
+  // Track visible tokens for optimized WebSocket subscriptions
+  useVisibleTokenSubscriptions({
+    allTokens,
+    visibleTokens,
+    onPriceUpdate: updateTokenPrice,
+  });
+
+  // Fetch 24h price data for all loaded tokens (not just visible)
+  // This ensures charts don't disappear when scrolling
+  const loadedTokenAddresses = useMemo(() => {
+    // Get addresses for featured token, watchlist tokens, and non-watchlist tokens
+    const addresses = new Set<string>();
+    
+    // Add featured token
+    if (featuredToken) {
+      addresses.add(featuredToken.address);
+    }
+    
+    // Add watchlist tokens
+    watchlistTokens.forEach(token => addresses.add(token.address));
+    
+    // Add currently displayed creator tokens
+    nonWatchlistTokens.forEach(token => addresses.add(token.address));
+    
+    return Array.from(addresses);
+  }, [featuredToken, watchlistTokens, nonWatchlistTokens]);
+  
+  const priceDataQueries = useMultipleToken24hPrices(loadedTokenAddresses);
 
   // Create a map of token address to chart data
   const chartDataMap = useMemo(() => {
     const map: Record<string, number[]> = {};
     priceDataQueries.forEach((query, index) => {
-      if (query.data && tokenAddresses[index]) {
-        // Interpolate to 50 points for mini charts (smoother but performant)
+      if (query.data && loadedTokenAddresses[index]) {
         const interpolated = interpolateChartData(query.data.prices, 50);
-        // Extract just the prices from the interpolated data
-        map[tokenAddresses[index]] = interpolated.map(point => point.price);
+        map[loadedTokenAddresses[index]] = interpolated.map(point => point.price);
       }
     });
     return map;
-  }, [priceDataQueries, tokenAddresses]);
+  }, [priceDataQueries, loadedTokenAddresses]);
 
   // Calculate 24h change for each token
   const changeMap = useMemo(() => {
     const map: Record<string, number> = {};
     priceDataQueries.forEach((query, index) => {
-      if (query.data && tokenAddresses[index]) {
-        map[tokenAddresses[index]] = calculatePriceChange(query.data.prices);
+      if (query.data && loadedTokenAddresses[index]) {
+        map[loadedTokenAddresses[index]] = calculatePriceChange(query.data.prices);
       }
     });
     return map;
-  }, [priceDataQueries, tokenAddresses]);
+  }, [priceDataQueries, loadedTokenAddresses]);
 
-  // Calculate top movers based on actual 24h price changes - now using allTokens
+  // Calculate top movers based on visible tokens
   const calculatedTopMovers = useMemo(() => {
     return allTokens
+      .slice(0, 50) // Only check top 50 tokens for performance
       .map(token => ({
         ...token,
         change24h: changeMap[token.address] || 0
@@ -75,7 +104,84 @@ export default function HomeScreen() {
       .slice(0, 10);
   }, [allTokens, changeMap]);
 
-  if (isLoading) {
+  // Track which tokens are visible on screen
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { 
+    viewableItems: ViewToken[] 
+  }) => {
+    const visible = viewableItems
+      .filter(item => item.isViewable && item.item)
+      .map(item => item.item as Token);
+    setVisibleTokens(visible);
+  }, []);
+
+  const viewabilityConfig = useMemo(() => ({
+    itemVisiblePercentThreshold: 50,
+    minimumViewTime: 100,
+  }), []);
+
+  // Handle refresh
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshTokenData();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refreshTokenData]);
+
+  // Load more when approaching the end
+  const handleEndReached = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const renderItem = useCallback(({ item }: { item: Token }) => (
+    <CreatorTokenRow
+      token={item}
+      chartData={chartDataMap[item.address]}
+      change24h={changeMap[item.address]}
+    />
+  ), [chartDataMap, changeMap]);
+
+  const renderFooter = useCallback(() => {
+    if (!isFetchingNextPage) return null;
+    
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={colors.neutral[500]} />
+        <Text style={styles.loadingText}>Loading more tokens...</Text>
+      </View>
+    );
+  }, [isFetchingNextPage]);
+
+  const ListHeaderComponent = useMemo(() => (
+    <>
+      {calculatedTopMovers.length > 0 && <TopMovers data={calculatedTopMovers} />}
+      {featuredToken && <FeaturedToken token={featuredToken} />}
+      
+      {/* Watchlist Section */}
+      {watchlistTokens.length > 0 && (
+        <View style={styles.tokenListSection}>
+          <Text style={styles.sectionTitle}>WATCHLIST</Text>
+          {watchlistTokens.map((token) => (
+            <CreatorTokenRow
+              key={token.address}
+              token={token}
+              chartData={chartDataMap[token.address]}
+              change24h={changeMap[token.address]}
+            />
+          ))}
+        </View>
+      )}
+      
+      <View style={styles.tokenListSection}>
+        <Text style={styles.sectionTitle}>CREATORS</Text>
+      </View>
+    </>
+  ), [calculatedTopMovers, featuredToken, watchlistTokens, chartDataMap, changeMap]);
+
+  if (isLoading && !isRefreshing) {
     return (
       <View style={styles.container}>
         <HeaderBar />
@@ -91,46 +197,31 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <HeaderBar />
 
-      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {calculatedTopMovers.length > 0 && <TopMovers data={calculatedTopMovers} />}
-
-        {featuredToken && <FeaturedToken token={featuredToken} />}
-
-        {/* Watchlist Section */}
-        {watchlistTokens.length > 0 && (
-          <View style={styles.tokenListSection}>
-            <Text style={styles.sectionTitle}>WATCHLIST</Text>
-            <FlatList
-              data={watchlistTokens}
-              keyExtractor={item => item.address}
-              renderItem={({ item }) => (
-                <CreatorTokenRow
-                  token={item}
-                  chartData={chartDataMap[item.address]}
-                  change24h={changeMap[item.address]}
-                />
-              )}
-              scrollEnabled={false}
-            />
-          </View>
-        )}
-
-        <View style={styles.tokenListSection}>
-          <Text style={styles.sectionTitle}>CREATORS</Text>
-          <FlatList
-            data={nonWatchlistTokens}
-            keyExtractor={item => item.address}
-            renderItem={({ item }) => (
-              <CreatorTokenRow
-                token={item}
-                chartData={chartDataMap[item.address]}
-                change24h={changeMap[item.address]}
-              />
-            )}
-            scrollEnabled={false}
+      <FlatList
+        data={nonWatchlistTokens}
+        renderItem={renderItem}
+        keyExtractor={item => item.address}
+        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={renderFooter}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.5}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.neutral[500]]}
+            tintColor={colors.neutral[500]}
           />
-        </View>
-      </ScrollView>
+        }
+        contentContainerStyle={styles.scrollContent}
+      />
 
       <BottomNav activeTab="home" />
     </View>
@@ -140,10 +231,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   scrollContent: {
-    flex: 1,
+    paddingBottom: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -151,16 +242,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tokenListSection: {
-    marginTop: 16,
-    backgroundColor: '#FFFFFF',
+    marginTop: 20,
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '700',
-    color: colors.neutral[700],
-    marginLeft: 20,
-    marginBottom: 12,
+    fontFamily: fonts.primaryBold,
+    color: colors.neutral[500],
     letterSpacing: 0.5,
-    fontFamily: fonts.secondaryBold,
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: colors.neutral[500],
+    fontFamily: fonts.primaryMedium,
   },
 });

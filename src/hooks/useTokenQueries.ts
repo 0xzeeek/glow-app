@@ -58,8 +58,9 @@ export const useMultipleToken24hPrices = (tokenAddresses: string[]) => {
       queryKey: queryKeys.prices.history(address, { range: '1d' }),
       queryFn: () => apiClient.getTokenPrices(address, { range: '1d' }),
       enabled: !!address,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes
+      staleTime: 1000 * 60 * 30, // 30 minutes (was 5)
+      gcTime: 1000 * 60 * 60, // 60 minutes (was 10)
+      refetchOnWindowFocus: false, // Don't refetch when app comes to foreground
     })),
   });
 };

@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    // TODO: update this color
     backgroundColor: '#1A1A1A',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: colors.neutral[300],
     backgroundColor: 'transparent',
     alignItems: 'center',
   },

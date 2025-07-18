@@ -7,6 +7,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '@/theme/colors';
 
 interface PurchaseSuccessProps {
   tokenName: string;
@@ -98,6 +99,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 20,
     borderWidth: 3,
+    // TODO: update this color
     borderColor: '#00FF88',
   },
   profileImage: {
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
   tokenName: {
     fontSize: 24,
     fontWeight: '400',
-    color: '#FFFFFF',
+    color: colors.text.secondary,
     marginBottom: 20,
     fontFamily: 'DGMTypeset-Regular',
   },
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
     fontFamily: 'DGMTypeset-Regular',
   },
   positiveGain: {
+    // TODO: update this color
     color: '#00FF88',
   },
   negativeGain: {
@@ -133,7 +136,7 @@ const styles = StyleSheet.create({
   shareButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
     paddingVertical: 16,
     paddingHorizontal: 30,
     borderRadius: 30,
@@ -141,7 +144,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   shareButtonText: {
-    color: '#000',
+    color: colors.text.primary,
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: 1,

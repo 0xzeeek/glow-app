@@ -22,6 +22,15 @@ export interface Token {
   lastUpdated?: number;
 }
 
+export interface PaginatedTokensResponse {
+  tokens: Token[];
+  count: number;
+  hasNextPage: boolean;
+  nextCursor?: string;
+  limit: number;
+  order: 'asc' | 'desc';
+}
+
 export interface WSConnectParams {
   wallet: string;
   signature: string;

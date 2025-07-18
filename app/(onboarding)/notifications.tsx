@@ -61,6 +61,7 @@ export default function NotificationsOnboardingScreen() {
             name: 'default',
             importance: Notifications.AndroidImportance.MAX,
             vibrationPattern: [0, 250, 250, 250],
+            // TODO: update this color
             lightColor: '#FF231F7C',
           });
         }

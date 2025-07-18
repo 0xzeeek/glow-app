@@ -203,6 +203,7 @@ const styles = StyleSheet.create({
     height: 320,
     paddingTop: 60,
     alignItems: 'center',
+    // TOOD: move this to colors
     backgroundColor: '#4B79A1',
   },
   settingsButton: {
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
   tokenRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: colors.neutral[100],
   },
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
     color: colors.green.black,
   },
   negativeChange: {
-    color: '#FF3B30',
+    color: colors.red.black,
   },
   shareButton: {
     padding: 8,

@@ -172,7 +172,7 @@ export default function TopMovers({ data }: TopMoversProps) {
 const styles = StyleSheet.create({
   container: {
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   scrollContent: {
     paddingHorizontal: 20,

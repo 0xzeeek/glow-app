@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { TokenEye, TokenShare, SocialXWhite, SocialYoutubeWhite, SocialInstagramWhite } from '../../../assets';
 import { colors, fonts } from '../../theme';
 import { useWatchlistContext } from '../../contexts';
+import { formatPercentage } from '@/utils';
 
 interface TokenHeaderProps {
   name: string;
@@ -76,8 +77,8 @@ export default function TokenHeader({ name, price, priceChange, profileImage, ba
               <Text style={styles.tokenName}>{name}</Text>
             <View style={styles.priceRow}>
               <Text style={styles.price}>{price}</Text>
-              <Text style={[styles.priceChange, { color: isPositive ? colors.green.white : '#FF3366' }]}>
-                {isPositive ? '▲' : '▼'} {Math.abs(priceChange).toFixed(2)}%
+              <Text style={[styles.priceChange, { color: isPositive ? colors.green.white : colors.red.white }]}>
+                {isPositive ? '▲' : '▼'} {formatPercentage(Math.abs(priceChange))}%
               </Text>
             </View>
             </View>

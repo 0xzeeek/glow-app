@@ -11,6 +11,7 @@ import {
   UserProfile,
   WalletBalance,
   Token,
+  PaginatedTokensResponse,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
@@ -182,10 +183,19 @@ class ApiClient {
     return this.request<TokenMetadata>(`/tokens/${token}`);
   }
 
-  // Get all tokens
+  // Get all tokens (legacy - for backward compatibility)
   public async getAllTokens(): Promise<Token[]> {
     const response = await this.request<{ count: number; tokens: Token[] }>('/tokens');
     return response.tokens;
+  }
+
+  // Get paginated tokens
+  public async getTokensPaginated(params: {
+    limit: number;
+    offset: number;
+    order?: 'asc' | 'desc';
+  }): Promise<PaginatedTokensResponse> {
+    return this.request('/tokens', { params });
   }
 
   // User profile
@@ -336,6 +346,8 @@ export const queryKeys = {
   },
   tokens: {
     all: () => ['tokens', 'all'] as const,
+    infinite: (params: { limit: number; order: 'asc' | 'desc' }) => 
+      ['tokens', 'infinite', params] as const,
     metadata: (token: string) => ['tokens', token] as const,
     holders: (token: string) => ['tokens', token, 'holders'] as const,
     chart: (token: string, timeframe?: string) => ['tokens', token, 'chart', timeframe] as const,

@@ -61,7 +61,7 @@ export default function HeaderBar() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   container: {
     flexDirection: 'row',
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.primary,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -82,11 +82,11 @@ const styles = StyleSheet.create({
   logoText: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.text.primary,
     letterSpacing: 1,
   },
   depositButton: {
-    backgroundColor: '#000000',
+    backgroundColor: colors.background.secondary,
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   depositButtonText: {
-    color: '#FFFFFF',
+    color: colors.text.secondary,
     fontSize: 14,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   cashAmount: {
     fontSize: 18,
     fontFamily: fonts.secondaryMedium,
-    color: '#000000',
+    color: colors.text.primary,
     letterSpacing: -0.5,
   },
   cashButtonWrapper: {

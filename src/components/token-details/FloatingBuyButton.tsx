@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Button } from '../shared/Button';
 import BuyModal from '../shared/BuyModal';
+import { colors } from '@/theme/colors';
 
 interface FloatingBuyButtonProps {
   tokenName: string;
@@ -44,7 +45,7 @@ const styles = StyleSheet.create({
     right: 16,
   },
   button: {
-    shadowColor: '#000',
+    shadowColor: colors.background.secondary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,

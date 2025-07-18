@@ -61,6 +61,7 @@ export default function CreatorTokenRow({ token, chartData, change24h, onPress }
 
       <View style={styles.priceSection}>
         <Text style={styles.price}>${formatPrice(token.price)}</Text>
+        
         <Text style={[styles.changePercent, { color: changeColor }]}>
           {arrow} {formatPercentage(Math.abs(displayChange))}%
         </Text>
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
   },
   marketCap: {
     fontSize: 14,
-    color: '#666666',
+    color: colors.neutral[500],
   },
   chartSection: {
     marginRight: 16,
@@ -114,7 +115,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000000',
+    color: colors.text.primary,
     marginBottom: 2,
   },
   changePercent: {

@@ -1,9 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo, useEffect, useRef } from 'react';
-import { Token, PriceUpdate } from '../types';
-import { useAllTokens } from '../hooks';
-import { getWebSocketManager } from '../services';
-import { useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '../services/ApiClient';
+import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
+import { Token } from '../types';
+import { useWebSocketPriceUpdates, useFlattenedInfiniteTokens } from '../hooks';
 
 interface TokenDataContextType {
   // Data
@@ -23,6 +20,12 @@ interface TokenDataContextType {
   // WebSocket subscription
   subscribeToTokens: (tokenAddresses: string[]) => void;
   unsubscribeFromTokens: (tokenAddresses: string[]) => void;
+  
+  // Infinite scrolling support
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => void;
+  totalCount: number;
 }
 
 const TokenDataContext = createContext<TokenDataContextType | undefined>(undefined);
@@ -32,11 +35,22 @@ interface TokenDataProviderProps {
 }
 
 export function TokenDataProvider({ children }: TokenDataProviderProps) {
-  const { data: fetchedTokens = [], isLoading, error, refetch } = useAllTokens();
+  // Use infinite scroll implementation
+  const {
+    tokens: fetchedTokens,
+    totalCount,
+    isLoading,
+    error,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useFlattenedInfiniteTokens({ 
+    limit: 50,  // Load 50 tokens per page
+    order: 'desc'
+  });
+
   const [localPriceUpdates, setLocalPriceUpdates] = useState<Record<string, { price: number }>>({});
-  const subscribedTokensRef = useRef<Set<string>>(new Set());
-  const lastPriceUpdatesRef = useRef<Record<string, PriceUpdate>>({});
-  const queryClient = useQueryClient();
 
   // Merge fetched tokens with local price updates
   const allTokens = useMemo(() => {
@@ -50,7 +64,6 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
   }, [fetchedTokens, localPriceUpdates]);
 
   // Calculate featured token (most recent createdAt)
-  // This will only be null if we have no tokens at all
   const featuredToken = useMemo(() => {
     if (allTokens.length === 0) return null;
     return [...allTokens].sort((a, b) => b.createdAt - a.createdAt)[0];
@@ -93,105 +106,11 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     setLocalPriceUpdates({});
   }, [refetch]);
 
-  // WebSocket subscription management
-  const subscribeToTokens = useCallback((tokenAddresses: string[]) => {
-    const wsManager = getWebSocketManager();
-    if (!wsManager || !wsManager.isConnected()) return;
-
-    tokenAddresses.forEach(address => {
-      if (!subscribedTokensRef.current.has(address)) {
-        wsManager.subscribeToPrice(address);
-        subscribedTokensRef.current.add(address);
-      }
-    });
-  }, []);
-
-  const unsubscribeFromTokens = useCallback((tokenAddresses: string[]) => {
-    const wsManager = getWebSocketManager();
-    if (!wsManager) return;
-
-    tokenAddresses.forEach(address => {
-      if (subscribedTokensRef.current.has(address)) {
-        wsManager.unsubscribeFromPrice(address);
-        subscribedTokensRef.current.delete(address);
-      }
-    });
-  }, []);
-
-  // Set up WebSocket price update handler
-  useEffect(() => {
-    const wsManager = getWebSocketManager();
-    if (!wsManager) return;
-
-    const handlePriceUpdate = (data: PriceUpdate) => {
-      const lastUpdate = lastPriceUpdatesRef.current[data.token];
-      
-      // Only update if this is a new update (newer timestamp)
-      if (!lastUpdate || data.timestamp > lastUpdate.timestamp) {
-        lastPriceUpdatesRef.current[data.token] = data;
-        updateTokenPrice(data.token, data.price);
-        
-        // Update React Query cache for price history
-        // This will add the new price point to the chart data
-        const ranges = ['1h', '1d', '7d', '30d', 'all'] as const;
-        ranges.forEach(range => {
-          queryClient.setQueryData(
-            queryKeys.prices.history(data.token, { range }),
-            (oldData: any) => {
-              if (!oldData || !oldData.prices) return oldData;
-              
-              // Add the new price point to the end of the array
-              const newPricePoint = {
-                timestamp: data.timestamp,
-                price: data.price,
-                source: 'websocket',
-              };
-              
-              // Check if we already have this timestamp (prevent duplicates)
-              const existingIndex = oldData.prices.findIndex(
-                (p: any) => p.timestamp === data.timestamp
-              );
-              
-              let updatedPrices;
-              if (existingIndex >= 0) {
-                // Update existing point
-                updatedPrices = [...oldData.prices];
-                updatedPrices[existingIndex] = newPricePoint;
-              } else {
-                // Add new point
-                updatedPrices = [...oldData.prices, newPricePoint];
-                // Keep array sorted by timestamp
-                updatedPrices.sort((a: any, b: any) => a.timestamp - b.timestamp);
-              }
-              
-              return {
-                ...oldData,
-                prices: updatedPrices,
-                count: updatedPrices.length,
-              };
-            }
-          );
-        });
-      }
-    };
-
-    wsManager.on('priceUpdate', handlePriceUpdate);
-
-    return () => {
-      wsManager.off('priceUpdate', handlePriceUpdate);
-      // Unsubscribe from all tokens on cleanup
-      const allSubscribed = Array.from(subscribedTokensRef.current);
-      unsubscribeFromTokens(allSubscribed);
-    };
-  }, [updateTokenPrice, unsubscribeFromTokens, queryClient]);
-
-  // Auto-subscribe to all tokens when they're loaded
-  useEffect(() => {
-    if (allTokens.length > 0) {
-      const tokenAddresses = allTokens.map(token => token.address);
-      subscribeToTokens(tokenAddresses);
-    }
-  }, [allTokens, subscribeToTokens]);
+  // Use the WebSocket price updates hook
+  const { subscribeToTokens, unsubscribeFromTokens } = useWebSocketPriceUpdates({
+    tokens: allTokens,
+    onPriceUpdate: updateTokenPrice,
+  });
 
   const value: TokenDataContextType = {
     featuredToken,
@@ -206,6 +125,11 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     updateTokenPrice,
     subscribeToTokens,
     unsubscribeFromTokens,
+    // Infinite scrolling
+    hasNextPage: hasNextPage ?? false,
+    isFetchingNextPage: isFetchingNextPage ?? false,
+    fetchNextPage: fetchNextPage ?? (() => {}),
+    totalCount,
   };
 
   return <TokenDataContext.Provider value={value}>{children}</TokenDataContext.Provider>;

@@ -492,6 +492,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    // TODO: update this color
     backgroundColor: '#0B0B0B',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -536,14 +537,14 @@ const styles = StyleSheet.create({
   cashBalance: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: colors.neutral[100],
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 24,
     marginTop: 8,
   },
   cashText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 14,
     fontFamily: fonts.secondaryMedium,
   },
@@ -555,11 +556,11 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 64,
     fontFamily: fonts.secondary,
-    color: 'rgba(255, 255, 255, 0.3)',
+    color: colors.neutral[500],
     letterSpacing: -2,
   },
   amountTextActive: {
-    color: '#FFF',
+    color: colors.text.secondary,
   },
   cashTypeButton: {
     alignSelf: 'center',
@@ -584,7 +585,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   quickAmountText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 16,
     fontFamily: fonts.secondaryMedium,
   },
@@ -608,7 +609,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 28,
-    color: '#FFF',
+    color: colors.text.secondary,
     fontFamily: fonts.secondary,
   },
   deleteIcon: {
@@ -635,7 +636,7 @@ const styles = StyleSheet.create({
     left: 2,
     width: 60,
     height: 52,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background.primary,
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
@@ -646,7 +647,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
   swipeText: {
-    color: 'rgba(255, 255, 255, 0.6)',
+    color: colors.neutral[500],
     fontSize: 14,
     fontFamily: fonts.primaryBold,
     letterSpacing: 2,
@@ -677,7 +678,7 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontFamily: fonts.primaryBold,
-    color: '#FFF',
+    color: colors.text.secondary,
     letterSpacing: 2,
     marginBottom: 16,
   },
@@ -701,6 +702,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    // TODO: update this color
     backgroundColor: '#1A1A1A',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -725,7 +727,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   paymentMethodText: {
-    color: '#FFF',
+    color: colors.text.secondary,
     fontSize: 16,
     fontFamily: fonts.primaryBold,
     letterSpacing: 1,
