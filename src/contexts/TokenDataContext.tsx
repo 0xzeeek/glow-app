@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useCallback, useState, useRef } from 'react';
 import { useFlattenedInfiniteTokens } from '../hooks';
 import { Token, TokenAddress } from '../types';
 
@@ -25,6 +25,11 @@ interface TokenDataProviderProps {
   children: ReactNode;
 }
 
+interface LocalPriceUpdate {
+  price: number;
+  timestamp: number; // Track when the update was made
+}
+
 export function TokenDataProvider({ children }: TokenDataProviderProps) {
   const {
     tokens,
@@ -39,16 +44,20 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     order: 'desc',
   });
 
-  // Track local price updates
+  // Track local price updates with timestamps
   const [localPriceUpdates, setLocalPriceUpdates] = useState<{
-    [address: string]: { price: number };
+    [address: string]: LocalPriceUpdate;
   }>({});
+
+  // Keep a ref to track server data timestamps for comparison
+  const serverDataTimestamp = useRef<number>(Date.now());
 
   // Merge fetched tokens with local price updates
   const allTokens = useMemo(() => {
     return tokens.map(token => {
       const update = localPriceUpdates[token.address];
-      if (update) {
+      // Only use local update if it's newer than the server data
+      if (update && update.timestamp > serverDataTimestamp.current) {
         return { ...token, price: update.price };
       }
       return token;
@@ -90,14 +99,36 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
   const updateTokenPrice = useCallback((address: TokenAddress, price: number) => {
     setLocalPriceUpdates(prev => ({
       ...prev,
-      [address]: { price }
+      [address]: { 
+        price,
+        timestamp: Date.now() // Track when this update was made
+      }
     }));
   }, []);
 
   const refreshTokenData = useCallback(async () => {
+    // Update server data timestamp before refetch
+    const newTimestamp = Date.now();
+    
     await refetch();
-    // Clear local updates after refresh
-    setLocalPriceUpdates({});
+    
+    // Update the ref after successful refetch
+    serverDataTimestamp.current = newTimestamp;
+    
+    // Clean up only outdated local updates
+    setLocalPriceUpdates(prev => {
+      const cleaned: typeof prev = {};
+      
+      // Keep local updates that are still newer than the server data
+      // This preserves WebSocket updates that came in during or after the refetch
+      Object.entries(prev).forEach(([address, update]) => {
+        if (update.timestamp > newTimestamp) {
+          cleaned[address] = update;
+        }
+      });
+      
+      return cleaned;
+    });
   }, [refetch]);
 
   const value: TokenDataContextType = {

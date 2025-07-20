@@ -23,6 +23,7 @@ import { AppProviders } from '../src/contexts';
 import { colors } from '@/theme/colors';
 import { PrivyProvider } from '@privy-io/expo';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
+// import { useCaptureReferralCode } from '../src/hooks';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -31,6 +32,9 @@ const queryClient = createQueryClient();
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
+  
+  // Capture referral code from deep links
+  // useCaptureReferralCode();
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
@@ -53,25 +57,33 @@ export default function RootLayout() {
         });
 
         // Initialize Balance WebSocket manager and connect
-        balanceWsManager = getBalanceWebSocketManager({
-          url: process.env.EXPO_PUBLIC_WS_URL || '',
-          heartbeatInterval: 60000, // Ping every 60 seconds (1 minute)
-        });
+        const wsUrl = process.env.EXPO_PUBLIC_BALANCE_WS_URL;
+        if (wsUrl) {
+          balanceWsManager = getBalanceWebSocketManager({
+            url: wsUrl,
+            heartbeatInterval: 60000, // Ping every 60 seconds (1 minute)
+          });
 
-        // Connect Balance WebSocket immediately on app load
-        balanceWsManager.connect();
+          // Connect Balance WebSocket immediately on app load
+          balanceWsManager.connect();
+        } else {
+          console.warn('Balance WebSocket URL not configured - skipping WebSocket initialization');
+        }
 
         // Initialize PriceSocket for Cloudflare edge worker
-        const priceWsUrl = process.env.EXPO_PUBLIC_PRICE_WS_URL || process.env.EXPO_PUBLIC_WS_URL?.replace(/^wss?:/, 'wss:').replace(/\/ws$/, '') + '/ws';
+        const priceWsUrl =
+          process.env.EXPO_PUBLIC_PRICE_WS_URL ||
+          process.env.EXPO_PUBLIC_WS_URL?.replace(/^wss?:/, 'wss:').replace(/\/ws$/, '') + '/ws';
         priceSocket = getPriceSocket(priceWsUrl);
 
         // Setup network monitoring
         unsubscribe = NetInfo.addEventListener(state => {
           const isConnected = state.isConnected ?? false;
           uiStore.getState().setOnline(isConnected);
-          
+
           // Reconnect Balance WebSocket when network comes back
           if (isConnected && balanceWsManager && !balanceWsManager.isConnected()) {
+            console.log('Network reconnected - reconnecting Balance WebSocket');
             balanceWsManager.connect();
           }
         });
@@ -104,10 +116,7 @@ export default function RootLayout() {
   const PRIVY_CLIENT_ID = process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID;
 
   return (
-    <PrivyProvider
-      appId={PRIVY_APP_ID || ''}
-      clientId={PRIVY_CLIENT_ID || ''}
-    >
+    <PrivyProvider appId={PRIVY_APP_ID || ''} clientId={PRIVY_CLIENT_ID || ''}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <ErrorBoundary>

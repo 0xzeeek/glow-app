@@ -16,15 +16,68 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSUserNotificationsUsageDescription": "Glow uses notifications to alert you about launches, price moves, and rewards in real time."
-      }
+        "NSUserNotificationsUsageDescription": "Glow uses notifications to alert you about launches, price moves, and rewards in real time.",
+        "branch_key": {
+          "live": "YOUR_BRANCH_LIVE_KEY"
+        }
+      },
+      "associatedDomains": [
+        "applinks:glow.app.link",
+        "applinks:glow-alternate.app.link",
+        "applinks:glow.app.link",
+        "applinks:glow-alternate.app.link"
+      ],
+      "bundleIdentifier": "com.fiigmnt.glow"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "glow.app.link"
+            },
+            {
+              "scheme": "https",
+              "host": "glow-alternate.app.link"
+            },
+            {
+              "scheme": "glow"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "glow.app.link"
+            },
+            {
+              "scheme": "https",
+              "host": "glow-alternate.app.link"
+            },
+            {
+              "scheme": "glow"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
+      "package": "com.fiigmnt.glow"
     },
     "web": {
       "bundler": "metro",
@@ -42,10 +95,18 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-branch"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "zeke-glow",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f0bfb786-a293-422b-ab63-134eb09cea01"
+      }
     }
   }
 }

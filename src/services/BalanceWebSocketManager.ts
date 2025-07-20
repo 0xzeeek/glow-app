@@ -86,6 +86,16 @@ export class BalanceWebSocketManager extends EventEmitter {
 
   constructor(config: BalanceWebSocketConfig) {
     super();
+    
+    // Validate WebSocket URL
+    if (!config.url || config.url.trim() === '') {
+      throw new Error('BalanceWebSocketManager: WebSocket URL is required');
+    }
+    
+    if (!config.url.startsWith('ws://') && !config.url.startsWith('wss://')) {
+      throw new Error('BalanceWebSocketManager: WebSocket URL must start with ws:// or wss://');
+    }
+    
     this.config = {
       url: config.url,
       maxReconnectAttempts: config.maxReconnectAttempts ?? 5,
@@ -135,8 +145,10 @@ export class BalanceWebSocketManager extends EventEmitter {
       this.emit('connected');
       this.startHeartbeat();
 
-      // Resubscribe to current wallet if any
-      this.resubscribeToWallet();
+      // Resubscribe to current wallet if any, with a small delay to ensure connection is ready
+      setTimeout(() => {
+        this.resubscribeToWallet();
+      }, 100);
     };
 
     this.ws.onclose = event => {
@@ -274,11 +286,9 @@ export class BalanceWebSocketManager extends EventEmitter {
       action: 'subscribeBalance',
       wallet: this.currentWallet,
     };
-    try {
-      this.ws!.send(JSON.stringify(message));
-    } catch (error) {
-      console.error(`Failed to resubscribe to wallet ${this.currentWallet}:`, error);
-    }
+    
+    // Use the safe send method instead of direct ws.send
+    this.send(message);
   }
 
   public subscribeToBalance(wallet: string): void {
@@ -328,9 +338,17 @@ export class BalanceWebSocketManager extends EventEmitter {
     }
 
     try {
-      this.ws!.send(JSON.stringify(data));
+      const message = JSON.stringify(data);
+      this.ws!.send(message);
     } catch (error) {
-      this.handleError(error as Error);
+      console.error('BalanceWebSocket: Error sending message:', error);
+      console.error('Message that failed to send:', data);
+      
+      // Create a more descriptive error
+      const enhancedError = new Error(
+        `Failed to send WebSocket message: ${(error as Error).message || 'Unknown error'}`
+      );
+      this.handleError(enhancedError);
     }
   }
 

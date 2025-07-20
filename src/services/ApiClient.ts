@@ -22,7 +22,7 @@ interface ApiConfig {
 interface RequestOptions extends RequestInit {
   params?: Record<string, any>;
   timeout?: number;
-  retries?: number;
+  retries?: number; // @deprecated - Retries are now handled by React Query
 }
 
 class ApiClient {
@@ -49,7 +49,7 @@ class ApiClient {
     const {
       params,
       timeout = this.defaultTimeout,
-      retries = 0,
+      retries = 0, // Deprecated: retries are now handled by React Query
       ...fetchOptions
     } = options;
 
@@ -125,11 +125,8 @@ class ApiClient {
         throw networkError;
       }
 
-      // Retry logic for certain errors
-      if (retries > 0 && this.shouldRetry(error)) {
-        await this.delay(1000); // Wait 1 second before retry
-        return this.request<T>(endpoint, { ...options, retries: retries - 1 });
-      }
+      // Removed retry logic - now handled by React Query at the hook level
+      // This prevents duplicate retry attempts (N×M problem)
 
       // Handle other API errors
       if (error instanceof ApiError) {
@@ -144,18 +141,6 @@ class ApiClient {
 
       throw error;
     }
-  }
-
-  private shouldRetry(error: any): boolean {
-    if (error instanceof ApiError) {
-      // Retry on server errors and timeout
-      return error.status >= 500 || error.status === 408;
-    }
-    return false;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   // Cancel all pending requests
@@ -200,6 +185,21 @@ class ApiClient {
   // User profile
   public async getUserProfile(wallet: string): Promise<User> {
     return this.request<User>(`/users/${wallet}`);
+  }
+
+  // Create user
+  public async createUser(wallet: string, email: string, recievedReferralCode?: string): Promise<{
+    ok: boolean;
+    user: User;
+  }> {
+    return this.request(`/users`, {
+      method: 'POST',
+      body: JSON.stringify({ 
+        wallet, 
+        email,
+        ...(recievedReferralCode && { recievedReferralCode })
+      }),
+    });
   }
 
   // Update username using PUT endpoint
@@ -264,9 +264,11 @@ export const getApiClient = (): ApiClient => {
 };
 
 // AsyncStorage persister configuration
+// Performance optimization: Increased throttle time and excluded price history from persistence
+// to prevent heavy disk I/O from WebSocket price updates (200+ data points every second)
 const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
-  throttleTime: 1000, // Throttle writes to prevent excessive storage operations
+  throttleTime: 15000, // Increased to 15 seconds to reduce disk I/O from frequent price updates
 });
 
 // TanStack Query configuration
@@ -276,6 +278,11 @@ export const createQueryClient = (): QueryClient => {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes - data is fresh for 5 minutes
         gcTime: 1000 * 60 * 60 * 24, // 24 hours - keep data in cache for 24 hours
+        // Retry strategy: 
+        // - Retry up to 3 times for server errors (5xx) and network errors
+        // - Don't retry client errors (4xx) 
+        // - Exponential backoff: 1s, 2s, 4s... up to 30s max
+        // Note: ApiClient no longer has retry logic to prevent duplicate retries
         retry: (failureCount, error) => {
           if (error instanceof ApiError) {
             // Don't retry on 4xx errors
@@ -312,6 +319,19 @@ export const createQueryClient = (): QueryClient => {
     queryClient,
     persister: asyncStoragePersister,
     maxAge: 1000 * 60 * 60 * 24, // 24 hours - persist data for 24 hours
+    dehydrateOptions: {
+      // Filter out price history queries from persistence
+      // These are large arrays (up to 200 points) that update frequently via WebSocket
+      shouldDehydrateQuery: (query) => {
+        const queryKey = query.queryKey;
+        // Don't persist price history queries
+        if (Array.isArray(queryKey) && queryKey[0] === 'prices' && queryKey[2] === 'history') {
+          return false;
+        }
+        // Persist all other queries
+        return true;
+      },
+    },
     hydrateOptions: {
       // This ensures queries are marked as stale when restored from storage
       // so they'll refetch automatically when components mount

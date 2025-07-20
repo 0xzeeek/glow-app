@@ -13,6 +13,9 @@ interface UseVisibleTokenSubscriptionsProps {
 /**
  * Manages PriceSocket subscriptions for visible tokens and user balance tokens
  * This prevents subscribing to hundreds of tokens at once
+ * 
+ * IMPORTANT: The `onPriceUpdate` callback should be wrapped in useCallback with stable dependencies
+ * to prevent unnecessary re-subscriptions when the list re-orders.
  */
 export function useVisibleTokenSubscriptions({
   visibleTokens,
@@ -20,10 +23,11 @@ export function useVisibleTokenSubscriptions({
   onPriceUpdate,
 }: UseVisibleTokenSubscriptionsProps) {
   const subscribedTokensRef = useRef<Set<TokenAddress>>(new Set());
+  const handlersRef = useRef<Map<TokenAddress, (price: number, timestamp: number) => void>>(new Map());
   const queryClient = useQueryClient();
   
-  // Create a callback that handles price updates
-  const handlePriceUpdate = useCallback((address: TokenAddress) => {
+  // Create a stable handler factory that won't change unless dependencies change
+  const createPriceHandler = useCallback((address: TokenAddress) => {
     return (price: number, timestamp: number) => {
       // Call the provided callback
       onPriceUpdate(address, price);
@@ -116,15 +120,35 @@ export function useVisibleTokenSubscriptions({
         }
       });
       
-      // Update subscriptions
+      // Unsubscribe tokens that are no longer needed
       toUnsubscribe.forEach(address => {
         priceSocket.unwatch(address);
         subscribedTokensRef.current.delete(address);
+        handlersRef.current.delete(address);
       });
       
+      // Subscribe to new tokens
       toSubscribe.forEach(address => {
-        priceSocket.watch(address, handlePriceUpdate(address));
+        const handler = createPriceHandler(address);
+        handlersRef.current.set(address, handler);
+        priceSocket.watch(address, handler);
         subscribedTokensRef.current.add(address);
+      });
+      
+      // Update handlers for existing subscriptions if onPriceUpdate changed
+      // This avoids unsubscribe/resubscribe cycles when only the handler changes
+      currentSubscribed.forEach(address => {
+        if (requiredAddresses.has(address)) {
+          const existingHandler = handlersRef.current.get(address);
+          const newHandler = createPriceHandler(address);
+          
+          // Only update if the handler actually changed
+          if (existingHandler !== newHandler) {
+            handlersRef.current.set(address, newHandler);
+            // PriceSocket.watch will overwrite the handler without unsubscribing
+            priceSocket.watch(address, newHandler);
+          }
+        }
       });
       
       // Cleanup: unsubscribe from all on unmount
@@ -134,12 +158,15 @@ export function useVisibleTokenSubscriptions({
           priceSocket.unwatch(address);
         });
         subscribedTokensRef.current.clear();
+        handlersRef.current.clear();
       };
     } catch (error) {
       // PriceSocket might not be initialized yet
       console.log('PriceSocket not available:', error);
+      // Return an empty cleanup function to satisfy TypeScript
+      return () => {};
     }
-  }, [visibleTokens, balanceTokens, handlePriceUpdate]);
+  }, [visibleTokens, balanceTokens, createPriceHandler]);
   
   return {
     subscribedCount: subscribedTokensRef.current.size,

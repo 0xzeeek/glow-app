@@ -8,9 +8,20 @@ export interface User {
   image?: string;
   referralCode?: string;
   referredBy?: string;
-  feesEarned?: number;
+  feesEarned?: string;
   createdAt: number;
   lastUpdated: number;
+}
+
+export interface CreateUserRequest {
+  wallet: string;
+  email: string;
+  recievedReferralCode?: string;
+}
+
+export interface CreateUserResponse {
+  ok: boolean;
+  user: User;
 }
 
 export interface Token {

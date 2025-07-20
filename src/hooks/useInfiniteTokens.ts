@@ -1,4 +1,5 @@
 import { useInfiniteQuery, InfiniteData } from '@tanstack/react-query';
+import { useRef, useMemo } from 'react';
 import { getApiClient, queryKeys } from '../services/ApiClient';
 import { Token, PaginatedTokensResponse } from '../types';
 
@@ -45,7 +46,46 @@ export function useInfiniteTokens(options: UseInfiniteTokensOptions = {}) {
 export function useFlattenedInfiniteTokens(options: UseInfiniteTokensOptions = {}) {
   const query = useInfiniteTokens(options);
   
-  const allTokens: Token[] = query.data?.pages.flatMap((page) => page.tokens) ?? [];
+  // Cache the flattened result to avoid recalculating on every render
+  const flattenedCacheRef = useRef<{
+    tokens: Token[];
+    dataUpdatedAt: number;
+    pagesLength: number;
+  }>({
+    tokens: [],
+    dataUpdatedAt: 0,
+    pagesLength: 0,
+  });
+  
+  // Only recalculate when data actually changes
+  const allTokens = useMemo(() => {
+    const currentDataUpdatedAt = query.dataUpdatedAt;
+    const currentPagesLength = query.data?.pages.length ?? 0;
+    const cache = flattenedCacheRef.current;
+    
+    // Check if we need to recalculate
+    if (
+      cache.dataUpdatedAt !== currentDataUpdatedAt ||
+      cache.pagesLength !== currentPagesLength
+    ) {
+      // Perform the expensive flattening operation
+      const newTokens = query.data?.pages.flatMap((page) => page.tokens) ?? [];
+      
+      // Update cache
+      flattenedCacheRef.current = {
+        tokens: newTokens,
+        dataUpdatedAt: currentDataUpdatedAt,
+        pagesLength: currentPagesLength,
+      };
+      
+      return newTokens;
+    }
+    
+    // Return cached result
+    return cache.tokens;
+  }, [query.dataUpdatedAt, query.data?.pages.length]);
+  
+  // totalCount is cheap to calculate, no need to cache
   const totalCount = query.data?.pages[0]?.count ?? 0;
   
   return {

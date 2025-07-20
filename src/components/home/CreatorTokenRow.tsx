@@ -45,7 +45,7 @@ export default function CreatorTokenRow({ token, chartData, change24h, onPress }
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
       <View style={styles.imageContainer}>
-        <Image source={{ uri: token.image }} style={styles.image} />
+        <Image source={{ uri: token.image }} fadeDuration={0} style={styles.image} />
       </View>
 
       <View style={styles.infoSection}>

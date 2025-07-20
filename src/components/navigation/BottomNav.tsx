@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useUser } from '../../contexts/UserContext';
-import { Home, HomeSelected, Plus, PlusSelected, Profile as ProfileIcon } from '../../../assets';
+import { Home, HomeSelected, Plus, PlusSelected, UserPlaceholder } from '../../../assets';
 import { colors } from '@/theme/colors';
 
 interface BottomNavProps {
@@ -40,15 +40,15 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
         <Image source={activeTab === 'referral' ? PlusSelected : Plus} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleProfilePress}>
-        {image ? (
+        {image && Number(image) !== 13 ? (
           <Image
             source={{ uri: image }}
             style={[styles.profileImage, activeTab === 'profile' && styles.activeProfileImage]}
           />
         ) : (
           <Image
-            source={ProfileIcon}
-            style={[styles.navIcon, activeTab === 'profile' && styles.activeIcon]}
+            source={UserPlaceholder}
+            style={[styles.profileImage, activeTab === 'profile' && styles.activeProfileImage]}
           />
         )}
       </TouchableOpacity>

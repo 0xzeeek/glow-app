@@ -17,8 +17,18 @@ import { TokenAddress } from '@/types';
 
 export default function TokenDetailScreen() {
   const { address } = useLocalSearchParams<{ address: TokenAddress }>();
-  const { tokenDetails, topHolders, chartData, isLoading, isChartLoading, error, selectedRange, setSelectedRange, availableRanges } = useTokenDetails(address);
-  
+  const {
+    tokenDetails,
+    topHolders,
+    chartData,
+    isLoading,
+    isChartLoading,
+    error,
+    selectedRange,
+    setSelectedRange,
+    availableRanges,
+  } = useTokenDetails(address);
+
   // Calculate price change from chart data
   const priceChange = chartData.length > 0 ? calculatePriceChange(chartData) : 0;
 
@@ -30,7 +40,7 @@ export default function TokenDetailScreen() {
     );
   }
 
-  if (error || !tokenDetails) {
+  if (!tokenDetails) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Unable to load token details</Text>
@@ -50,7 +60,7 @@ export default function TokenDetailScreen() {
           backgroundImage={tokenDetails.video || ''}
           address={tokenDetails.address}
         />
-        
+
         <View style={styles.contentContainer}>
           <TokenStatsChart
             marketCap={formatMarketCap(tokenDetails?.marketCap || 0)}
@@ -61,30 +71,30 @@ export default function TokenDetailScreen() {
             isLoading={isChartLoading}
             availableRanges={availableRanges}
           />
-          
+
           <View style={styles.divider} />
-          
+
           <TokenAbout description={tokenDetails.description} />
-          
+
           <View style={styles.divider} />
-          
+
           <TokenInfo
             marketCap={formatMarketCap(tokenDetails?.marketCap || 0)}
             volume24h="N/A" // Not available in Token type
             holders={0} // Not available in Token type, using 0 as default
-            circulatingSupply={tokenDetails.totalSupply ? tokenDetails.totalSupply.toLocaleString() : 'N/A'}
+            circulatingSupply={
+              tokenDetails.totalSupply ? tokenDetails.totalSupply.toLocaleString() : 'N/A'
+            }
             createdAt={new Date(tokenDetails.createdAt * 1000).toLocaleDateString()}
           />
-          
+
           <View style={styles.divider} />
-          
-          <TokenSocials 
-            socialLinks={formatSocialsForDisplay(tokenDetails.socials)}
-          />
+
+          <TokenSocials socialLinks={formatSocialsForDisplay(tokenDetails.socials)} />
         </View>
       </ScrollView>
-      
-      <FloatingBuyButton 
+
+      <FloatingBuyButton
         tokenName={tokenDetails.name}
         tokenImage={tokenDetails.image}
         tokenAddress={tokenDetails.address}
@@ -148,4 +158,4 @@ const styles = StyleSheet.create({
     color: colors.neutral[500],
     textAlign: 'center',
   },
-}); 
+});

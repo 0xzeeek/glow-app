@@ -38,13 +38,13 @@ export default function ReferralScreen() {
     console.log('Invite friends pressed');
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(Number(amount));
   };
 
   return (
@@ -64,7 +64,7 @@ export default function ReferralScreen() {
         {/* Lifetime Rewards Card */}
         <View style={styles.rewardsCard}>
           <Text style={styles.rewardsLabel}>LIFETIME REWARDS</Text>
-          <Text style={styles.rewardsAmount}>{formatCurrency(feesEarned)}</Text>
+          <Text style={styles.rewardsAmount}>{formatCurrency(feesEarned || 0)}</Text>
         </View>
 
         {/* Title and Description */}

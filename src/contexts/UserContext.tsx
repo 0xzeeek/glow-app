@@ -23,7 +23,7 @@ interface UserContextType {
   email: string;
   image: string | null;
   memberSince: Date;
-  feesEarned: number;
+  feesEarned: string | null;
 
   // Wallet Data
   walletBalance: WalletBalance | null;
@@ -66,7 +66,7 @@ export function UserProvider({ children }: UserProviderProps) {
   const [email, setEmailState] = useState('');
   const [image, setImageState] = useState<string | null>(UserPlaceholder);
   const [memberSince, setMemberSince] = useState(new Date());
-  const [feesEarned, setFeesEarned] = useState(0);
+  const [feesEarned, setFeesEarned] = useState<string | null>(null);
 
   // Memoize setter functions
   const setUsername = useCallback((name: string) => setUsernameState(name), []);
@@ -79,7 +79,7 @@ export function UserProvider({ children }: UserProviderProps) {
       setEmailState(userProfile.email);
       setImageState(userProfile.image || UserPlaceholder);
       setMemberSince(new Date(userProfile.createdAt));
-      setFeesEarned(userProfile.feesEarned || 0);
+      setFeesEarned(userProfile.feesEarned || null);
     }
   }, [userProfile]);
 
