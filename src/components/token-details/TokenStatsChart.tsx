@@ -317,7 +317,6 @@ const styles = StyleSheet.create({
   },
   timeframeText: {
     fontSize: 13,
-    fontWeight: '600',
     color: colors.text.primary,
     fontFamily: fonts.primaryMedium,
   },

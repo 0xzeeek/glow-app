@@ -1,31 +1,22 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useCallback, useState } from 'react';
+import { useFlattenedInfiniteTokens } from '../hooks';
 import { Token, TokenAddress } from '../types';
-import { useWebSocketPriceUpdates, useFlattenedInfiniteTokens } from '../hooks';
 
 interface TokenDataContextType {
-  // Data
   featuredToken: Token | null;
   creatorTokens: Token[];
   allTokens: Token[];
   isLoading: boolean;
   error: Error | null;
-  
-  // Actions
   getTokenByAddress: (address: TokenAddress) => Token | undefined;
-  getTokenPrice: (address: TokenAddress) => number;
+  getTokenPrice: (address: TokenAddress) => number | undefined;
   searchTokens: (query: string) => Token[];
   refreshTokenData: () => Promise<void>;
   updateTokenPrice: (address: TokenAddress, price: number) => void;
-  
-  // WebSocket subscription
-  subscribeToTokens: (tokenAddresses: TokenAddress[]) => void;
-  unsubscribeFromTokens: (tokenAddresses: TokenAddress[]) => void;
-  
-  // Infinite scrolling support
+  // Infinite scrolling
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
-  totalCount: number;
 }
 
 const TokenDataContext = createContext<TokenDataContextType | undefined>(undefined);
@@ -35,33 +26,34 @@ interface TokenDataProviderProps {
 }
 
 export function TokenDataProvider({ children }: TokenDataProviderProps) {
-  // Use infinite scroll implementation
   const {
-    tokens: fetchedTokens,
-    totalCount,
+    tokens,
     isLoading,
     error,
     refetch,
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
-  } = useFlattenedInfiniteTokens({ 
-    limit: 50,  // Load 50 tokens per page
-    order: 'desc'
+  } = useFlattenedInfiniteTokens({
+    limit: 20,
+    order: 'desc',
   });
 
-  const [localPriceUpdates, setLocalPriceUpdates] = useState<Record<string, { price: number }>>({});
+  // Track local price updates
+  const [localPriceUpdates, setLocalPriceUpdates] = useState<{
+    [address: string]: { price: number };
+  }>({});
 
   // Merge fetched tokens with local price updates
   const allTokens = useMemo(() => {
-    return fetchedTokens.map(token => {
+    return tokens.map(token => {
       const update = localPriceUpdates[token.address];
       if (update) {
         return { ...token, price: update.price };
       }
       return token;
     });
-  }, [fetchedTokens, localPriceUpdates]);
+  }, [tokens, localPriceUpdates]);
 
   // Calculate featured token (most recent createdAt)
   const featuredToken = useMemo(() => {
@@ -81,9 +73,9 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     return allTokens.find(token => token.address === address);
   }, [allTokens]);
 
-  const getTokenPrice = useCallback((address: TokenAddress): number => {
+  const getTokenPrice = useCallback((address: TokenAddress): number | undefined => {
     const token = allTokens.find(t => t.address === address);
-    return token?.price || 0;
+    return token?.price;
   }, [allTokens]);
 
   const searchTokens = useCallback((query: string): Token[] => {
@@ -108,12 +100,6 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     setLocalPriceUpdates({});
   }, [refetch]);
 
-  // Use the WebSocket price updates hook
-  const { subscribeToTokens, unsubscribeFromTokens } = useWebSocketPriceUpdates({
-    tokens: allTokens,
-    onPriceUpdate: updateTokenPrice,
-  });
-
   const value: TokenDataContextType = {
     featuredToken,
     creatorTokens,
@@ -125,13 +111,10 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     searchTokens,
     refreshTokenData,
     updateTokenPrice,
-    subscribeToTokens,
-    unsubscribeFromTokens,
     // Infinite scrolling
-    hasNextPage: hasNextPage ?? false,
-    isFetchingNextPage: isFetchingNextPage ?? false,
-    fetchNextPage: fetchNextPage ?? (() => {}),
-    totalCount,
+    hasNextPage: hasNextPage || false,
+    isFetchingNextPage,
+    fetchNextPage,
   };
 
   return <TokenDataContext.Provider value={value}>{children}</TokenDataContext.Provider>;

@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getWebSocketManager } from '../services';
+import { getBalanceWebSocketManager } from '../services';
 import { queryKeys } from '../services/ApiClient';
 import { BalanceUpdate, WalletBalance } from '../types';
 import { TOKEN_ADDRESSES, calculatePnlPercentage } from '../utils';
 
 export function useWebSocketBalanceUpdates(walletAddress: string | null) {
   const queryClient = useQueryClient();
-  const wsManagerRef = useRef<ReturnType<typeof getWebSocketManager> | null>(null);
+  const balanceWsManagerRef = useRef<ReturnType<typeof getBalanceWebSocketManager> | null>(null);
   const isSubscribedRef = useRef(false);
 
   useEffect(() => {
@@ -17,9 +17,9 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
 
     const setupSubscription = () => {
       try {
-        // Get WebSocket manager instance
-        const wsManager = getWebSocketManager();
-        wsManagerRef.current = wsManager;
+        // Get Balance WebSocket manager instance
+        const balanceWsManager = getBalanceWebSocketManager();
+        balanceWsManagerRef.current = balanceWsManager;
 
         // Don't need to connect - it's already connected from _layout.tsx
 
@@ -111,9 +111,9 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
 
         // Handle connection events
         const handleConnected = () => {
-          // Subscribe when WebSocket connects
+          // Subscribe when Balance WebSocket connects
           if (!isSubscribedRef.current) {
-            wsManager.subscribeToBalance(walletAddress);
+            balanceWsManager.subscribeToBalance(walletAddress);
             isSubscribedRef.current = true;
           }
         };
@@ -123,30 +123,30 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
         };
 
         // Subscribe immediately if already connected
-        if (wsManager.isConnected() && !isSubscribedRef.current) {
-          wsManager.subscribeToBalance(walletAddress);
+        if (balanceWsManager.isConnected() && !isSubscribedRef.current) {
+          balanceWsManager.subscribeToBalance(walletAddress);
           isSubscribedRef.current = true;
         }
 
-        wsManager.on('balanceUpdate', handleBalanceUpdate);
-        wsManager.on('connected', handleConnected);
-        wsManager.on('disconnected', handleDisconnected);
+        balanceWsManager.on('balanceUpdate', handleBalanceUpdate);
+        balanceWsManager.on('connected', handleConnected);
+        balanceWsManager.on('disconnected', handleDisconnected);
 
         // Cleanup function
         cleanup = () => {
-          if (wsManagerRef.current) {
+          if (balanceWsManagerRef.current) {
             if (isSubscribedRef.current) {
-              wsManagerRef.current.unsubscribeFromBalance(walletAddress);
+              balanceWsManagerRef.current.unsubscribeFromBalance(walletAddress);
             }
-            wsManagerRef.current.off('balanceUpdate', handleBalanceUpdate);
-            wsManagerRef.current.off('connected', handleConnected);
-            wsManagerRef.current.off('disconnected', handleDisconnected);
+            balanceWsManagerRef.current.off('balanceUpdate', handleBalanceUpdate);
+            balanceWsManagerRef.current.off('connected', handleConnected);
+            balanceWsManagerRef.current.off('disconnected', handleDisconnected);
             isSubscribedRef.current = false;
           }
         };
       } catch (error) {
-        // WebSocketManager might not be initialized yet (e.g., if WS URL is not configured)
-        console.log('WebSocket not available:', error);
+        // BalanceWebSocketManager might not be initialized yet (e.g., if WS URL is not configured)
+        console.log('Balance WebSocket not available:', error);
       }
     };
 
@@ -158,6 +158,6 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
   }, [walletAddress, queryClient]);
 
   return {
-    isConnected: wsManagerRef.current?.isConnected() ?? false,
+    isConnected: balanceWsManagerRef.current?.isConnected() ?? false,
   };
 }

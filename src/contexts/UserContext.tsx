@@ -14,6 +14,7 @@ import {
   useWalletHoldings,
 } from '../hooks';
 import { getErrorHandler } from '../services/ErrorHandler';
+import { UserPlaceholder } from '../../assets';
 import { WalletBalance, TokenHolding } from '../types';
 
 interface UserContextType {
@@ -22,6 +23,7 @@ interface UserContextType {
   email: string;
   image: string | null;
   memberSince: Date;
+  feesEarned: number;
 
   // Wallet Data
   walletBalance: WalletBalance | null;
@@ -62,8 +64,9 @@ export function UserProvider({ children }: UserProviderProps) {
   // User profile state
   const [username, setUsernameState] = useState('');
   const [email, setEmailState] = useState('');
-  const [image, setImageState] = useState<string | null>(null);
+  const [image, setImageState] = useState<string | null>(UserPlaceholder);
   const [memberSince, setMemberSince] = useState(new Date());
+  const [feesEarned, setFeesEarned] = useState(0);
 
   // Memoize setter functions
   const setUsername = useCallback((name: string) => setUsernameState(name), []);
@@ -74,8 +77,9 @@ export function UserProvider({ children }: UserProviderProps) {
     if (userProfile) {
       setUsernameState(userProfile.username);
       setEmailState(userProfile.email);
-      setImageState(userProfile.image);
+      setImageState(userProfile.image || UserPlaceholder);
       setMemberSince(new Date(userProfile.createdAt));
+      setFeesEarned(userProfile.feesEarned || 0);
     }
   }, [userProfile]);
 
@@ -162,6 +166,7 @@ export function UserProvider({ children }: UserProviderProps) {
     email,
     image,
     memberSince,
+    feesEarned,
 
     // Wallet
     walletAddress,
@@ -187,6 +192,7 @@ export function UserProvider({ children }: UserProviderProps) {
     email,
     image,
     memberSince,
+    feesEarned,
     walletAddress,
     walletBalance,
     isLoadingHoldings,

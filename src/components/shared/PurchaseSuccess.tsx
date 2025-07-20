@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
 
 interface PurchaseSuccessProps {
   tokenName: string;
@@ -108,14 +109,12 @@ const styles = StyleSheet.create({
   },
   tokenName: {
     fontSize: 24,
-    fontWeight: '400',
     color: colors.text.secondary,
     marginBottom: 20,
-    fontFamily: 'DGMTypeset-Regular',
+    fontFamily: fonts.primary,
   },
   percentage: {
     fontSize: 60,
-    fontWeight: '300',
     marginBottom: 10,
     fontFamily: 'DGMTypeset-Regular',
   },
@@ -124,14 +123,14 @@ const styles = StyleSheet.create({
     color: '#00FF88',
   },
   negativeGain: {
+    // TODO: update this color
     color: '#FF3366',
   },
   sinceText: {
     fontSize: 14,
     color: '#666',
-    fontWeight: '600',
     letterSpacing: 1,
-    fontFamily: 'DGMTypeset-Regular',
+    fontFamily: fonts.primary,
   },
   shareButton: {
     flexDirection: 'row',
@@ -146,8 +145,7 @@ const styles = StyleSheet.create({
   shareButtonText: {
     color: colors.text.primary,
     fontSize: 16,
-    fontWeight: '700',
     letterSpacing: 1,
-    fontFamily: 'DGMTypeset-Regular',
+    fontFamily: fonts.primary,
   },
 }); 

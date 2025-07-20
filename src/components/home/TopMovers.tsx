@@ -207,7 +207,6 @@ const styles = StyleSheet.create({
   },
   changeText: {
     fontSize: 13,
-    fontWeight: '600',
     textAlign: 'center',
     minWidth: 60, // Ensure enough width for arrow + percentage
   },

@@ -1,5 +1,11 @@
-import { WSMessage, PriceUpdate, BalanceUpdate } from '../types';
+import { BalanceUpdate, WalletAddress } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
+
+// Balance-specific WebSocket message
+interface BalanceWSMessage {
+  action: 'subscribeBalance' | 'unsubscribeBalance';
+  wallet: WalletAddress;
+}
 
 // Custom EventEmitter for React Native compatibility
 class EventEmitter {
@@ -51,9 +57,8 @@ class EventEmitter {
   }
 }
 
-interface WebSocketConfig {
+interface BalanceWebSocketConfig {
   url: string;
-  useCloudflare?: boolean;
   maxReconnectAttempts?: number;
   reconnectDelay?: number;
   heartbeatInterval?: number;
@@ -64,28 +69,25 @@ interface WebSocketEvents {
   connected: () => void;
   disconnected: (reason?: string) => void;
   error: (error: Error) => void;
-  priceUpdate: (data: PriceUpdate) => void;
   balanceUpdate: (data: BalanceUpdate) => void;
   message: (data: any) => void;
 }
 
-export class WebSocketManager extends EventEmitter {
+export class BalanceWebSocketManager extends EventEmitter {
   private ws: WebSocket | null = null;
-  private config: Required<WebSocketConfig>;
+  private config: Required<BalanceWebSocketConfig>;
   private reconnectAttempts = 0;
   private heartbeatTimer: number | null = null;
   private reconnectTimer: number | null = null;
   private connectionTimer: number | null = null;
   private isConnecting = false;
   private shouldReconnect = true;
-  private subscriptions = new Set<string>();
-  private messageQueue: any[] = []; // Add message queue
+  private currentWallet: string | null = null; // Track single wallet subscription
 
-  constructor(config: WebSocketConfig) {
+  constructor(config: BalanceWebSocketConfig) {
     super();
     this.config = {
       url: config.url,
-      useCloudflare: config.useCloudflare ?? false,
       maxReconnectAttempts: config.maxReconnectAttempts ?? 5,
       reconnectDelay: config.reconnectDelay ?? 2000,
       heartbeatInterval: config.heartbeatInterval ?? 30000,
@@ -95,7 +97,7 @@ export class WebSocketManager extends EventEmitter {
 
   public connect(): void {
     if (this.isConnecting || this.isConnected()) {
-      console.log('WebSocket already connected or connecting');
+      console.log('BalanceWebSocket already connected or connecting');
       return;
     }
 
@@ -110,13 +112,13 @@ export class WebSocketManager extends EventEmitter {
     this.cleanup();
 
     try {
-      console.log(`WebSocket: Attempting to connect to ${this.config.url}`);
+      console.log(`BalanceWebSocket: Attempting to connect to ${this.config.url}`);
       // Simple connection without authentication
       this.ws = new WebSocket(this.config.url);
       this.setupEventHandlers();
       this.startConnectionTimeout();
     } catch (error) {
-      console.error('WebSocket: Failed to create WebSocket instance:', error);
+      console.error('BalanceWebSocket: Failed to create WebSocket instance:', error);
       this.handleError(error as Error);
       this.isConnecting = false;
     }
@@ -126,42 +128,26 @@ export class WebSocketManager extends EventEmitter {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('WebSocket: Connected successfully');
+      console.log('BalanceWebSocket: Connected successfully');
       this.clearConnectionTimeout();
       this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.emit('connected');
       this.startHeartbeat();
 
-      // Clear subscriptions before flushing queue to avoid duplicates
-      const previousSubscriptions = new Set(this.subscriptions);
-      this.subscriptions.clear();
-
-      // Send any queued messages (this will rebuild subscriptions)
-      this.flushMessageQueue();
-
-      // Only resubscribe to subscriptions that weren't in the queue
-      previousSubscriptions.forEach(subscription => {
-        if (!this.subscriptions.has(subscription)) {
-          const [type, identifier] = subscription.split(':');
-          if (type === 'price') {
-            this.subscribeToPrice(identifier);
-          } else if (type === 'balance') {
-            this.subscribeToBalance(identifier);
-          }
-        }
-      });
+      // Resubscribe to current wallet if any
+      this.resubscribeToWallet();
     };
 
     this.ws.onclose = event => {
       console.log(
-        `WebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`
+        `BalanceWebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`
       );
       this.handleDisconnect(event.reason || 'Connection closed');
     };
 
     this.ws.onerror = error => {
-      console.error('WebSocket: Error event received:', error);
+      console.error('BalanceWebSocket: Error event received:', error);
       // In React Native, the error event doesn't provide much detail
       // The actual error details usually come through the onclose event
       this.handleError(new Error('WebSocket connection error'));
@@ -178,9 +164,6 @@ export class WebSocketManager extends EventEmitter {
 
       // Handle different message types
       switch (message.type) {
-        case 'PRICE_UPDATE':
-          this.emit('priceUpdate', message as PriceUpdate);
-          break;
         case 'BALANCE_UPDATE':
           this.emit('balanceUpdate', message as BalanceUpdate);
           break;
@@ -280,99 +263,67 @@ export class WebSocketManager extends EventEmitter {
     }
   }
 
-  private flushMessageQueue(): void {
-    if (this.messageQueue.length > 0) {
-      console.log(`WebSocket: Sending ${this.messageQueue.length} queued messages`);
-      const messages = [...this.messageQueue];
-      this.messageQueue = [];
-
-      messages.forEach(message => {
-        try {
-          this.ws!.send(JSON.stringify(message));
-        } catch (error) {
-          console.error('Failed to send queued message:', error);
-        }
-      });
-    }
-  }
-
-  public subscribeToPrice(token: string): void {
-    // Don't queue subscription messages if not connected
-    // These will be re-sent when connection is established
-    if (!this.isConnected()) {
-      console.log(`WebSocket: Skipping price subscription for ${token} - not connected`);
-      // Still track the subscription intent
-      this.subscriptions.add(`price:${token}`);
+  private resubscribeToWallet(): void {
+    if (!this.currentWallet) {
+      console.log('BalanceWebSocket: No wallet subscription to restore');
       return;
     }
-    
-    const message: WSMessage = {
-      action: 'subscribePrice',
-      token,
-    };
-    this.send(message);
-    this.subscriptions.add(`price:${token}`);
-  }
 
-  public unsubscribeFromPrice(token: string): void {
-    // Skip unsubscribe if not connected - subscription tracking handles cleanup
-    if (!this.isConnected()) {
-      this.subscriptions.delete(`price:${token}`);
-      return;
-    }
-    
-    const message: WSMessage = {
-      action: 'unsubscribePrice',
-      token,
+    console.log(`BalanceWebSocket: Resubscribing to wallet ${this.currentWallet}`);
+    const message: BalanceWSMessage = {
+      action: 'subscribeBalance',
+      wallet: this.currentWallet,
     };
-    this.send(message);
-    this.subscriptions.delete(`price:${token}`);
+    try {
+      this.ws!.send(JSON.stringify(message));
+    } catch (error) {
+      console.error(`Failed to resubscribe to wallet ${this.currentWallet}:`, error);
+    }
   }
 
   public subscribeToBalance(wallet: string): void {
-    // Don't queue subscription messages if not connected
-    if (!this.isConnected()) {
-      console.log(`WebSocket: Skipping balance subscription for ${wallet} - not connected`);
-      // Still track the subscription intent
-      this.subscriptions.add(`balance:${wallet}`);
+    // If already subscribed to this wallet, do nothing
+    if (this.currentWallet === wallet) {
+      console.log(`BalanceWebSocket: Already subscribed to wallet ${wallet}`);
       return;
     }
+
+    // If subscribed to a different wallet, unsubscribe first
+    if (this.currentWallet && this.currentWallet !== wallet) {
+      console.log(`BalanceWebSocket: Switching subscription from ${this.currentWallet} to ${wallet}`);
+      this.unsubscribeFromBalance(this.currentWallet);
+    }
+
+    // Track the new wallet subscription
+    this.currentWallet = wallet;
     
-    const message: WSMessage = {
-      action: 'subscribeBalance',
-      wallet,
-    };
-    this.send(message);
-    this.subscriptions.add(`balance:${wallet}`);
+    // Only send subscription if connected
+    if (this.isConnected()) {
+      const message: BalanceWSMessage = {
+        action: 'subscribeBalance',
+        wallet,
+      };
+      this.send(message);
+    }
   }
 
   public unsubscribeFromBalance(wallet: string): void {
-    // Skip unsubscribe if not connected - subscription tracking handles cleanup
-    if (!this.isConnected()) {
-      this.subscriptions.delete(`balance:${wallet}`);
-      return;
-    }
+    // Remove from tracked wallets
+    this.currentWallet = null;
     
-    const message: WSMessage = {
-      action: 'unsubscribeBalance',
-      wallet,
-    };
-    this.send(message);
-    this.subscriptions.delete(`balance:${wallet}`);
+    // Only send unsubscribe if connected
+    if (this.isConnected()) {
+      const message: BalanceWSMessage = {
+        action: 'unsubscribeBalance',
+        wallet,
+      };
+      this.send(message);
+    }
   }
 
   public send(data: any): void {
     if (!this.isConnected()) {
-      // Add a queue size limit to prevent memory issues
-      const MAX_QUEUE_SIZE = 100;
-      if (this.messageQueue.length >= MAX_QUEUE_SIZE) {
-        console.warn(`WebSocket: Message queue full (${MAX_QUEUE_SIZE} messages), dropping oldest message`);
-        this.messageQueue.shift(); // Remove oldest message
-      }
-      
-      // Queue the message instead of discarding it
-      this.messageQueue.push(data);
-      console.log(`WebSocket: Queued message, ${this.messageQueue.length} messages in queue`);
+      console.log('BalanceWebSocket: Cannot send message - not connected');
       return;
     }
 
@@ -393,9 +344,6 @@ export class WebSocketManager extends EventEmitter {
     this.isConnecting = false;
     this.stopHeartbeat();
     this.clearConnectionTimeout();
-
-    // Clear message queue on cleanup
-    this.messageQueue = [];
 
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
@@ -455,13 +403,13 @@ export class WebSocketManager extends EventEmitter {
 }
 
 // Singleton instance
-let instance: WebSocketManager | null = null;
+let instance: BalanceWebSocketManager | null = null;
 
-export const getWebSocketManager = (config?: WebSocketConfig): WebSocketManager => {
+export const getBalanceWebSocketManager = (config?: BalanceWebSocketConfig): BalanceWebSocketManager => {
   if (!instance && config) {
-    instance = new WebSocketManager(config);
+    instance = new BalanceWebSocketManager(config);
   } else if (!instance) {
-    throw new Error('WebSocketManager not initialized. Please provide config.');
+    throw new Error('BalanceWebSocketManager not initialized. Please provide config.');
   }
 
   return instance;

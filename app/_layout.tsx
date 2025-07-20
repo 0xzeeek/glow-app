@@ -14,7 +14,8 @@ import {
   createQueryClient,
   initializeApiClient,
   initializeErrorHandler,
-  getWebSocketManager,
+  getBalanceWebSocketManager,
+  getPriceSocket,
 } from '../src/services';
 import { uiStore } from '../src/stores/uiStore';
 import { fonts } from '../assets';
@@ -33,7 +34,8 @@ export default function RootLayout() {
 
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    let wsManager: ReturnType<typeof getWebSocketManager> | undefined;
+    let balanceWsManager: ReturnType<typeof getBalanceWebSocketManager> | undefined;
+    let priceSocket: ReturnType<typeof getPriceSocket> | undefined;
 
     async function prepare() {
       try {
@@ -50,24 +52,27 @@ export default function RootLayout() {
           enableInDev: false,
         });
 
-        // Initialize WebSocket manager and connect
-        wsManager = getWebSocketManager({
+        // Initialize Balance WebSocket manager and connect
+        balanceWsManager = getBalanceWebSocketManager({
           url: process.env.EXPO_PUBLIC_WS_URL || '',
-          useCloudflare: process.env.EXPO_PUBLIC_USE_CLOUDFLARE === 'false',
           heartbeatInterval: 60000, // Ping every 60 seconds (1 minute)
         });
 
-        // Connect WebSocket immediately on app load
-        wsManager.connect();
+        // Connect Balance WebSocket immediately on app load
+        balanceWsManager.connect();
+
+        // Initialize PriceSocket for Cloudflare edge worker
+        const priceWsUrl = process.env.EXPO_PUBLIC_PRICE_WS_URL || process.env.EXPO_PUBLIC_WS_URL?.replace(/^wss?:/, 'wss:').replace(/\/ws$/, '') + '/ws';
+        priceSocket = getPriceSocket(priceWsUrl);
 
         // Setup network monitoring
         unsubscribe = NetInfo.addEventListener(state => {
           const isConnected = state.isConnected ?? false;
           uiStore.getState().setOnline(isConnected);
           
-          // Reconnect WebSocket when network comes back
-          if (isConnected && wsManager && !wsManager.isConnected()) {
-            wsManager.connect();
+          // Reconnect Balance WebSocket when network comes back
+          if (isConnected && balanceWsManager && !balanceWsManager.isConnected()) {
+            balanceWsManager.connect();
           }
         });
 
@@ -85,8 +90,9 @@ export default function RootLayout() {
 
     return () => {
       unsubscribe?.();
-      // Disconnect WebSocket on cleanup
-      wsManager?.disconnect();
+      // Disconnect WebSockets on cleanup
+      balanceWsManager?.disconnect();
+      priceSocket?.disconnect();
     };
   }, []);
 

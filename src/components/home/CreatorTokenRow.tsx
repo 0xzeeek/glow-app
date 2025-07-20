@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
   },
   creatorName: {
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text.primary,
     marginBottom: 2,
     fontFamily: fonts.primary,
@@ -114,12 +113,10 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text.primary,
     marginBottom: 2,
   },
   changePercent: {
     fontSize: 13,
-    fontWeight: '500',
   },
 });

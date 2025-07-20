@@ -81,7 +81,6 @@ const styles = StyleSheet.create({
   },
   logoText: {
     fontSize: 26,
-    fontWeight: 'bold',
     color: colors.text.primary,
     letterSpacing: 1,
   },
@@ -101,7 +100,6 @@ const styles = StyleSheet.create({
   depositButtonText: {
     color: colors.text.secondary,
     fontSize: 14,
-    fontWeight: '700',
     letterSpacing: 0.5,
   },
   cashButton: {

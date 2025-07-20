@@ -9,6 +9,7 @@ import {
   User,
   WalletBalance,
   PaginatedTokensResponse,
+  TopHolder,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
@@ -177,6 +178,23 @@ class ApiClient {
     order?: 'asc' | 'desc';
   }): Promise<PaginatedTokensResponse> {
     return this.request<PaginatedTokensResponse>('/tokens', { params });
+  }
+
+  // Get token holders
+  public async getTokenHolders(
+    token: string,
+    limit: number = 3
+  ): Promise<TopHolder[]> {
+    const response = await this.request<{ holders: any[] }>(`/tokens/${token}/holders`);
+    
+    // Transform the response to match our TopHolder interface
+    return response.holders.slice(0, limit).map((holder: any, index: number) => ({
+      position: index + 1,
+      image: holder.image || '',
+      wallet: holder.wallet,
+      holdings: holder.holdings,
+      percentage: holder.percentage,
+    }));
   }
 
   // User profile

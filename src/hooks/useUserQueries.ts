@@ -14,8 +14,7 @@ export function useUserProfile(walletAddress: string | null) {
       return apiClient.getUserProfile(walletAddress);
     },
     enabled: !!walletAddress,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes
   });
 }
 
@@ -32,8 +31,5 @@ export function useWalletHoldings(walletAddress: string | null) {
       return apiClient.getWalletBalance(walletAddress);
     },
     enabled: !!walletAddress,
-    staleTime: 30 * 1000, // 30 seconds - more frequent updates for balance
-    gcTime: 5 * 60 * 1000, // 5 minutes
-    // refetchInterval: 60 * 1000, // Refetch every minute // TODO: use websocket for this
   });
 } 

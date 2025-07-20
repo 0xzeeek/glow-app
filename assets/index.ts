@@ -14,6 +14,9 @@ export { default as BackgroundOnbordingMain } from './images/background/onboardi
 export { default as BackgroundProfile } from './images/background/profile.png';
 export { default as BackgroundReferral } from './images/background/referral.png';
 
+// ----- Placeholder Images -----
+export { default as UserPlaceholder } from './images/placeholder/user.png';
+
 // ------ UI Icons ------
 // Deposit
 export { default as DepositAppleButton } from './icons/ui/deposit/apple-button.png';

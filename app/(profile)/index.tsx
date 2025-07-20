@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import BottomNav from '../../src/components/navigation/BottomNav';
@@ -6,12 +6,16 @@ import { ProfileSettings, ProfileExplore, ProfileDepositWhite, ProfileDeposit, P
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
-import { useCountingAnimation, useHoldingsPriceUpdates } from '../../src/hooks';
+import { useCountingAnimation, useVisibleTokenSubscriptions } from '../../src/hooks';
 import { Button } from '../../src/components/shared/Button';
 import DepositModal from '../../src/components/shared/DepositModal';
 import CashOutModal from '../../src/components/shared/CashOutModal';
 import { Profile } from '../../assets';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../src/services/ApiClient';
+import { WalletBalance } from '../../src/types';
+import { calculatePnlPercentage } from '../../src/utils';
 
 export default function ProfileScreen() {
   const { 
@@ -25,11 +29,63 @@ export default function ProfileScreen() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showCashOutModal, setShowCashOutModal] = useState(false);
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Handle price updates by updating the cached wallet holdings
+  const handlePriceUpdate = useCallback((tokenAddress: string, newPrice: number) => {
+    if (!walletAddress) return;
+
+    // Update the cached wallet holdings data
+    queryClient.setQueryData<WalletBalance>(
+      queryKeys.users.holdings(walletAddress),
+      (oldData) => {
+        if (!oldData) return oldData;
+
+        // Find the token that was updated
+        const tokenIndex = oldData.tokens.findIndex(t => t.address === tokenAddress);
+        if (tokenIndex === -1) return oldData;
+
+        // Create a copy of the tokens array
+        const updatedTokens = [...oldData.tokens];
+        const token = updatedTokens[tokenIndex];
+
+        // Calculate new USD value with the updated price
+        const newUsdValue = token.balance * newPrice;
+
+        // Recalculate PnL percentage with the new price
+        const newPnlPercentage = calculatePnlPercentage(
+          token.balance,
+          newPrice,
+          token.pnlData
+        );
+
+        // Update the token with new price and calculated values
+        updatedTokens[tokenIndex] = {
+          ...token,
+          price: newPrice,
+          value: newUsdValue,
+          pnlPercentage: newPnlPercentage,
+        };
+
+        // Recalculate total USD value
+        const newTotalUsdValue = updatedTokens.reduce((total, t) => total + t.value, 0);
+
+        // Return the updated wallet balance
+        return {
+          ...oldData,
+          tokens: updatedTokens,
+          totalUsdValue: newTotalUsdValue,
+          timestamp: Date.now(),
+        };
+      }
+    );
+  }, [walletAddress, queryClient]);
 
   // Subscribe to live price updates for all holdings
-  useHoldingsPriceUpdates({
-    walletAddress,
-    tokenHoldings,
+  useVisibleTokenSubscriptions({
+    visibleTokens: [], // No visible tokens on profile page
+    balanceTokens: tokenHoldings, // Subscribe to all user holdings
+    onPriceUpdate: handlePriceUpdate,
   });
 
   console.log('tokenHoldings', tokenHoldings);

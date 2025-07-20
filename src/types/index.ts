@@ -3,10 +3,14 @@
 // ============================================
 export interface User {
   wallet: WalletAddress;
-  username: string;
   email: string;
-  image: string;
-  createdAt: UnixTimestamp;
+  username: string;
+  image?: string;
+  referralCode?: string;
+  referredBy?: string;
+  feesEarned?: number;
+  createdAt: number;
+  lastUpdated: number;
 }
 
 export interface Token {

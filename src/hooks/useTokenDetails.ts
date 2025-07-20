@@ -31,8 +31,6 @@ export function useTokenDetails(address: TokenAddress): UseTokenDetailsReturn {
   
   // Get token from context
   const tokenFromContext = useMemo(() => getTokenByAddress(address), [address, getTokenByAddress]);
-
-  console.log('tokenFromContext', tokenFromContext);
   
   // All time ranges we want to prefetch
   const timeRanges: TimeRange[] = ['1h', '1d', '7d', '30d', 'all'];
@@ -85,22 +83,7 @@ export function useTokenDetails(address: TokenAddress): UseTokenDetailsReturn {
     queries: [
       {
         queryKey: queryKeys.tokens.holders(address),
-        queryFn: async () => {
-          try {
-            const response = await apiClient.request<{ holders: any[] }>(`/tokens/${address}/holders`);
-            // Transform the response to match our interface
-            return response.holders.slice(0, 3).map((holder: any, index: number) => ({
-              position: index + 1,
-              image: holder.image || '',
-              wallet: holder.wallet,
-              holdings: holder.holdings,
-              percentage: holder.percentage,
-            }));
-          } catch (error) {
-            console.error('Error fetching top holders:', error);
-            return [];
-          }
-        },
+        queryFn: () => apiClient.getTokenHolders(address, 3),
         enabled: !!address,
         staleTime: 10 * 60 * 1000, // 10 minutes
         gcTime: 30 * 60 * 1000, // 30 minutes
@@ -143,12 +126,5 @@ export function useTokenDetails(address: TokenAddress): UseTokenDetailsReturn {
 // Export individual fetch functions for flexibility
 export async function fetchTopHolders(address: TokenAddress): Promise<TopHolder[]> {
   const apiClient = getApiClient();
-  const response = await apiClient.request<{ holders: any[] }>(`/tokens/${address}/holders`);
-  return response.holders.slice(0, 3).map((holder: any, index: number) => ({
-    position: index + 1,
-    image: holder.image || '',
-    wallet: holder.wallet,
-    holdings: holder.holdings,
-    percentage: holder.percentage,
-  }));
+  return apiClient.getTokenHolders(address, 3);
 } 

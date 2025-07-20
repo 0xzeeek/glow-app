@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,14 +6,29 @@ import {
   ScrollView,
   Dimensions,
   Image,
+  RefreshControl,
 } from 'react-native';
 import { Button } from '@/components/shared/Button';
 import { colors, fonts } from '@/theme';
 import { ReferralCircle, ReferralQuestion } from '../../assets';
+import { useUser } from '../../src/contexts/UserContext';
+import { useUserProfile } from '../../src/hooks/useUserQueries';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ReferralScreen() {
+  const { feesEarned, walletAddress } = useUser();
+  const { refetch: refetchUserProfile } = useUserProfile(walletAddress);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetchUserProfile();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetchUserProfile]);
 
   const handleLearnMore = () => {
     console.log('Learn more pressed');
@@ -23,13 +38,33 @@ export default function ReferralScreen() {
     console.log('Invite friends pressed');
   };
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
   return (
     <>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.neutral[500]]}
+            tintColor={colors.neutral[500]}
+          />
+        }
+      >
         {/* Lifetime Rewards Card */}
         <View style={styles.rewardsCard}>
           <Text style={styles.rewardsLabel}>LIFETIME REWARDS</Text>
-          <Text style={styles.rewardsAmount}>$0</Text>
+          <Text style={styles.rewardsAmount}>{formatCurrency(feesEarned)}</Text>
         </View>
 
         {/* Title and Description */}
