@@ -6,7 +6,7 @@ import { ProfileSettings, ProfileExplore, ProfileDepositWhite, ProfileDeposit, P
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
-import { useCountingAnimation } from '../../src/hooks';
+import { useCountingAnimation, useHoldingsPriceUpdates } from '../../src/hooks';
 import { Button } from '../../src/components/shared/Button';
 import DepositModal from '../../src/components/shared/DepositModal';
 import CashOutModal from '../../src/components/shared/CashOutModal';
@@ -19,11 +19,20 @@ export default function ProfileScreen() {
     username, 
     totalUsdValue,
     usdcBalance,
-    tokenHoldings
+    tokenHoldings,
+    walletAddress
   } = useUser();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showCashOutModal, setShowCashOutModal] = useState(false);
   const router = useRouter();
+
+  // Subscribe to live price updates for all holdings
+  useHoldingsPriceUpdates({
+    walletAddress,
+    tokenHoldings,
+  });
+
+  console.log('tokenHoldings', tokenHoldings);
 
   // Use totalUsdValue from wallet holdings
   const totalValue = totalUsdValue;
@@ -137,7 +146,7 @@ export default function ProfileScreen() {
                     <Text style={styles.tokenBalance}>{token.balance.toFixed(2)} {token.symbol}</Text>
                   </View>
                   <View style={styles.tokenValueSection}>
-                    <Text style={styles.tokenValue}>${token.usdValue.toFixed(2)}</Text>
+                    <Text style={styles.tokenValue}>${token.value.toFixed(2)}</Text>
                     {token.pnlPercentage !== undefined && (
                       <Text style={[
                         styles.tokenPnl,

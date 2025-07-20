@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useRef } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { View, FlatList, StyleSheet, Text, ActivityIndicator, ViewToken, RefreshControl } from 'react-native';
 import HeaderBar from '../../src/components/navigation/HeaderBar';
 import TopMovers from '../../src/components/home/TopMovers';
@@ -10,7 +10,7 @@ import { useMultipleToken24hPrices, useVisibleTokenSubscriptions } from '../../s
 import { fonts } from '@/theme/typography';
 import { colors } from '@/theme/colors';
 import { interpolateChartData, calculatePriceChange } from '@/utils';
-import { Token } from '@/types';
+import { Token, TokenAddress } from '@/types';
 
 export default function HomeScreen() {
   const { 
@@ -42,7 +42,6 @@ export default function HomeScreen() {
 
   // Track visible tokens for optimized WebSocket subscriptions
   useVisibleTokenSubscriptions({
-    allTokens,
     visibleTokens,
     onPriceUpdate: updateTokenPrice,
   });
@@ -51,7 +50,7 @@ export default function HomeScreen() {
   // This ensures charts don't disappear when scrolling
   const loadedTokenAddresses = useMemo(() => {
     // Get addresses for featured token, watchlist tokens, and non-watchlist tokens
-    const addresses = new Set<string>();
+    const addresses = new Set<TokenAddress>();
     
     // Add featured token
     if (featuredToken) {
@@ -68,6 +67,7 @@ export default function HomeScreen() {
   }, [featuredToken, watchlistTokens, nonWatchlistTokens]);
   
   const priceDataQueries = useMultipleToken24hPrices(loadedTokenAddresses);
+  // const priceDataQueries = [];
 
   // Create a map of token address to chart data
   const chartDataMap = useMemo(() => {
@@ -199,7 +199,7 @@ export default function HomeScreen() {
       <FlatList
         data={nonWatchlistTokens}
         renderItem={renderItem}
-        keyExtractor={(item, index) => `${item.address}-${index}`}
+        keyExtractor={item => item.address}
         ListHeaderComponent={ListHeaderComponent}
         ListFooterComponent={renderFooter}
         onEndReached={handleEndReached}

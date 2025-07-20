@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useMemo } from 'react';
-import { Token } from '../types';
+import { Token, TokenAddress } from '../types';
 import { useWebSocketPriceUpdates, useFlattenedInfiniteTokens } from '../hooks';
 
 interface TokenDataContextType {
@@ -11,15 +11,15 @@ interface TokenDataContextType {
   error: Error | null;
   
   // Actions
-  getTokenByAddress: (address: string) => Token | undefined;
-  getTokenPrice: (address: string) => number;
+  getTokenByAddress: (address: TokenAddress) => Token | undefined;
+  getTokenPrice: (address: TokenAddress) => number;
   searchTokens: (query: string) => Token[];
   refreshTokenData: () => Promise<void>;
-  updateTokenPrice: (address: string, price: number) => void;
+  updateTokenPrice: (address: TokenAddress, price: number) => void;
   
   // WebSocket subscription
-  subscribeToTokens: (tokenAddresses: string[]) => void;
-  unsubscribeFromTokens: (tokenAddresses: string[]) => void;
+  subscribeToTokens: (tokenAddresses: TokenAddress[]) => void;
+  unsubscribeFromTokens: (tokenAddresses: TokenAddress[]) => void;
   
   // Infinite scrolling support
   hasNextPage: boolean;
@@ -75,11 +75,13 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     return allTokens.filter(token => token.address !== featuredToken.address);
   }, [allTokens, featuredToken]);
 
-  const getTokenByAddress = useCallback((address: string): Token | undefined => {
+  const getTokenByAddress = useCallback((address: TokenAddress): Token | undefined => {
+    console.log('address', address);
+    console.log('allTokens.find(token => token.address === address)', allTokens.find(token => token.address === address));
     return allTokens.find(token => token.address === address);
   }, [allTokens]);
 
-  const getTokenPrice = useCallback((address: string): number => {
+  const getTokenPrice = useCallback((address: TokenAddress): number => {
     const token = allTokens.find(t => t.address === address);
     return token?.price || 0;
   }, [allTokens]);
@@ -93,7 +95,7 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
     );
   }, [allTokens]);
 
-  const updateTokenPrice = useCallback((address: string, price: number) => {
+  const updateTokenPrice = useCallback((address: TokenAddress, price: number) => {
     setLocalPriceUpdates(prev => ({
       ...prev,
       [address]: { price }

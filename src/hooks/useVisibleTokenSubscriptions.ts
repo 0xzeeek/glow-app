@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { useWebSocketPriceUpdates } from './useWebSocketPriceUpdates';
-import { Token } from '../types';
+import { Token, TokenAddress } from '../types';
 
 interface UseVisibleTokenSubscriptionsProps {
-  allTokens: Token[];
   visibleTokens: Token[];
-  onPriceUpdate: (address: string, price: number) => void;
+  onPriceUpdate: (address: TokenAddress, price: number) => void;
 }
 
 /**
@@ -13,11 +12,10 @@ interface UseVisibleTokenSubscriptionsProps {
  * This prevents subscribing to hundreds of tokens at once
  */
 export function useVisibleTokenSubscriptions({
-  allTokens,
   visibleTokens,
   onPriceUpdate,
 }: UseVisibleTokenSubscriptionsProps) {
-  const subscribedTokensRef = useRef<Set<string>>(new Set());
+  const subscribedTokensRef = useRef<Set<TokenAddress>>(new Set());
   
   // Use the WebSocket price updates hook with visible tokens
   const { subscribeToTokens, unsubscribeFromTokens } = useWebSocketPriceUpdates({
@@ -31,7 +29,7 @@ export function useVisibleTokenSubscriptions({
     const currentSubscribed = subscribedTokensRef.current;
     
     // Find tokens to unsubscribe (no longer visible)
-    const toUnsubscribe: string[] = [];
+    const toUnsubscribe: TokenAddress[] = [];
     currentSubscribed.forEach(address => {
       if (!visibleAddresses.has(address)) {
         toUnsubscribe.push(address);
@@ -39,7 +37,7 @@ export function useVisibleTokenSubscriptions({
     });
     
     // Find tokens to subscribe (newly visible)
-    const toSubscribe: string[] = [];
+    const toSubscribe: TokenAddress[] = [];
     visibleAddresses.forEach(address => {
       if (!currentSubscribed.has(address)) {
         toSubscribe.push(address);

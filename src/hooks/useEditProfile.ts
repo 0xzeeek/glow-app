@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
 import { useUser } from '../contexts/UserContext';
 import { getApiClient } from '../services/ApiClient';
+import { ApiError } from '../services/ApiClient';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
 
@@ -138,7 +139,6 @@ export function useEditProfile(): UseEditProfileReturn {
       
       if (image) {
         setLocalProfileImage(image);
-        Alert.alert('Success', 'Profile picture updated successfully');
       } else {
         Alert.alert('Error', 'Failed to upload profile picture');
       }
@@ -185,6 +185,17 @@ export function useEditProfile(): UseEditProfileReturn {
       return true;
     } catch (error) {
       console.error('Error saving changes:', error);
+      
+      // Check if it's a 409 error for username already taken
+      if (error instanceof ApiError && error.status === 409) {
+        if (error.data?.error === 'Username is already taken' || 
+            error.message === 'Username is already taken') {
+          setUsernameError('Username is already taken');
+          return false;
+        }
+      }
+      
+      // For other errors, show generic alert
       Alert.alert('Error', 'Failed to save changes');
       return false;
     }

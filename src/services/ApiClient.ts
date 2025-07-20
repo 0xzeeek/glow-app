@@ -4,13 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import {
-  LatestPriceResponse,
   TokenPricesResponse,
   GetPricesParams,
-  TokenMetadata,
-  UserProfile,
+  User,
   WalletBalance,
-  Token,
   PaginatedTokensResponse,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
@@ -166,11 +163,6 @@ class ApiClient {
     this.abortControllers.clear();
   }
 
-  // Price data
-  public async getLatestPrice(token: string): Promise<LatestPriceResponse> {
-    return this.request<LatestPriceResponse>(`/tokens/${token}/price`);
-  }
-
   public async getTokenPrices(
     token: string,
     params?: GetPricesParams
@@ -178,34 +170,23 @@ class ApiClient {
     return this.request<TokenPricesResponse>(`/tokens/${token}/prices`, { params });
   }
 
-  // Token metadata
-  public async getTokenMetadata(token: string): Promise<TokenMetadata> {
-    return this.request<TokenMetadata>(`/tokens/${token}`);
-  }
-
-  // Get all tokens (legacy - for backward compatibility)
-  public async getAllTokens(): Promise<Token[]> {
-    const response = await this.request<{ count: number; tokens: Token[] }>('/tokens');
-    return response.tokens;
-  }
-
   // Get paginated tokens
   public async getTokensPaginated(params: {
     limit: number;
-    offset: number;
+    cursor?: string;
     order?: 'asc' | 'desc';
   }): Promise<PaginatedTokensResponse> {
-    return this.request('/tokens', { params });
+    return this.request<PaginatedTokensResponse>('/tokens', { params });
   }
 
   // User profile
-  public async getUserProfile(wallet: string): Promise<UserProfile> {
-    return this.request<UserProfile>(`/users/${wallet}`);
+  public async getUserProfile(wallet: string): Promise<User> {
+    return this.request<User>(`/users/${wallet}`);
   }
 
   // Update username using PUT endpoint
-  public async updateUser(wallet: string, username: string): Promise<UserProfile> {
-    return this.request<UserProfile>(`/users/${wallet}`, {
+  public async updateUser(wallet: string, username: string): Promise<User> {
+    return this.request<User>(`/users/${wallet}`, {
       method: 'PUT',
       body: JSON.stringify({ username }),
     });
@@ -214,16 +195,6 @@ class ApiClient {
   // Wallet balance
   public async getWalletBalance(wallet: string): Promise<WalletBalance> {
     return this.request<WalletBalance>(`/wallets/${wallet}/balance`);
-  }
-
-  // Historical prices
-  public async getHistoricalPrices(
-    mint: string, 
-    range: '1h' | '24h' | '7d' | '30d' = '24h'
-  ): Promise<Array<{ timestamp: number; price: number }>> {
-    return this.request<Array<{ timestamp: number; price: number }>>(`/tokens/${mint}/prices`, {
-      params: { range }
-    });
   }
 
   // Upload user profile image

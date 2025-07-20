@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { getApiClient, queryKeys } from '../services/ApiClient';
-import { Token, TopHolder } from '../types';
+import { Token, TokenAddress, TopHolder } from '../types';
 import { useTokenData } from '../contexts';
 
 interface ChartDataPoint {
@@ -24,13 +24,15 @@ interface UseTokenDetailsReturn {
   availableRanges: Record<TimeRange, boolean>;
 }
 
-export function useTokenDetails(tokenId: string): UseTokenDetailsReturn {
+export function useTokenDetails(address: TokenAddress): UseTokenDetailsReturn {
   const apiClient = getApiClient();
   const { getTokenByAddress } = useTokenData();
   const [selectedRange, setSelectedRange] = useState<TimeRange>('1d');
   
   // Get token from context
-  const tokenFromContext = useMemo(() => getTokenByAddress(tokenId), [tokenId, getTokenByAddress]);
+  const tokenFromContext = useMemo(() => getTokenByAddress(address), [address, getTokenByAddress]);
+
+  console.log('tokenFromContext', tokenFromContext);
   
   // All time ranges we want to prefetch
   const timeRanges: TimeRange[] = ['1h', '1d', '7d', '30d', 'all'];
@@ -38,9 +40,9 @@ export function useTokenDetails(tokenId: string): UseTokenDetailsReturn {
   // Fetch price history for all time ranges in parallel
   const priceQueries = useQueries({
     queries: timeRanges.map(range => ({
-      queryKey: queryKeys.prices.history(tokenId, { range }),
-      queryFn: () => apiClient.getTokenPrices(tokenId, { range }),
-      enabled: !!tokenId,
+      queryKey: queryKeys.prices.history(address, { range }),
+      queryFn: () => apiClient.getTokenPrices(address, { range }),
+      enabled: !!address,
       staleTime: range === '1h' ? 1000 * 60 * 1 : 1000 * 60 * 5, // 1 min for 1h, 5 min for others
       gcTime: 1000 * 60 * 10, // 10 minutes
     })),
@@ -82,10 +84,10 @@ export function useTokenDetails(tokenId: string): UseTokenDetailsReturn {
   const queries = useQueries({
     queries: [
       {
-        queryKey: queryKeys.tokens.holders(tokenId),
+        queryKey: queryKeys.tokens.holders(address),
         queryFn: async () => {
           try {
-            const response = await apiClient.request<{ holders: any[] }>(`/tokens/${tokenId}/holders`);
+            const response = await apiClient.request<{ holders: any[] }>(`/tokens/${address}/holders`);
             // Transform the response to match our interface
             return response.holders.slice(0, 3).map((holder: any, index: number) => ({
               position: index + 1,
@@ -99,7 +101,7 @@ export function useTokenDetails(tokenId: string): UseTokenDetailsReturn {
             return [];
           }
         },
-        enabled: !!tokenId,
+        enabled: !!address,
         staleTime: 10 * 60 * 1000, // 10 minutes
         gcTime: 30 * 60 * 1000, // 30 minutes
       },
@@ -139,9 +141,9 @@ export function useTokenDetails(tokenId: string): UseTokenDetailsReturn {
 }
 
 // Export individual fetch functions for flexibility
-export async function fetchTopHolders(tokenId: string): Promise<TopHolder[]> {
+export async function fetchTopHolders(address: TokenAddress): Promise<TopHolder[]> {
   const apiClient = getApiClient();
-  const response = await apiClient.request<{ holders: any[] }>(`/tokens/${tokenId}/holders`);
+  const response = await apiClient.request<{ holders: any[] }>(`/tokens/${address}/holders`);
   return response.holders.slice(0, 3).map((holder: any, index: number) => ({
     position: index + 1,
     image: holder.image || '',

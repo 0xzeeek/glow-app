@@ -50,7 +50,7 @@ export default function CreatorTokenRow({ token, chartData, change24h, onPress }
 
       <View style={styles.infoSection}>
         <Text style={styles.creatorName}>{token.name}</Text>
-        <Text style={styles.marketCap}>{formatMarketCap(token.marketCap)}</Text>
+        <Text style={styles.marketCap}>{formatMarketCap(token.marketCap || 0)}</Text>
       </View>
 
       {chartData && chartData.length > 0 && (

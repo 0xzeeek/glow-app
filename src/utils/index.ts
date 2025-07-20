@@ -1,5 +1,6 @@
 export * from './constants';
 export * from './watchlist';
+export * from './socialHelpers';
 
 /**
  * Calculate PnL percentage based on token holding data
@@ -39,12 +40,30 @@ export function calculatePnlPercentage(
 } 
 
 export const formatPrice = (price: number): string => {
-  if (price === 0) return '0.0000';
-  
-  // For very small prices (less than 0.0001), use more decimal places
-  if (price < 0.0001) {
+  if (price >= 1) {
+    return price.toFixed(2);
+  } else if (price >= 0.01) {
+    return price.toFixed(4);
+  } else if (price >= 0.0001) {
+    return price.toFixed(6);
+  } else {
     return price.toFixed(8);
   }
+};
+
+export const formatMarketCap = (marketCap: number): string => {
+  if (marketCap >= 1_000_000_000) {
+    return `${(marketCap / 1_000_000_000).toFixed(2)}B`;
+  } else if (marketCap >= 1_000_000) {
+    return `${(marketCap / 1_000_000).toFixed(2)}M`;
+  } else if (marketCap >= 1_000) {
+    return `${(marketCap / 1_000).toFixed(2)}K`;
+  } else {
+    return marketCap.toFixed(2);
+  }
+};
+
+export const formatNumber = (price: number): string => {
   
   // For small prices (less than 1), use 4 decimal places
   if (price < 1) {
@@ -58,19 +77,6 @@ export const formatPrice = (price: number): string => {
   
   // For large prices, use comma formatting with no decimals
   return price.toLocaleString('en-US', { maximumFractionDigits: 0 });
-};
-
-export const formatMarketCap = (marketCap: number): string => {
-  if (marketCap >= 1000000) {
-    return `$${(marketCap / 1000000).toFixed(0)}M`;
-  } else if (marketCap >= 1000) {
-    return `$${(marketCap / 1000).toFixed(0)}K`;
-  }
-  return `$${marketCap.toFixed(0)}`;
-};
-
-export const formatNumber = (num: number): string => {
-  return num.toLocaleString();
 };
 
 export const formatPercentage = (percentage: number, decimals: number = 2): string => {
@@ -179,4 +185,4 @@ export const interpolateChartData = (data: ChartPoint[], targetPoints: number = 
   }
   
   return smoothedPoints;
-}; 
+};

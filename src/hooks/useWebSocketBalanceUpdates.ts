@@ -88,14 +88,14 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
             updatedTokens[tokenIndex] = {
               ...token,
               balance: newBalance,
-              usdValue: newUsdValue,
+              value: newUsdValue,
               pnlPercentage: newPnlPercentage,
             };
 
             console.log('updatedTokens', updatedTokens);
 
             // Recalculate total USD value
-            const newTotalUsdValue = updatedTokens.reduce((total, t) => total + t.usdValue, 0);
+            const newTotalUsdValue = updatedTokens.reduce((total, t) => total + t.value, 0);
 
             console.log('newTotalUsdValue', newTotalUsdValue);
 

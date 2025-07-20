@@ -1,8 +1,4 @@
-import { 
-  WSMessage, 
-  PriceUpdate, 
-  BalanceUpdate 
-} from '../types';
+import { WSMessage, PriceUpdate, BalanceUpdate } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
 // Custom EventEmitter for React Native compatibility
@@ -19,14 +15,14 @@ class EventEmitter {
 
   off(event: string, listener: Function): this {
     if (!this.events[event]) return this;
-    
+
     this.events[event] = this.events[event].filter(l => l !== listener);
     return this;
   }
 
   emit(event: string, ...args: any[]): boolean {
     if (!this.events[event]) return false;
-    
+
     this.events[event].forEach(listener => {
       try {
         listener(...args);
@@ -109,7 +105,7 @@ export class WebSocketManager extends EventEmitter {
 
   private performConnect(): void {
     if (this.isConnecting) return;
-    
+
     this.isConnecting = true;
     this.cleanup();
 
@@ -136,14 +132,14 @@ export class WebSocketManager extends EventEmitter {
       this.reconnectAttempts = 0;
       this.emit('connected');
       this.startHeartbeat();
-      
+
       // Clear subscriptions before flushing queue to avoid duplicates
       const previousSubscriptions = new Set(this.subscriptions);
       this.subscriptions.clear();
-      
+
       // Send any queued messages (this will rebuild subscriptions)
       this.flushMessageQueue();
-      
+
       // Only resubscribe to subscriptions that weren't in the queue
       previousSubscriptions.forEach(subscription => {
         if (!this.subscriptions.has(subscription)) {
@@ -157,19 +153,21 @@ export class WebSocketManager extends EventEmitter {
       });
     };
 
-    this.ws.onclose = (event) => {
-      console.log(`WebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`);
+    this.ws.onclose = event => {
+      console.log(
+        `WebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`
+      );
       this.handleDisconnect(event.reason || 'Connection closed');
     };
 
-    this.ws.onerror = (error) => {
+    this.ws.onerror = error => {
       console.error('WebSocket: Error event received:', error);
       // In React Native, the error event doesn't provide much detail
       // The actual error details usually come through the onclose event
       this.handleError(new Error('WebSocket connection error'));
     };
 
-    this.ws.onmessage = (event) => {
+    this.ws.onmessage = event => {
       this.handleMessage(event.data);
     };
   }
@@ -177,7 +175,7 @@ export class WebSocketManager extends EventEmitter {
   private handleMessage(data: string): void {
     try {
       const message = JSON.parse(data);
-      
+
       // Handle different message types
       switch (message.type) {
         case 'PRICE_UPDATE':
@@ -200,7 +198,7 @@ export class WebSocketManager extends EventEmitter {
   private handleDisconnect(reason: string): void {
     this.cleanup();
     this.emit('disconnected', reason);
-    
+
     if (this.shouldReconnect && this.reconnectAttempts < this.config.maxReconnectAttempts) {
       this.scheduleReconnect();
     } else if (this.shouldReconnect && this.reconnectAttempts >= this.config.maxReconnectAttempts) {
@@ -209,12 +207,12 @@ export class WebSocketManager extends EventEmitter {
         new Error('WebSocket connection failed after maximum retry attempts'),
         ErrorCategory.WEBSOCKET,
         ErrorSeverity.HIGH,
-        { 
-          metadata: { 
+        {
+          metadata: {
             reason,
             maxAttempts: this.config.maxReconnectAttempts,
-            url: this.config.url 
-          } 
+            url: this.config.url,
+          },
         }
       );
     }
@@ -222,21 +220,16 @@ export class WebSocketManager extends EventEmitter {
 
   private handleError(error: Error): void {
     console.error('WebSocket error:', error);
-    
+
     // Report to error handler
-    getErrorHandler().handleError(
-      error,
-      ErrorCategory.WEBSOCKET,
-      ErrorSeverity.MEDIUM,
-      { 
-        metadata: { 
-          isConnected: this.ws?.readyState === WebSocket.OPEN,
-          reconnectAttempts: this.reconnectAttempts,
-          url: this.config.url 
-        } 
-      }
-    );
-    
+    getErrorHandler().handleError(error, ErrorCategory.WEBSOCKET, ErrorSeverity.MEDIUM, {
+      metadata: {
+        isConnected: this.ws?.readyState === WebSocket.OPEN,
+        reconnectAttempts: this.reconnectAttempts,
+        url: this.config.url,
+      },
+    });
+
     this.emit('error', error);
   }
 
@@ -245,9 +238,9 @@ export class WebSocketManager extends EventEmitter {
 
     this.reconnectAttempts++;
     const delay = this.config.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-    
+
     console.log(`Scheduling reconnect attempt ${this.reconnectAttempts} in ${delay}ms`);
-    
+
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       this.performConnect();
@@ -256,7 +249,7 @@ export class WebSocketManager extends EventEmitter {
 
   private startHeartbeat(): void {
     this.stopHeartbeat();
-    
+
     this.heartbeatTimer = setInterval(() => {
       if (this.isConnected()) {
         this.send({ type: 'PING' });
@@ -292,7 +285,7 @@ export class WebSocketManager extends EventEmitter {
       console.log(`WebSocket: Sending ${this.messageQueue.length} queued messages`);
       const messages = [...this.messageQueue];
       this.messageQueue = [];
-      
+
       messages.forEach(message => {
         try {
           this.ws!.send(JSON.stringify(message));
@@ -303,19 +296,16 @@ export class WebSocketManager extends EventEmitter {
     }
   }
 
-  private resubscribe(): void {
-    // Resubscribe to all previous subscriptions
-    this.subscriptions.forEach(subscription => {
-      const [type, identifier] = subscription.split(':');
-      if (type === 'price') {
-        this.subscribeToPrice(identifier);
-      } else if (type === 'balance') {
-        this.subscribeToBalance(identifier);
-      }
-    });
-  }
-
   public subscribeToPrice(token: string): void {
+    // Don't queue subscription messages if not connected
+    // These will be re-sent when connection is established
+    if (!this.isConnected()) {
+      console.log(`WebSocket: Skipping price subscription for ${token} - not connected`);
+      // Still track the subscription intent
+      this.subscriptions.add(`price:${token}`);
+      return;
+    }
+    
     const message: WSMessage = {
       action: 'subscribePrice',
       token,
@@ -325,6 +315,12 @@ export class WebSocketManager extends EventEmitter {
   }
 
   public unsubscribeFromPrice(token: string): void {
+    // Skip unsubscribe if not connected - subscription tracking handles cleanup
+    if (!this.isConnected()) {
+      this.subscriptions.delete(`price:${token}`);
+      return;
+    }
+    
     const message: WSMessage = {
       action: 'unsubscribePrice',
       token,
@@ -334,6 +330,14 @@ export class WebSocketManager extends EventEmitter {
   }
 
   public subscribeToBalance(wallet: string): void {
+    // Don't queue subscription messages if not connected
+    if (!this.isConnected()) {
+      console.log(`WebSocket: Skipping balance subscription for ${wallet} - not connected`);
+      // Still track the subscription intent
+      this.subscriptions.add(`balance:${wallet}`);
+      return;
+    }
+    
     const message: WSMessage = {
       action: 'subscribeBalance',
       wallet,
@@ -343,6 +347,12 @@ export class WebSocketManager extends EventEmitter {
   }
 
   public unsubscribeFromBalance(wallet: string): void {
+    // Skip unsubscribe if not connected - subscription tracking handles cleanup
+    if (!this.isConnected()) {
+      this.subscriptions.delete(`balance:${wallet}`);
+      return;
+    }
+    
     const message: WSMessage = {
       action: 'unsubscribeBalance',
       wallet,
@@ -353,6 +363,13 @@ export class WebSocketManager extends EventEmitter {
 
   public send(data: any): void {
     if (!this.isConnected()) {
+      // Add a queue size limit to prevent memory issues
+      const MAX_QUEUE_SIZE = 100;
+      if (this.messageQueue.length >= MAX_QUEUE_SIZE) {
+        console.warn(`WebSocket: Message queue full (${MAX_QUEUE_SIZE} messages), dropping oldest message`);
+        this.messageQueue.shift(); // Remove oldest message
+      }
+      
       // Queue the message instead of discarding it
       this.messageQueue.push(data);
       console.log(`WebSocket: Queued message, ${this.messageQueue.length} messages in queue`);
@@ -376,25 +393,25 @@ export class WebSocketManager extends EventEmitter {
     this.isConnecting = false;
     this.stopHeartbeat();
     this.clearConnectionTimeout();
-    
+
     // Clear message queue on cleanup
     this.messageQueue = [];
-    
+
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
     }
-    
+
     if (this.ws) {
       this.ws.onopen = null;
       this.ws.onclose = null;
       this.ws.onerror = null;
       this.ws.onmessage = null;
-      
+
       if (this.ws.readyState === WebSocket.OPEN) {
         this.ws.close();
       }
-      
+
       this.ws = null;
     }
   }
@@ -405,7 +422,7 @@ export class WebSocketManager extends EventEmitter {
 
   public getConnectionState(): string {
     if (!this.ws) return 'disconnected';
-    
+
     switch (this.ws.readyState) {
       case WebSocket.CONNECTING:
         return 'connecting';
@@ -421,17 +438,11 @@ export class WebSocketManager extends EventEmitter {
   }
 
   // Type-safe event emitter methods
-  public on<K extends keyof WebSocketEvents>(
-    event: K,
-    listener: WebSocketEvents[K]
-  ): this {
+  public on<K extends keyof WebSocketEvents>(event: K, listener: WebSocketEvents[K]): this {
     return super.on(event, listener);
   }
 
-  public off<K extends keyof WebSocketEvents>(
-    event: K,
-    listener: WebSocketEvents[K]
-  ): this {
+  public off<K extends keyof WebSocketEvents>(event: K, listener: WebSocketEvents[K]): this {
     return super.off(event, listener);
   }
 
@@ -452,6 +463,6 @@ export const getWebSocketManager = (config?: WebSocketConfig): WebSocketManager 
   } else if (!instance) {
     throw new Error('WebSocketManager not initialized. Please provide config.');
   }
-  
+
   return instance;
-}; 
+};

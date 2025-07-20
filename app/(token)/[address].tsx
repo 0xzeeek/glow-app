@@ -1,20 +1,23 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import TokenHeader from '../../src/components/token-details/TokenHeader';
-import TokenStatsChart from '../../src/components/token-details/TokenStatsChart';
-import TokenAbout from '../../src/components/token-details/TokenAbout';
-import TokenInfo from '../../src/components/token-details/TokenInfo';
-import TokenSocials from '../../src/components/token-details/TokenSocials';
-import FloatingBuyButton from '../../src/components/token-details/FloatingBuyButton';
-import BottomNav from '../../src/components/navigation/BottomNav';
-import { useTokenDetails } from '../../src/hooks';
-import { colors, fonts } from '../../src/theme';
-import { formatMarketCap, calculatePriceChange, formatPrice } from '../../src/utils';
+import { useTokenDetails } from '@/hooks';
+import TokenHeader from '@/components/token-details/TokenHeader';
+import TokenStatsChart from '@/components/token-details/TokenStatsChart';
+import TokenAbout from '@/components/token-details/TokenAbout';
+import TokenInfo from '@/components/token-details/TokenInfo';
+import TokenSocials from '@/components/token-details/TokenSocials';
+import FloatingBuyButton from '@/components/token-details/FloatingBuyButton';
+import BottomNav from '@/components/navigation/BottomNav';
+import { colors } from '@/theme/colors';
+import { fonts } from '@/theme/typography';
+import { formatPrice, formatMarketCap, calculatePriceChange } from '@/utils';
+import { formatSocialsForDisplay } from '@/utils/socialHelpers';
+import { TokenAddress } from '@/types';
 
 export default function TokenDetailScreen() {
-  const { id } = useLocalSearchParams();
-  const { tokenDetails, topHolders, chartData, isLoading, isChartLoading, error, selectedRange, setSelectedRange, availableRanges } = useTokenDetails(id as string);
+  const { address } = useLocalSearchParams<{ address: TokenAddress }>();
+  const { tokenDetails, topHolders, chartData, isLoading, isChartLoading, error, selectedRange, setSelectedRange, availableRanges } = useTokenDetails(address);
   
   // Calculate price change from chart data
   const priceChange = chartData.length > 0 ? calculatePriceChange(chartData) : 0;
@@ -44,13 +47,13 @@ export default function TokenDetailScreen() {
           price={`$${formatPrice(tokenDetails.price)}`}
           priceChange={priceChange}
           profileImage={tokenDetails.image}
-          backgroundImage={tokenDetails.video}
+          backgroundImage={tokenDetails.video || ''}
           address={tokenDetails.address}
         />
         
         <View style={styles.contentContainer}>
           <TokenStatsChart
-            marketCap={formatMarketCap(tokenDetails.marketCap)}
+            marketCap={formatMarketCap(tokenDetails?.marketCap || 0)}
             topHolders={topHolders}
             chartData={chartData}
             selectedRange={selectedRange}
@@ -66,22 +69,17 @@ export default function TokenDetailScreen() {
           <View style={styles.divider} />
           
           <TokenInfo
-            marketCap={formatMarketCap(tokenDetails.marketCap)}
+            marketCap={formatMarketCap(tokenDetails?.marketCap || 0)}
             volume24h="N/A" // Not available in Token type
             holders={0} // Not available in Token type, using 0 as default
             circulatingSupply={tokenDetails.totalSupply ? tokenDetails.totalSupply.toLocaleString() : 'N/A'}
-            createdAt={new Date(tokenDetails.createdAt).toLocaleDateString()}
+            createdAt={new Date(tokenDetails.createdAt * 1000).toLocaleDateString()}
           />
           
           <View style={styles.divider} />
           
           <TokenSocials 
-            socialLinks={[
-              tokenDetails.x && { platform: 'X', handle: tokenDetails.x, icon: 'logo-twitter' },
-              tokenDetails.instagram && { platform: 'Instagram', handle: tokenDetails.instagram, icon: 'logo-instagram' },
-              tokenDetails.youtube && { platform: 'YouTube', handle: tokenDetails.youtube, icon: 'logo-youtube' },
-              tokenDetails.tiktok && { platform: 'TikTok', handle: tokenDetails.tiktok, icon: 'logo-tiktok' },
-            ].filter(Boolean) as any[]}
+            socialLinks={formatSocialsForDisplay(tokenDetails.socials)}
           />
         </View>
       </ScrollView>

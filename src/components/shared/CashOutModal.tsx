@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
   cashBalance: {
     alignItems: 'center',
     alignSelf: 'center',
-    backgroundColor: colors.neutral[100],
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 24,

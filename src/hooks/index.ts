@@ -8,3 +8,4 @@ export * from './useWatchlist';
 export * from './useCountingAnimation';
 export * from './useInfiniteTokens';
 export * from './useVisibleTokenSubscriptions';
+export * from './useHoldingsPriceUpdates';

@@ -7,45 +7,36 @@ interface UseInfiniteTokensOptions {
   order?: 'asc' | 'desc';
 }
 
-type PageData = PaginatedTokensResponse & { offset: number };
-
 export function useInfiniteTokens(options: UseInfiniteTokensOptions = {}) {
   const apiClient = getApiClient();
   const { limit = 20, order = 'desc' } = options;
 
-  return useInfiniteQuery<PageData, Error, InfiniteData<PageData>, readonly unknown[], number>({
+  return useInfiniteQuery<
+    PaginatedTokensResponse,
+    Error,
+    InfiniteData<PaginatedTokensResponse>,
+    readonly unknown[],
+    string | undefined
+  >({
     queryKey: queryKeys.tokens.infinite({ limit, order }),
-    queryFn: async ({ pageParam = 0 }) => {
-      // For now, using offset-based pagination
-      // Can switch to cursor-based if backend supports it
+    queryFn: async ({ pageParam }) => {
       const response = await apiClient.getTokensPaginated({
         limit,
-        offset: pageParam,
+        cursor: pageParam,
         order,
       });
-
-      console.log('response', response);
       
-      return {
-        ...response,
-        // Add offset for next page calculation
-        offset: pageParam,
-      };
+      return response;
     },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) => {
-      // Calculate next offset
-      const loadedCount = allPages.reduce((sum, page) => sum + page.tokens.length, 0);
-      
-      // If we've loaded all tokens, return undefined to indicate no more pages
-      if (loadedCount >= lastPage.count) {
-        return undefined;
-      }
-      
-      // Return the next offset
-      return loadedCount;
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => {
+      // Return the nextCursor if there's a next page, otherwise undefined
+      return lastPage.hasNextPage ? lastPage.nextCursor : undefined;
     },
-    staleTime: 1000 * 60 * 1, // 1 minute
+    refetchOnWindowFocus: true,
+    // staleTime: 1000 * 60 * 1, // 1 minute
+    // TODO: update this back to 1 minute
+    staleTime: 1000,
     gcTime: 1000 * 60 * 5, // 5 minutes
   });
 }
@@ -54,7 +45,7 @@ export function useInfiniteTokens(options: UseInfiniteTokensOptions = {}) {
 export function useFlattenedInfiniteTokens(options: UseInfiniteTokensOptions = {}) {
   const query = useInfiniteTokens(options);
   
-  const allTokens = query.data?.pages.flatMap((page) => page.tokens) ?? [];
+  const allTokens: Token[] = query.data?.pages.flatMap((page) => page.tokens) ?? [];
   const totalCount = query.data?.pages[0]?.count ?? 0;
   
   return {

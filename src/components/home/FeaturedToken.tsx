@@ -48,7 +48,7 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
             <View style={styles.bottomSection}>
               <TouchableOpacity style={styles.marketCapSection} onPress={handleTokenPress} activeOpacity={0.8}>
                 <Text style={styles.marketCapLabel}>MARKET CAP</Text>
-                <Text style={styles.marketCapValue}>{formatMarketCap(token.marketCap)}</Text>
+                <Text style={styles.marketCapValue}>{formatMarketCap(token.marketCap || 0)}</Text>
               </TouchableOpacity>
               
               <Button title="BUY NOW" onPress={handleBuyPress} style={styles.buyButton} />

@@ -1,26 +1,72 @@
+// ============================================
+// Main Types
+// ============================================
+export interface User {
+  wallet: WalletAddress;
+  username: string;
+  email: string;
+  image: string;
+  createdAt: UnixTimestamp;
+}
+
 export interface Token {
-  address: string;
+  address: TokenAddress;
   symbol: string;
   name: string;
-  decimals: number;
   description: string;
-  price: number;
-  marketCap: number;
-  totalSupply: number;
   image: string;
   video: string;
-  youtube?: string;
-  tiktok?: string;
-  instagram?: string;
-  x?: string;
-  kick?: string;
-  website?: string;
-  phase: 'bonding' | 'amm';
-  ammPool?: string;
-  createdAt: number;
-  transitionedAt?: number;
-  lastUpdated?: number;
+  socials: Social[];
+  price: number;
+  marketCap: number;
+  holders: number;
+  change24h: number;
+  volume24h: number;
+  totalSupply: number;
+  circulatingSupply: number;
+  decimals: number;
+  createdAt: UnixTimestamp;
+  lastUpdated: UnixTimestamp;
 }
+
+export interface Social {
+  name: string;
+  url: string;
+  priority: number;
+}
+
+export interface WalletBalance {
+  wallet: WalletAddress;
+  totalUsdValue: number;
+  totalPnLPercentage?: number;
+  tokens: TokenHolding[];
+  timestamp: number;
+}
+
+export interface TopHolder {
+  position: number;
+  image: string;
+  wallet: WalletAddress;
+  holdings: number;
+  percentage: number;
+}
+
+export interface TokenHolding extends Token {
+  balance: number;
+  value: number;
+  pnlPercentage?: number;
+  pnlData?: {
+    avgBuyPrice: number;
+    totalSpentUsd: number;
+    realizedPnL: number;
+    totalBought: number;
+    totalSold: number;
+  };
+}
+
+// ============================================
+// API Types
+// ============================================
 
 export interface PaginatedTokensResponse {
   tokens: Token[];
@@ -32,20 +78,20 @@ export interface PaginatedTokensResponse {
 }
 
 export interface WSConnectParams {
-  wallet: string;
+  wallet: WalletAddress;
   signature: string;
   nonce: string;
 }
 
 export interface WSMessage {
   action: 'subscribePrice' | 'subscribeBalance' | 'unsubscribePrice' | 'unsubscribeBalance';
-  token?: string;
-  wallet?: string;
+  token?: TokenAddress;
+  wallet?: WalletAddress;
 }
 
 export interface PriceUpdate {
   type: 'PRICE_UPDATE';
-  token: string;
+  token: TokenAddress;
   price: number;
   timestamp: number;
   slot?: number;
@@ -54,23 +100,10 @@ export interface PriceUpdate {
 
 export interface BalanceUpdate {
   type: 'BALANCE_UPDATE';
-  wallet: string;
-  token: string;
+  wallet: WalletAddress;
+  token: TokenAddress;
   amount: number;
   timestamp: number;
-}
-
-export interface TokenMetadata {
-  token: string;
-  symbol: string;
-  name: string;
-  decimals: number;
-  imageUrl?: string;
-  phase: 'bonding' | 'amm';
-  ammPool?: string;
-  createdAt?: number;
-  transitionedAt?: number;
-  description?: string;
 }
 
 export interface PricePoint {
@@ -81,82 +114,21 @@ export interface PricePoint {
   txSignature?: string;
 }
 
-export interface UserProfile {
-  wallet: string;
-  username: string;
-  email: string;
-  image: string;
-  createdAt: number;
-}
-
 export interface GetPricesParams {
   range: '1h' | '1d' | '7d' | '30d' | 'all';
 }
 
-export interface UpdateTokenMetadataParams {
-  symbol?: string;
-  name?: string;
-  imageUrl?: string;
-  description?: string;
-}
-
-export interface LatestPriceResponse {
-  token: string;
-  price: number;
-  timestamp: number;
-  source: string;
-}
-
 export interface TokenPricesResponse {
-  token: string;
+  token: TokenAddress;
   prices: PricePoint[];
   range: string;
   count: number;
 }
 
-export type TokenAddress = string;
+// ============================================
+// Helper Types
+// ============================================
+
 export type WalletAddress = string;
+export type TokenAddress = string;
 export type UnixTimestamp = number;
-export type TokenAmount = number;
-
-export interface TokenHolding {
-  address: string;
-  symbol: string;
-  name: string;
-  balance: number;
-  decimals: number;
-  usdValue: number;
-  price: number;
-  totalSupply?: number;
-  marketCap?: number;
-  phase?: string;
-  image: string;
-  ammPool?: string;
-  createdAt: number;
-  transitionedAt?: number;
-  description: string;
-  pnlPercentage?: number;
-  pnlData?: {
-    avgBuyPrice: number;
-    totalSpentUsd: number;
-    realizedPnL: number;
-    totalBought: number;
-    totalSold: number;
-  };
-}
-
-export interface WalletBalance {
-  wallet: string;
-  totalUsdValue: number;
-  totalPnLPercentage?: number;
-  tokens: TokenHolding[];
-  timestamp: number;
-} 
-
-export interface TopHolder {
-  position: number;
-  image: string;
-  wallet: string;
-  holdings: number;
-  percentage: number;
-}

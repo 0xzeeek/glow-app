@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
   amountText: {
     fontSize: 64,
     fontFamily: fonts.secondary,
-    color: colors.neutral[500],
+    color: 'rgba(255, 255, 255, 0.3)',
     letterSpacing: -2,
   },
   amountTextActive: {
@@ -570,13 +570,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   quickAmountButton: {
-    backgroundColor: colors.neutral[100],
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 24,
   },
   quickAmountText: {
-    color: colors.text.secondary,
+    color: '#FFF',
     fontSize: 16,
     fontFamily: fonts.secondaryMedium,
   },
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontSize: 28,
-    color: colors.text.secondary,
+    color: '#FFF',
     fontFamily: fonts.secondary,
   },
   deleteIcon: {
@@ -614,10 +614,10 @@ const styles = StyleSheet.create({
   },
   swipeTrack: {
     height: 56,
-    backgroundColor: colors.neutral[100],
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderRadius: 28,
     borderWidth: 1,
-    borderColor: colors.neutral[300],
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
@@ -627,7 +627,7 @@ const styles = StyleSheet.create({
     left: 2,
     width: 60,
     height: 52,
-    backgroundColor: colors.background.primary,
+    backgroundColor: '#FFF',
     borderRadius: 26,
     justifyContent: 'center',
     alignItems: 'center',
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     height: 20,
   },
   swipeText: {
-    color: colors.neutral[500],
+    color: 'rgba(255, 255, 255, 0.6)',
     fontSize: 14,
     fontFamily: fonts.primaryBold,
     letterSpacing: 2,
@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 24,
     fontFamily: fonts.primaryBold,
-    color: colors.text.secondary,
+    color: '#FFF',
     letterSpacing: 2,
     marginBottom: 16,
   },
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   successSubtitle: {
     fontSize: 16,
     fontFamily: fonts.secondaryMedium,
-    color: colors.neutral[500],
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   paymentMethodsOverlay: {
     ...StyleSheet.absoluteFillObject,

@@ -1,16 +1,16 @@
 import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  Image, 
-  TextInput, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,7 +24,7 @@ import { Profile, SettingsEdit } from '../../assets';
 export default function EditProfileScreen() {
   const router = useRouter();
   const { memberSince } = useUser();
-  
+
   const {
     localUserName,
     localProfileImage,
@@ -38,20 +38,21 @@ export default function EditProfileScreen() {
   } = useEditProfile();
 
   const handleBack = async () => {
+    router.back();
     if (hasChanges) {
       const saved = await saveChanges();
-      if (saved) {
-        router.back();
+      if (!saved) {
+        Alert.alert('Unable to Save', 'There was an error saving your changes. Please try again.', [
+          { text: 'OK' },
+        ]);
       }
-    } else {
-      router.back();
     }
   };
 
   const handleEditProfileImage = async () => {
     // Request permissions
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (status !== 'granted') {
       Alert.alert(
         'Permission Required',
@@ -79,11 +80,11 @@ export default function EditProfileScreen() {
   const formattedDate = memberSince.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
-    year: 'numeric'
+    year: 'numeric',
   });
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
@@ -96,24 +97,21 @@ export default function EditProfileScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
         {/* Profile Image Section */}
         <View style={styles.profileImageSection}>
           <View style={styles.profileImageContainer}>
-            <Image 
-              source={{ uri: localProfileImage || Profile }} 
-              style={styles.profileImage} 
-            />
+            <Image source={{ uri: localProfileImage || Profile }} style={styles.profileImage} />
             {isUploadingImage && (
               <View style={styles.imageOverlay}>
                 <ActivityIndicator size="large" color={colors.background.primary} />
               </View>
             )}
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.editImageButton}
               onPress={handleEditProfileImage}
               activeOpacity={0.8}
@@ -129,10 +127,7 @@ export default function EditProfileScreen() {
           {/* Username Field */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>USERNAME</Text>
-            <View style={[
-              styles.inputContainer,
-              usernameError && styles.inputError
-            ]}>
+            <View style={[styles.inputContainer, usernameError && styles.inputError]}>
               <TextInput
                 style={styles.input}
                 value={localUserName}
@@ -144,9 +139,7 @@ export default function EditProfileScreen() {
                 autoCorrect={false}
               />
             </View>
-            {usernameError && (
-              <Text style={styles.errorText}>{usernameError}</Text>
-            )}
+            {usernameError && <Text style={styles.errorText}>{usernameError}</Text>}
           </View>
 
           {/* Member Since */}
@@ -274,4 +267,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 40,
   },
-}); 
+});

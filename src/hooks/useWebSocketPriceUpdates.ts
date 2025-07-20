@@ -2,20 +2,20 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { getWebSocketManager } from '../services';
 import { queryKeys } from '../services/ApiClient';
-import { PriceUpdate, Token } from '../types';
+import { PriceUpdate, Token, TokenAddress } from '../types';
 
 interface UseWebSocketPriceUpdatesProps {
   tokens: Token[];
-  onPriceUpdate: (address: string, price: number) => void;
+  onPriceUpdate: (address: TokenAddress, price: number) => void;
 }
 
 export function useWebSocketPriceUpdates({ tokens, onPriceUpdate }: UseWebSocketPriceUpdatesProps) {
   const queryClient = useQueryClient();
-  const subscribedTokensRef = useRef<Set<string>>(new Set());
+  const subscribedTokensRef = useRef<Set<TokenAddress>>(new Set());
   const lastPriceUpdatesRef = useRef<Record<string, PriceUpdate>>({});
 
   // WebSocket subscription management
-  const subscribeToTokens = useCallback((tokenAddresses: string[]) => {
+  const subscribeToTokens = useCallback((tokenAddresses: TokenAddress[]) => {
     const wsManager = getWebSocketManager();
     if (!wsManager || !wsManager.isConnected()) {
       console.warn('Cannot subscribe: WebSocket not connected');
@@ -34,7 +34,7 @@ export function useWebSocketPriceUpdates({ tokens, onPriceUpdate }: UseWebSocket
     });
   }, []);
 
-  const unsubscribeFromTokens = useCallback((tokenAddresses: string[]) => {
+  const unsubscribeFromTokens = useCallback((tokenAddresses: TokenAddress[]) => {
     const wsManager = getWebSocketManager();
     if (!wsManager) {
       console.warn('Cannot unsubscribe: WebSocket manager not available');
@@ -168,7 +168,7 @@ export function useWebSocketPriceUpdates({ tokens, onPriceUpdate }: UseWebSocket
     const subscribedAddresses = subscribedTokensRef.current;
     
     // Unsubscribe from removed tokens
-    const toUnsubscribe: string[] = [];
+    const toUnsubscribe: TokenAddress[] = [];
     subscribedAddresses.forEach(address => {
       if (!currentAddresses.has(address)) {
         toUnsubscribe.push(address);
@@ -179,7 +179,7 @@ export function useWebSocketPriceUpdates({ tokens, onPriceUpdate }: UseWebSocket
     }
     
     // Subscribe to new tokens
-    const toSubscribe: string[] = [];
+    const toSubscribe: TokenAddress[] = [];
     currentAddresses.forEach(address => {
       if (!subscribedAddresses.has(address)) {
         toSubscribe.push(address);

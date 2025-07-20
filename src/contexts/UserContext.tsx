@@ -145,7 +145,7 @@ export function UserProvider({ children }: UserProviderProps) {
   // Calculate total USD value from individual token values
   const calculatedTotalUsdValue = useMemo(() => {
     const value = walletBalance?.tokens.reduce((total, token) => {
-      return total + (token.usdValue || 0);
+      return total + (token.value || 0);
     }, 0) || 0;
     return value;
   }, [walletBalance?.tokens]);
