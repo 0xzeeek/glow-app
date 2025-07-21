@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, FlatList, StyleSheet, Text, ActivityIndicator, ViewToken, RefreshControl } from 'react-native';
+import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import HeaderBar from '../../src/components/navigation/HeaderBar';
 import TopMovers from '../../src/components/home/TopMovers';
 import FeaturedToken from '../../src/components/home/FeaturedToken';
@@ -167,6 +168,16 @@ export default function HomeScreen() {
     </>
   ), [calculatedTopMovers, featuredToken, watchlistTokens, chartDataMap]);
 
+  // Create animated scroll value
+  const scrollY = useSharedValue(0);
+  
+  // Handle scroll event
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
   if (isLoading && !isRefreshing) {
     return (
       <View style={styles.container}>
@@ -181,9 +192,9 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBar />
+      <HeaderBar scrollY={scrollY} />
 
-      <FlatList
+      <Animated.FlatList
         data={nonWatchlistTokens}
         renderItem={renderItem}
         keyExtractor={item => item.address}
@@ -207,6 +218,8 @@ export default function HomeScreen() {
           />
         }
         contentContainerStyle={styles.scrollContent}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
       />
 
       <BottomNav activeTab="home" />
