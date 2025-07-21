@@ -92,35 +92,34 @@ export default function RootLayout() {
           <ErrorBoundary>
             <AppProviders>
               <StatusBar style="light" />
-              <Stack
-                screenOptions={{
-                  headerStyle: {
-                    backgroundColor: colors.background.primary,
-                  },
-                  contentStyle: {
-                    backgroundColor: colors.background.primary,
-                  },
-                  animation: 'slide_from_right',
-                }}
-              >
-                <Stack.Screen name="(onboarding)" options={{ headerShown: false }} />
+              <Stack>
+                <Stack.Screen
+                  name="(onboarding)"
+                  options={{
+                    headerShown: false,
+                    animation: 'slide_from_right',
+                    contentStyle: {
+                      backgroundColor: colors.background.secondary,
+                    },
+                  }}
+                />
                 <Stack.Screen
                   name="(home)"
                   options={{
                     headerShown: false,
-                    animation: 'slide_from_left',
+                    animation: 'none',
                   }}
                 />
                 <Stack.Screen
                   name="(referral)"
-                  options={{ headerShown: false, animation: 'slide_from_bottom' }}
+                  options={{ headerShown: false, animation: 'none' }}
                 />
                 <Stack.Screen name="(token)" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="(profile)"
                   options={{
                     headerShown: false,
-                    animation: 'slide_from_right',
+                    animation: 'none',
                   }}
                 />
                 <Stack.Screen

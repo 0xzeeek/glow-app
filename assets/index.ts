@@ -3,6 +3,10 @@
 // Placeholder export to avoid empty file error
 export const ASSETS_READY = true;
 
+// Logo
+export { default as Swirl } from './icons/ui/logo/swirl.png';
+export { default as Glow } from './icons/ui/logo/glow.png';
+
 // Onboarding Images
 export { default as OnboardingLogo } from './images/onboarding/logo.png';
 export { default as OnboardingLightningBolt } from './images/onboarding/lightning-bolt.png';

@@ -1,4 +1,4 @@
-import { PlusWallet, Logo, DepositWallet } from 'assets';
+import { PlusWallet, Swirl, Glow, DepositWallet } from 'assets';
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -30,7 +30,8 @@ export default function HeaderBar() {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.container}>
           <View style={styles.logoContainer}>
-            <Image source={Logo} style={styles.logo} />
+            <Image source={Swirl} style={styles.swirl} />
+            <Image source={Glow} style={styles.glow} />
           </View>
           <Animated.View style={[styles.cashButtonWrapper, animatedButtonStyle]}>
             <TouchableOpacity style={styles.cashButton} onPress={handleDepositPress}>
@@ -48,7 +49,8 @@ export default function HeaderBar() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.logoContainer}>
-          <Image source={Logo} style={styles.logo} />
+          <Image source={Swirl} style={styles.swirl} />
+          <Image source={Glow} style={styles.glow} />
         </View>
         <TouchableOpacity style={styles.depositButton} onPress={handleDepositPress}>
           <Image source={PlusWallet} style={styles.depositButtonIcon} />
@@ -74,10 +76,15 @@ const styles = StyleSheet.create({
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
-  logo: {
-    width: 191,
+  swirl: {
+    width: 50,
     height: 40,
+  },
+  glow: {
+    width: 127,
+    height: 21,
   },
   logoText: {
     fontSize: 26,
