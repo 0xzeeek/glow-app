@@ -18,6 +18,7 @@ export default function TokenAbout({ description }: TokenAboutProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 24,
+    marginBottom: 24,
   },
   title: {
     fontSize: 14,

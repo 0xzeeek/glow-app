@@ -83,6 +83,7 @@ export { default as TokenEye } from './icons/ui/token/eye.png';
 export { default as TokenLive } from './icons/ui/token/live.png';
 export { default as TokenProfile } from './icons/ui/token/profile.png';
 export { default as TokenShare } from './icons/ui/token/share.png';
+export { default as TokenShareWhite } from './icons/ui/token/share-white.png';
 export { default as TopHolder } from './icons/ui/token/top-holder.png';
 export { default as Crown } from './icons/ui/token/crown.png';
 

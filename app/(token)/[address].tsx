@@ -2,8 +2,10 @@ import React from 'react';
 import { View, ScrollView, StyleSheet, Text, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTokenDetails } from '@/hooks';
+import { useUser } from '@/contexts/UserContext';
 import TokenHeader from '@/components/token-details/TokenHeader';
 import TokenStatsChart from '@/components/token-details/TokenStatsChart';
+import TokenHolding from '@/components/token-details/TokenHolding';
 import TokenAbout from '@/components/token-details/TokenAbout';
 import TokenInfo from '@/components/token-details/TokenInfo';
 import TokenSocials from '@/components/token-details/TokenSocials';
@@ -19,7 +21,8 @@ import { TokenAddress } from '@/types';
 export default function TokenDetailScreen() {
   const { address } = useLocalSearchParams<{ address: TokenAddress }>();
   const [showHoldersModal, setShowHoldersModal] = React.useState(false);
-  
+  const { tokenHoldings } = useUser();
+
   const {
     tokenDetails,
     topHolders,
@@ -35,12 +38,20 @@ export default function TokenDetailScreen() {
   // Debug re-renders
   React.useEffect(() => {
     if (tokenDetails) {
-      console.log("tokenDetails updated:", tokenDetails.address);
+      console.log('tokenDetails updated:', tokenDetails.address);
     }
   }, [tokenDetails?.address]);
 
   // Use price change from token details instead of calculating from chart data
   const priceChange = tokenDetails?.change24h || 0;
+
+  // Check if user is holding this token
+  const userHolding = tokenHoldings.find(holding => holding.address === address);
+
+  const handleShareHolding = () => {
+    console.log('Share holding modal will be implemented next');
+    // TODO: Implement share modal
+  };
 
   if (isLoading) {
     return (
@@ -85,9 +96,16 @@ export default function TokenDetailScreen() {
 
           <View style={styles.divider} />
 
-          <TokenAbout description={tokenDetails.description} />
+          {/* Show user's holding if they have this token */}
+          {userHolding && (
+            <TokenHolding
+              holding={userHolding}
+              backgroundImage={tokenDetails.image}
+              onSharePress={handleShareHolding}
+            />
+          )}
 
-          <View style={styles.divider} />
+          <TokenAbout description={tokenDetails.description} />
 
           <TokenInfo
             marketCap={formatMarketCap(tokenDetails?.marketCap || 0)}
@@ -112,7 +130,7 @@ export default function TokenDetailScreen() {
         tokenPrice={tokenDetails.price}
       />
       <BottomNav activeTab={null} />
-      
+
       {/* Top Holders Modal */}
       <TopHoldersModal
         visible={showHoldersModal}
