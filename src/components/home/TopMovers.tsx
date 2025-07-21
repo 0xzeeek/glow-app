@@ -1,12 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Token } from '@/types';
 import { colors } from '@/theme/colors';
 import { CHART_COLORS } from '@/utils/constants';
 import { formatPercentage } from '@/utils';
+import { fonts } from '@/theme/typography';
 
-const ITEM_WIDTH = 80; // Width of each mover item including margin
+const ITEM_WIDTH = 90; // Width of each mover item including margin
 
 interface TopMoversProps {
   data: (Token & { change24h: number })[];
@@ -15,7 +24,9 @@ interface TopMoversProps {
 export default function TopMovers({ data }: TopMoversProps) {
   const router = useRouter();
   const [tokenOrder, setTokenOrder] = useState<string[]>([]);
-  const animatedValuesRef = useRef<Map<string, { animatedValue: Animated.ValueXY; opacityValue: Animated.Value }>>(new Map());
+  const animatedValuesRef = useRef<
+    Map<string, { animatedValue: Animated.ValueXY; opacityValue: Animated.Value }>
+  >(new Map());
   const previousOrderRef = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
@@ -33,7 +44,7 @@ export default function TopMovers({ data }: TopMoversProps) {
     sortedData.forEach((token, newIndex) => {
       const existingAnimValues = animatedValuesRef.current.get(token.address);
       const oldIndex = previousPositions.get(token.address);
-      
+
       if (existingAnimValues) {
         if (oldIndex !== undefined && oldIndex !== newIndex) {
           // Animate position change
@@ -67,9 +78,9 @@ export default function TopMovers({ data }: TopMoversProps) {
           y: 0,
         });
         const opacityValue = new Animated.Value(0);
-        
+
         animatedValuesRef.current.set(token.address, { animatedValue, opacityValue });
-        
+
         Animated.timing(opacityValue, {
           toValue: 1,
           duration: 300,
@@ -77,7 +88,7 @@ export default function TopMovers({ data }: TopMoversProps) {
         }).start();
       }
     });
-    
+
     // Handle removed tokens (fade out)
     animatedValuesRef.current.forEach((animValues, address) => {
       if (!sortedData.find(t => t.address === address)) {
@@ -94,7 +105,7 @@ export default function TopMovers({ data }: TopMoversProps) {
 
     // Update state with sorted order
     setTokenOrder(sortedData.map(t => t.address));
-    
+
     // Update previous positions
     previousOrderRef.current = newPositions;
   }, [data]);
@@ -102,9 +113,9 @@ export default function TopMovers({ data }: TopMoversProps) {
   const renderItem = (address: string) => {
     const token = data.find(t => t.address === address);
     const animValues = animatedValuesRef.current.get(address);
-    
+
     if (!token || !animValues) return null;
-    
+
     const isPositive = token.change24h >= 0;
     const arrow = isPositive ? '▲' : '▼';
     const changeColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
@@ -123,17 +134,20 @@ export default function TopMovers({ data }: TopMoversProps) {
           },
         ]}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.moverItem}
           onPress={() => router.push(`/(token)/${token.address}`)}
           activeOpacity={0.7}
         >
-          <View style={styles.avatarContainer}>
-            <Image source={{ uri: token.image }} fadeDuration={0} style={styles.profileImage} />
-          </View>
-          <Text 
-            style={[styles.changeText, { color: changeColor }]}
+          <Image source={{ uri: token.image }} fadeDuration={0} style={styles.profileImage} />
+          <Text
+            style={styles.tokenName}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
+            {token.name}
+          </Text>
+          <Text style={[styles.changeText, { color: changeColor }]}>
             {arrow} {formatPercentage(Math.abs(token.change24h))}%
           </Text>
         </TouchableOpacity>
@@ -151,9 +165,7 @@ export default function TopMovers({ data }: TopMoversProps) {
         contentContainerStyle={[styles.scrollContent, { width: contentWidth }]}
         scrollEventThrottle={16}
       >
-        <View style={styles.contentContainer}>
-          {tokenOrder.map(renderItem)}
-        </View>
+        <View style={styles.contentContainer}>{tokenOrder.map(renderItem)}</View>
       </ScrollView>
     </View>
   );
@@ -168,7 +180,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   contentContainer: {
-    height: 80,
+    height: 110,
     position: 'relative',
   },
   animatedContainer: {
@@ -178,26 +190,22 @@ const styles = StyleSheet.create({
   },
   moverItem: {
     alignItems: 'center',
+    gap: 4,
     width: ITEM_WIDTH, // Adjusted to give some padding but use most of the container width
   },
-  avatarContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 50,
-    height: 50,
-    borderRadius: 100,
-    borderColor: colors.neutral[300],
-    borderWidth: 1,
-    marginBottom: 8,
-  },
   profileImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 28,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  tokenName: {
+    fontSize: 12,
+    fontFamily: fonts.primaryBold,
+    color: colors.text.primary,
   },
   changeText: {
     fontSize: 13,
     textAlign: 'center',
     minWidth: 60, // Ensure enough width for arrow + percentage
   },
-}); 
+});

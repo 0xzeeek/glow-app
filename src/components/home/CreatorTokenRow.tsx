@@ -44,9 +44,7 @@ export default function CreatorTokenRow({ token, chartData, change24h, onPress }
 
   return (
     <TouchableOpacity style={styles.container} onPress={handlePress}>
-      <View style={styles.imageContainer}>
         <Image source={{ uri: token.image }} fadeDuration={0} style={styles.image} />
-      </View>
 
       <View style={styles.infoSection}>
         <Text style={styles.creatorName}>{token.name}</Text>
@@ -75,22 +73,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 2,
-  },
-  imageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 50,
-    height: 50,
-    borderRadius: 100,
-    borderColor: colors.neutral[300],
-    borderWidth: 1,
-    marginRight: 12,
+    paddingVertical: 4,
   },
   image: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: 12,
   },
   infoSection: {
     flex: 1,
