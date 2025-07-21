@@ -137,6 +137,7 @@ export default function MoneyModal({
       // Reset animation values to ensure proper starting position
       overlayOpacity.setValue(0);
       contentTranslateY.setValue(screenHeight);
+      swipeAnimation.setValue(0); // Reset swipe animation when modal opens
 
       // Fade in overlay
       Animated.timing(overlayOpacity, {
@@ -166,6 +167,44 @@ export default function MoneyModal({
     }
   }, [visible]);
 
+  // Handle payment methods modal animations
+  React.useEffect(() => {
+    if (showPaymentMethods) {
+      // Reset values
+      paymentOverlayOpacity.setValue(0);
+      paymentContentTranslateY.setValue(300);
+
+      // Animate in
+      Animated.parallel([
+        Animated.timing(paymentOverlayOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.spring(paymentContentTranslateY, {
+          toValue: 0,
+          tension: 65,
+          friction: 11,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Animate out
+      Animated.parallel([
+        Animated.timing(paymentOverlayOpacity, {
+          toValue: 0,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(paymentContentTranslateY, {
+          toValue: 300,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [showPaymentMethods]);
+
   // Reset amount when balance changes (for cash-out mode)
   React.useEffect(() => {
     if (mode === 'cash-out' && !hasInteracted) {
@@ -174,7 +213,18 @@ export default function MoneyModal({
   }, [usdcBalance, mode, hasInteracted]);
 
   const handleNumberPress = (num: string) => {
-    setHasInteracted(true);
+    // If this is the first interaction, replace the entire amount
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      if (num === '.') {
+        setAmount('0.');
+      } else {
+        setAmount(num);
+      }
+      return;
+    }
+    
+    // Otherwise, append to existing amount
     if (amount === '0' && num !== '.') {
       setAmount(num);
     } else if (num === '.' && !amount.includes('.')) {
@@ -188,6 +238,12 @@ export default function MoneyModal({
   };
 
   const handleDelete = () => {
+    if (!hasInteracted) {
+      setHasInteracted(true);
+      setAmount('0');
+      return;
+    }
+    
     if (amount.length > 1) {
       setAmount(amount.slice(0, -1));
     } else {
@@ -275,6 +331,9 @@ export default function MoneyModal({
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      // Optional: Add visual feedback when touch starts
+    },
     onPanResponderMove: (_, gestureState) => {
       if (gestureState.dx > 0) {
         const maxSwipe = screenWidth - 140;
@@ -283,12 +342,28 @@ export default function MoneyModal({
       }
     },
     onPanResponderRelease: async (_, gestureState) => {
-      if (gestureState.dx > screenWidth * 0.5) {
+      const swipeThreshold = screenWidth * 0.5;
+      
+      if (gestureState.dx > swipeThreshold) {
+        // Validate amount
+        if (numericAmount <= 0) {
+          alert('Please enter an amount');
+          Animated.spring(swipeAnimation, {
+            toValue: 0,
+            tension: 20,
+            friction: 7,
+            useNativeDriver: false,
+          }).start();
+          return;
+        }
+        
         // Validate amount for cash-out
         if (mode === 'cash-out' && numericAmount > usdcBalance) {
           alert('Insufficient balance');
           Animated.spring(swipeAnimation, {
             toValue: 0,
+            tension: 20,
+            friction: 7,
             useNativeDriver: false,
           }).start();
           return;
@@ -297,7 +372,12 @@ export default function MoneyModal({
         // Execute the transaction
         let success = true;
         if (onComplete) {
-          success = await onComplete(numericAmount);
+          try {
+            success = await onComplete(numericAmount);
+          } catch (error) {
+            console.error('Transaction error:', error);
+            success = false;
+          }
         } else {
           // Default behavior if no callback provided
           if (mode === 'deposit' || mode === 'cash-out') {
@@ -306,6 +386,8 @@ export default function MoneyModal({
         }
 
         if (success) {
+          // Reset swipe immediately after success
+          swipeAnimation.setValue(0);
           setShowSuccess(true);
           
           // Auto close after 2 seconds for deposit/cash-out
@@ -319,6 +401,8 @@ export default function MoneyModal({
           alert(mode === 'buy' ? 'Purchase failed. Please check your balance.' : 'Transaction failed.');
           Animated.spring(swipeAnimation, {
             toValue: 0,
+            tension: 20,
+            friction: 7,
             useNativeDriver: false,
           }).start();
         }
@@ -326,9 +410,20 @@ export default function MoneyModal({
         // Snap back if not swiped far enough
         Animated.spring(swipeAnimation, {
           toValue: 0,
+          tension: 20,
+          friction: 7,
           useNativeDriver: false,
         }).start();
       }
+    },
+    onPanResponderTerminate: () => {
+      // Handle gesture termination
+      Animated.spring(swipeAnimation, {
+        toValue: 0,
+        tension: 20,
+        friction: 7,
+        useNativeDriver: false,
+      }).start();
     },
   });
 
@@ -515,6 +610,9 @@ export default function MoneyModal({
             </>
           )}
         </SafeAreaView>
+        
+        {/* Home Indicator */}
+        <View style={styles.homeIndicator} />
       </Animated.View>
 
       {/* Payment Methods Modal */}
@@ -602,7 +700,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: screenHeight * 0.92,
-    backgroundColor: colors.background.primary,
+    backgroundColor: '#1C1C1E', // Dark background like screenshot
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -627,17 +725,18 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontFamily: fonts.primaryBold,
-    color: colors.text.primary,
+    color: colors.green.black, // Green title like screenshot
     letterSpacing: 1,
   },
   closeButton: {
     position: 'absolute',
     right: 20,
+    top: 20,
     padding: 5,
   },
   closeButtonIcon: {
-    width: 24,
-    height: 24,
+    width: 44,
+    height: 44,
   },
   cashBalance: {
     flexDirection: 'row',
@@ -648,7 +747,7 @@ const styles = StyleSheet.create({
   cashText: {
     fontSize: 14,
     fontFamily: fonts.secondary,
-    color: colors.text.secondary,
+    color: colors.text.secondary, // White text
     marginRight: 4,
   },
   amountSection: {
@@ -658,20 +757,20 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   amountText: {
-    fontSize: 48,
+    fontSize: 56, // Larger amount text
     fontFamily: fonts.secondaryBold,
-    color: colors.text.secondary,
+    color: colors.text.secondary, // White text
   },
   amountTextActive: {
-    color: colors.text.primary,
+    color: colors.text.secondary, // Keep white when active
   },
   cashTypeButton: {
     alignSelf: 'center',
     marginBottom: 20,
   },
   cashTypeButtonIcon: {
-    width: 120,
-    height: 40,
+    width: 140, // Slightly larger button
+    height: 45,
     resizeMode: 'contain',
   },
   quickAmounts: {
@@ -685,12 +784,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   quickAmountText: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: fonts.secondaryMedium,
-    color: colors.text.primary,
+    color: colors.text.secondary, // White text
   },
   numberPad: {
     paddingHorizontal: 40,
@@ -708,25 +807,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   numberText: {
-    fontSize: 24,
+    fontSize: 40, // Larger numbers
     fontFamily: fonts.secondary,
-    color: colors.text.primary,
+    color: colors.text.secondary, // White text
   },
   deleteIcon: {
-    width: 24,
+    width: 35,
     height: 24,
-    tintColor: colors.text.primary,
+    tintColor: colors.text.secondary, // White icon
   },
   swipeContainer: {
     paddingHorizontal: 20,
     position: 'absolute',
-    bottom: 40,
+    bottom: 100,
     left: 0,
     right: 0,
+    zIndex: 10, // Ensure it's above other elements
   },
   swipeTrack: {
     height: 60,
-    backgroundColor: colors.background.secondary,
+    backgroundColor: '#2C2C2E', // Gray track background
     borderRadius: 30,
     overflow: 'hidden',
     justifyContent: 'center',
@@ -742,12 +842,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     left: 0,
+    zIndex: 5, // Ensure button is above progress
   },
   swipeButtonInner: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.background.primary,
+    backgroundColor: colors.text.secondary, // White button
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -760,12 +861,13 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     resizeMode: 'contain',
+    tintColor: colors.text.primary, // Black icon on white background
   },
   swipeText: {
     textAlign: 'center',
     fontSize: 14,
     fontFamily: fonts.primaryBold,
-    color: colors.text.secondary,
+    color: colors.text.secondary, // White text
     letterSpacing: 1,
   },
   successContainer: {
@@ -785,20 +887,20 @@ const styles = StyleSheet.create({
   successTitle: {
     fontSize: 20,
     fontFamily: fonts.secondaryBold,
-    color: colors.text.primary,
+    color: colors.text.secondary, // White text
     marginBottom: 10,
     letterSpacing: 1,
   },
   successAmount: {
     fontSize: 36,
     fontFamily: fonts.secondaryBold,
-    color: colors.text.primary,
+    color: colors.text.secondary, // White text
     marginBottom: 5,
   },
   successSubtitle: {
     fontSize: 16,
     fontFamily: fonts.secondary,
-    color: colors.text.secondary,
+    color: colors.text.secondary, // White text
   },
   paymentModalOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -809,7 +911,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.background.primary,
+    backgroundColor: '#1C1C1E', // Dark background
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 10,
@@ -818,7 +920,7 @@ const styles = StyleSheet.create({
   paymentModalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: colors.neutral[300],
+    backgroundColor: '#48484A', // Gray handle
     borderRadius: 2,
     alignSelf: 'center',
     marginBottom: 20,
@@ -826,7 +928,7 @@ const styles = StyleSheet.create({
   paymentModalTitle: {
     fontSize: 18,
     fontFamily: fonts.primaryBold,
-    color: colors.text.primary,
+    color: colors.text.secondary, // White text
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -844,7 +946,7 @@ const styles = StyleSheet.create({
   paymentText: {
     fontSize: 16,
     fontFamily: fonts.secondaryMedium,
-    color: colors.text.primary,
+    color: colors.text.secondary, // White text
     flex: 1,
   },
   checkmark: {
@@ -856,8 +958,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkmarkText: {
-    color: 'white',
+    color: colors.text.primary, // Black text on green background
     fontSize: 14,
     fontFamily: fonts.secondaryBold,
+  },
+  homeIndicator: {
+    width: 134,
+    height: 5,
+    backgroundColor: '#FFFFFF', // White bar
+    borderRadius: 2.5,
+    position: 'absolute',
+    bottom: 8,
+    alignSelf: 'center',
   },
 }); 

@@ -31,5 +31,7 @@ export function useWalletHoldings(walletAddress: string | null) {
       return apiClient.getWalletBalance(walletAddress);
     },
     enabled: !!walletAddress,
+    staleTime: 0, // Always consider data stale to allow immediate refetches
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
   });
 } 

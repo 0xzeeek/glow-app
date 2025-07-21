@@ -115,6 +115,17 @@ export class BalanceWebSocketManager extends EventEmitter {
     this.performConnect();
   }
 
+  // Watch pattern similar to PriceSocket - auto-connects when needed
+  public watch(wallet: string): void {
+    // Ensure connection exists
+    if (!this.isConnecting && !this.isConnected()) {
+      this.connect();
+    }
+    
+    // Subscribe to wallet
+    this.subscribeToBalance(wallet);
+  }
+
   private performConnect(): void {
     if (this.isConnecting) return;
 
@@ -281,7 +292,7 @@ export class BalanceWebSocketManager extends EventEmitter {
       return;
     }
 
-    console.log(`BalanceWebSocket: Resubscribing to wallet ${this.currentWallet}`);
+    console.log(`BalanceWebSocket: Subscribing to wallet ${this.currentWallet}`);
     const message: BalanceWSMessage = {
       action: 'subscribeBalance',
       wallet: this.currentWallet,

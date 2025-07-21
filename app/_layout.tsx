@@ -32,15 +32,12 @@ const queryClient = createQueryClient();
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
-  
+
+  // TODO: when switch to eas build, remove this comment
   // Capture referral code from deep links
   // useCaptureReferralCode();
 
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-    let balanceWsManager: ReturnType<typeof getBalanceWebSocketManager> | undefined;
-    let priceSocket: ReturnType<typeof getPriceSocket> | undefined;
-
     async function prepare() {
       try {
         // Load fonts
@@ -56,36 +53,17 @@ export default function RootLayout() {
           enableInDev: false,
         });
 
-        // Initialize Balance WebSocket manager and connect
-        const wsUrl = process.env.EXPO_PUBLIC_BALANCE_WS_URL;
-        if (wsUrl) {
-          balanceWsManager = getBalanceWebSocketManager({
-            url: wsUrl,
-            heartbeatInterval: 60000, // Ping every 60 seconds (1 minute)
-          });
+        // Initialize WebSocket managers - they'll auto-connect when needed
+        getBalanceWebSocketManager({
+          url: process.env.EXPO_PUBLIC_BALANCE_WS_URL || '',
+          heartbeatInterval: 60000, // Ping every 60 seconds
+        });
 
-          // Connect Balance WebSocket immediately on app load
-          balanceWsManager.connect();
-        } else {
-          console.warn('Balance WebSocket URL not configured - skipping WebSocket initialization');
-        }
+        getPriceSocket(process.env.EXPO_PUBLIC_PRICE_WS_URL || '');
 
-        // Initialize PriceSocket for Cloudflare edge worker
-        const priceWsUrl =
-          process.env.EXPO_PUBLIC_PRICE_WS_URL ||
-          process.env.EXPO_PUBLIC_WS_URL?.replace(/^wss?:/, 'wss:').replace(/\/ws$/, '') + '/ws';
-        priceSocket = getPriceSocket(priceWsUrl);
-
-        // Setup network monitoring
-        unsubscribe = NetInfo.addEventListener(state => {
-          const isConnected = state.isConnected ?? false;
-          uiStore.getState().setOnline(isConnected);
-
-          // Reconnect Balance WebSocket when network comes back
-          if (isConnected && balanceWsManager && !balanceWsManager.isConnected()) {
-            console.log('Network reconnected - reconnecting Balance WebSocket');
-            balanceWsManager.connect();
-          }
+        // Monitor network status for UI state
+        NetInfo.addEventListener(state => {
+          uiStore.getState().setOnline(state.isConnected ?? false);
         });
 
         setIsReady(true);
@@ -93,19 +71,11 @@ export default function RootLayout() {
         console.warn(e);
         setIsReady(true);
       } finally {
-        // Hide splash screen
         await SplashScreen.hideAsync();
       }
     }
 
     prepare();
-
-    return () => {
-      unsubscribe?.();
-      // Disconnect WebSockets on cleanup
-      balanceWsManager?.disconnect();
-      priceSocket?.disconnect();
-    };
   }, []);
 
   if (!isReady) {

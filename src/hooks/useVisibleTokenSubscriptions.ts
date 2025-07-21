@@ -6,6 +6,7 @@ import { Token, TokenAddress } from '../types';
 
 interface UseVisibleTokenSubscriptionsProps {
   visibleTokens: Token[];
+  featuredToken?: Token;
   balanceTokens?: Token[]; // User's holdings for profile page
   onPriceUpdate: (address: TokenAddress, price: number) => void;
 }
@@ -19,6 +20,7 @@ interface UseVisibleTokenSubscriptionsProps {
  */
 export function useVisibleTokenSubscriptions({
   visibleTokens,
+  featuredToken,
   balanceTokens = [],
   onPriceUpdate,
 }: UseVisibleTokenSubscriptionsProps) {
@@ -97,7 +99,7 @@ export function useVisibleTokenSubscriptions({
       const priceSocket = getPriceSocket();
       
       // Combine visible tokens and balance tokens, removing duplicates
-      const allTokens = [...visibleTokens, ...balanceTokens];
+      const allTokens = [...visibleTokens, ...balanceTokens, ...(featuredToken ? [featuredToken] : [])];
       const tokenMap = new Map<TokenAddress, Token>();
       allTokens.forEach(token => tokenMap.set(token.address, token));
       
@@ -166,7 +168,7 @@ export function useVisibleTokenSubscriptions({
       // Return an empty cleanup function to satisfy TypeScript
       return () => {};
     }
-  }, [visibleTokens, balanceTokens, createPriceHandler]);
+  }, [visibleTokens, balanceTokens, featuredToken, createPriceHandler]);
   
   return {
     subscribedCount: subscribedTokensRef.current.size,

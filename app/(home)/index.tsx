@@ -43,6 +43,7 @@ export default function HomeScreen() {
   // Track visible tokens for optimized WebSocket subscriptions
   useVisibleTokenSubscriptions({
     visibleTokens,
+    featuredToken: featuredToken || undefined,
     onPriceUpdate: updateTokenPrice,
   });
 

@@ -33,10 +33,17 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
             );
 
             if (!currentData) {
-              // If we don't have existing data, invalidate to fetch fresh data
-              queryClient.invalidateQueries({
+              // If we don't have existing data, invalidate and refetch
+              console.log('No current data, refetching holdings for wallet:', walletAddress);
+              
+              await queryClient.invalidateQueries({
                 queryKey: queryKeys.users.holdings(walletAddress),
               });
+              
+              await queryClient.refetchQueries({
+                queryKey: queryKeys.users.holdings(walletAddress),
+              });
+              
               return;
             }
 
@@ -45,9 +52,19 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
 
             if (tokenIndex === -1) {
               // New token not in holdings - refetch everything
-              queryClient.invalidateQueries({
+              console.log('Balance update for new token:', data.token);
+              console.log('Invalidating and refetching holdings for wallet:', walletAddress);
+              
+              // Invalidate to mark as stale
+              await queryClient.invalidateQueries({
                 queryKey: queryKeys.users.holdings(walletAddress),
               });
+              
+              // Force refetch to ensure the data is fetched immediately
+              await queryClient.refetchQueries({
+                queryKey: queryKeys.users.holdings(walletAddress),
+              });
+              
               return;
             }
 
@@ -109,28 +126,12 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
           }
         };
 
-        // Handle connection events
-        const handleConnected = () => {
-          // Subscribe when Balance WebSocket connects
-          if (!isSubscribedRef.current) {
-            balanceWsManager.subscribeToBalance(walletAddress);
-            isSubscribedRef.current = true;
-          }
-        };
+        // Use watch pattern - it will auto-connect if needed
+        balanceWsManager.watch(walletAddress);
+        isSubscribedRef.current = true;
 
-        const handleDisconnected = () => {
-          isSubscribedRef.current = false;
-        };
-
-        // Subscribe immediately if already connected
-        if (balanceWsManager.isConnected() && !isSubscribedRef.current) {
-          balanceWsManager.subscribeToBalance(walletAddress);
-          isSubscribedRef.current = true;
-        }
-
+        // Just listen for balance updates
         balanceWsManager.on('balanceUpdate', handleBalanceUpdate);
-        balanceWsManager.on('connected', handleConnected);
-        balanceWsManager.on('disconnected', handleDisconnected);
 
         // Cleanup function
         cleanup = () => {
@@ -139,8 +140,6 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
               balanceWsManagerRef.current.unsubscribeFromBalance(walletAddress);
             }
             balanceWsManagerRef.current.off('balanceUpdate', handleBalanceUpdate);
-            balanceWsManagerRef.current.off('connected', handleConnected);
-            balanceWsManagerRef.current.off('disconnected', handleDisconnected);
             isSubscribedRef.current = false;
           }
         };

@@ -212,6 +212,7 @@ class ApiClient {
 
   // Wallet balance
   public async getWalletBalance(wallet: string): Promise<WalletBalance> {
+    console.log('ApiClient: Fetching wallet balance for', wallet);
     return this.request<WalletBalance>(`/wallets/${wallet}/balance`);
   }
 
