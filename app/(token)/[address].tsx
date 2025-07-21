@@ -32,7 +32,12 @@ export default function TokenDetailScreen() {
     availableRanges,
   } = useTokenDetails(address);
 
-  console.log("topHolders", topHolders);
+  // Debug re-renders
+  React.useEffect(() => {
+    if (tokenDetails) {
+      console.log("tokenDetails updated:", tokenDetails.address);
+    }
+  }, [tokenDetails?.address]);
 
   // Use price change from token details instead of calculating from chart data
   const priceChange = tokenDetails?.change24h || 0;
@@ -86,8 +91,8 @@ export default function TokenDetailScreen() {
 
           <TokenInfo
             marketCap={formatMarketCap(tokenDetails?.marketCap || 0)}
-            volume24h="N/A" // Not available in Token type
-            holders={0} // Not available in Token type, using 0 as default
+            volume24h={tokenDetails?.volume24h ? formatMarketCap(tokenDetails.volume24h) : 'N/A'}
+            holders={tokenDetails?.holders || 0}
             circulatingSupply={
               tokenDetails.totalSupply ? tokenDetails.totalSupply.toLocaleString() : 'N/A'
             }

@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: screenHeight * 0.9,
-    backgroundColor: colors.background.grey,
+    backgroundColor: colors.background.secondary,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
