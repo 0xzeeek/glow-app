@@ -15,9 +15,7 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   withSequence,
-  Easing,
-  interpolate,
-  Extrapolate
+  Easing
 } from 'react-native-reanimated';
 
 interface HeaderBarProps {
@@ -28,8 +26,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 export default function HeaderBar({ scrollY }: HeaderBarProps) {
   const router = useRouter();
-  // const { totalUsdValue } = useUser();
-  const totalUsdValue = 1000000;
+  const { totalUsdValue } = useUser();;
   
   // Use the counting animation hook
   const { displayValue, bounceScale } = useCountingAnimation(totalUsdValue);
@@ -82,12 +79,6 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
   const SWIRL_WIDTH = 50;
   const GAP = 4; // Reduced gap for tighter spacing
   
-  // Calculate dynamic swirl width based on scale
-  const getSwirlWidth = (scale: number) => {
-    'worklet';
-    return SWIRL_WIDTH * scale;
-  };
-  
   // Animated styles for header container
   const animatedHeaderStyle = useAnimatedStyle(() => {
     return {
@@ -100,19 +91,10 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
   
   // Animated styles for glow image (fade out)
   const animatedGlowStyle = useAnimatedStyle(() => {
-    // Gradually scale down based on cash text width
-    // Normal size at 80px width, 0.7 scale at 150px+ width
-    const baseScale = interpolate(
-      cashTextWidth.value,
-      [80, 150],
-      [1, 0.7],
-      Extrapolate.CLAMP
-    );
-    
     return {
       opacity: withTiming(isCollapsed.value ? 0 : 1, { duration: 200 }),
       transform: [{ 
-        scale: withSpring(isCollapsed.value ? 0.8 : baseScale, {
+        scale: withSpring(isCollapsed.value ? 0.8 : 1, {
           damping: 15,
           stiffness: 150,
         })
@@ -124,20 +106,9 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
   const animatedSwirlStyle = useAnimatedStyle(() => {
     const screenCenter = screenWidth / 2;
     
-    // Gradually scale down based on cash text width
-    const baseScale = interpolate(
-      cashTextWidth.value,
-      [80, 150],
-      [1, 0.8],
-      Extrapolate.CLAMP
-    );
-    const collapsedScale = baseScale * 0.8;
-    
     if (totalUsdValue > 0) {
       // With cash: position swirl so it and cash text are centered together
-      // Use actual swirl width based on scale
-      const actualSwirlWidth = getSwirlWidth(isCollapsed.value ? collapsedScale : baseScale);
-      const totalWidth = actualSwirlWidth + GAP + cashTextWidth.value;
+      const totalWidth = SWIRL_WIDTH + GAP + cashTextWidth.value;
       const startX = (screenWidth - totalWidth) / 2;
       const swirlTranslateX = startX - PADDING;
       
@@ -150,7 +121,7 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
             })
           },
           { 
-            scale: withSpring(isCollapsed.value ? collapsedScale : baseScale, {
+            scale: withSpring(isCollapsed.value ? 0.8 : 1, {
               damping: 15,
               stiffness: 150,
             })
@@ -162,8 +133,7 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
       };
     } else {
       // Without cash: center the swirl
-      const actualSwirlWidth = getSwirlWidth(isCollapsed.value ? collapsedScale : baseScale);
-      const swirlToCenter = screenCenter - PADDING - (actualSwirlWidth / 2);
+      const swirlToCenter = screenCenter - PADDING - (SWIRL_WIDTH / 2);
       
       return {
         transform: [
@@ -174,7 +144,7 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
             })
           },
           { 
-            scale: withSpring(isCollapsed.value ? collapsedScale : baseScale, {
+            scale: withSpring(isCollapsed.value ? 0.8 : 1, {
               damping: 15,
               stiffness: 150,
             })
@@ -197,24 +167,16 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
       };
     }
     
-    // Get the actual swirl scale for collapsed state
-    const swirlScale = interpolate(
-      cashTextWidth.value,
-      [80, 150],
-      [1, 0.8],
-      Extrapolate.CLAMP
-    ) * 0.8; // Collapsed scale
-    
     // Calculate where we want swirl and text to be centered as a group
-    const actualSwirlWidth = SWIRL_WIDTH * swirlScale;
-    const totalContentWidth = actualSwirlWidth + GAP + cashTextWidth.value;
+    const swirlWidth = SWIRL_WIDTH * 0.8; // Swirl is scaled to 0.8 when collapsed
+    const totalContentWidth = swirlWidth + GAP + cashTextWidth.value;
     
     // Center position of the entire group
     const groupCenterX = screenWidth / 2;
     const groupStartX = groupCenterX - (totalContentWidth / 2);
     
     // Where we want the text to start (after swirl and gap)
-    const textTargetX = groupStartX + actualSwirlWidth + GAP;
+    const textTargetX = groupStartX + swirlWidth + GAP;
     
     // Current text position within button (icon + padding before text)
     const textOffsetInButton = 32;
@@ -289,13 +251,6 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
 
   // Animated styles for logo container
   const animatedLogoContainerStyle = useAnimatedStyle(() => {
-    // Scale the gap between logos based on cash text width
-    // const gapScale = interpolate(
-    //   cashTextWidth.value,
-    //   [80, 150],
-    //   [1, 0.5],  // Reduced from 0.7 to 0.5 for tighter spacing
-    //   Extrapolate.CLAMP
-    // );
     
     return {
       gap: 8, // Base gap is now 8px, scales down to 4px
