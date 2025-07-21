@@ -9,7 +9,7 @@ import { useTokenData, useWatchlistContext } from '../../src/contexts';
 import { useMultipleToken24hPrices, useVisibleTokenSubscriptions } from '../../src/hooks';
 import { fonts } from '@/theme/typography';
 import { colors } from '@/theme/colors';
-import { interpolateChartData, calculatePriceChange } from '@/utils';
+import { interpolateChartData } from '@/utils';
 import { Token, TokenAddress } from '@/types';
 
 export default function HomeScreen() {
@@ -73,6 +73,7 @@ export default function HomeScreen() {
   // Create a map of token address to chart data
   const chartDataMap = useMemo(() => {
     const map: Record<string, number[]> = {};
+
     priceDataQueries.forEach((query, index) => {
       if (query.data && loadedTokenAddresses[index]) {
         const interpolated = interpolateChartData(query.data.prices, 50);
@@ -82,27 +83,12 @@ export default function HomeScreen() {
     return map;
   }, [priceDataQueries, loadedTokenAddresses]);
 
-  // Calculate 24h change for each token
-  const changeMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    priceDataQueries.forEach((query, index) => {
-      if (query.data && loadedTokenAddresses[index]) {
-        map[loadedTokenAddresses[index]] = calculatePriceChange(query.data.prices);
-      }
-    });
-    return map;
-  }, [priceDataQueries, loadedTokenAddresses]);
-
   // Calculate top movers based on visible tokens
   const calculatedTopMovers = useMemo(() => {
     return allTokens
       .slice(0, 50) // Only check top 50 tokens for performance
-      .map(token => ({
-        ...token,
-        change24h: changeMap[token.address] || 0
-      }))
-      .sort((a, b) => b.change24h - a.change24h)
-  }, [allTokens, changeMap]);
+      .sort((a, b) => b.change24h - a.change24h);
+  }, [allTokens]);
 
   // Track which tokens are visible on screen
   const onViewableItemsChanged = useCallback(({ viewableItems }: { 
@@ -140,9 +126,9 @@ export default function HomeScreen() {
     <CreatorTokenRow
       token={item}
       chartData={chartDataMap[item.address]}
-      change24h={changeMap[item.address]}
+      change24h={item.change24h}
     />
-  ), [chartDataMap, changeMap]);
+  ), [chartDataMap]);
 
   const renderFooter = useCallback(() => {
     if (!isFetchingNextPage) return null;
@@ -169,7 +155,7 @@ export default function HomeScreen() {
               key={token.address}
               token={token}
               chartData={chartDataMap[token.address]}
-              change24h={changeMap[token.address]}
+              change24h={token.change24h}
             />
           ))}
         </View>
@@ -179,7 +165,7 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>CREATORS</Text>
       </View>
     </>
-  ), [calculatedTopMovers, featuredToken, watchlistTokens, chartDataMap, changeMap]);
+  ), [calculatedTopMovers, featuredToken, watchlistTokens, chartDataMap]);
 
   if (isLoading && !isRefreshing) {
     return (

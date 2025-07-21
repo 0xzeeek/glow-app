@@ -12,11 +12,11 @@ interface TokenHeaderProps {
   price: string;
   priceChange: number;
   profileImage: string;
-  backgroundImage: string;
+  backgroundVideo?: string;
   address: string;
 }
 
-export default function TokenHeader({ name, price, priceChange, profileImage, backgroundImage, address }: TokenHeaderProps) {
+export default function TokenHeader({ name, price, priceChange, profileImage, backgroundVideo, address }: TokenHeaderProps) {
   const router = useRouter();
   const { isInWatchlist, toggleWatchlist } = useWatchlistContext();
   const isPositive = priceChange >= 0;
@@ -31,7 +31,7 @@ export default function TokenHeader({ name, price, priceChange, profileImage, ba
   };
   
   return (
-    <ImageBackground source={{ uri: backgroundImage }} style={styles.container}>
+    <ImageBackground source={backgroundVideo ? { uri: backgroundVideo } : undefined} style={styles.container}>
       <View style={styles.overlay}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.topBar}>
@@ -164,8 +164,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 8,
   },
   price: {

@@ -35,9 +35,7 @@ export function useInfiniteTokens(options: UseInfiniteTokensOptions = {}) {
       return lastPage.hasNextPage ? lastPage.nextCursor : undefined;
     },
     refetchOnWindowFocus: true,
-    // staleTime: 1000 * 60 * 1, // 1 minute
-    // TODO: update this back to 1 minute
-    staleTime: 1000,
+    staleTime: 1000 * 60 * 1, // 1 minute
     gcTime: 1000 * 60 * 5, // 5 minutes
   });
 }

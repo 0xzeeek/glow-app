@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { Token1, Token2, Token3, ReferralProfile } from '../../../assets';
+import { Token1White, Token2White, Token3White, UserPlaceholder, TopHolder as TopHolderIcon } from '../../../assets';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { interpolateChartData } from '@/utils';
@@ -21,6 +21,7 @@ interface TokenStatsChartProps {
   onRangeChange?: (range: '1h' | '1d' | '7d' | '30d' | 'all') => void;
   isLoading?: boolean;
   availableRanges?: Record<'1h' | '1d' | '7d' | '30d' | 'all', boolean>;
+  onPressHolders?: () => void;
 }
 
 const timeframes: Array<{ label: string; value: '1h' | '1d' | '7d' | '30d' | 'all' }> = [
@@ -38,7 +39,8 @@ export default function TokenStatsChart({
   selectedRange = '1d',
   onRangeChange,
   isLoading = false,
-  availableRanges = { '1h': true, '1d': true, '7d': true, '30d': true, 'all': true }
+  availableRanges = { '1h': true, '1d': true, '7d': true, '30d': true, 'all': true },
+  onPressHolders,
 }: TokenStatsChartProps) {
   const handleTimeframeChange = (value: '1h' | '1d' | '7d' | '30d' | 'all') => {
     if (onRangeChange && availableRanges[value]) {
@@ -100,7 +102,7 @@ export default function TokenStatsChart({
   }, [chartData, isLoading]);
   
   // Get position badge images
-  const positionIcons = [Token1, Token2, Token3];
+  const positionIcons = [Token1White, Token2White, Token3White];
   
   // Generate path for the chart
   const chartWidth = screenWidth - 48;
@@ -131,14 +133,21 @@ export default function TokenStatsChart({
   const isPositive = lastPrice >= firstPrice;
   const chartColor = isPositive ? CHART_COLORS.POSITIVE : CHART_COLORS.NEGATIVE;
   
-  // Create placeholder holders if needed
-  const displayHolders = topHolders.length > 0 
-    ? topHolders.slice(0, 3)
-    : [
-        { position: 1, image: '', wallet: '', holdings: 0, percentage: 0 },
-        { position: 2, image: '', wallet: '', holdings: 0, percentage: 0 },
-        { position: 3, image: '', wallet: '', holdings: 0, percentage: 0 }
-      ];
+  // Always create 3 display slots, filling with real holders where available
+  const displayHolders = Array.from({ length: 3 }, (_, index) => {
+    const realHolder = topHolders[index];
+    if (realHolder) {
+      return realHolder;
+    }
+    // Return placeholder for empty positions
+    return {
+      position: index + 1,
+      image: '',
+      wallet: '',
+      holdings: 0,
+      percentage: 0,
+    };
+  });
   
   return (
     <View style={styles.container}>
@@ -150,20 +159,31 @@ export default function TokenStatsChart({
         
         <View style={styles.divider} />
         
-        <View style={styles.holderBlock}>
+        <TouchableOpacity 
+          style={styles.holderBlock}
+          onPress={onPressHolders}
+          disabled={!onPressHolders}
+          activeOpacity={0.7}
+        >
           <Text style={styles.label}>TOP HOLDERS</Text>
           <View style={styles.holdersContainer}>
             {displayHolders.map((holder, index) => (
               <View key={holder.position} style={styles.holderWrapper}>
                 <Image source={positionIcons[index]} style={styles.positionBadge} />
                 <Image 
-                  source={holder.image ? { uri: holder.image } : ReferralProfile} 
+                  source={
+                    holder.image 
+                      ? { uri: holder.image } 
+                      : holder.wallet 
+                        ? TopHolderIcon  // Has wallet but no image = non-user holder
+                        : UserPlaceholder  // Empty position
+                  } 
                   style={styles.holderAvatar} 
                 />
               </View>
             ))}
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
       
       {/* Chart */}
@@ -324,6 +344,6 @@ const styles = StyleSheet.create({
     color: colors.text.secondary,
   },
   timeframeTextDisabled: {
-    color: colors.neutral[400],
+    color: colors.neutral[300],
   },
 }); 

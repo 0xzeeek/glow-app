@@ -19,6 +19,7 @@ export const colors = {
   background: {
     primary: '#FFFFFF',
     secondary: '#000000',
+    grey: '#232323',
   },
   
   // Text colors

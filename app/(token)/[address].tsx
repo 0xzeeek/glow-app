@@ -8,15 +8,18 @@ import TokenAbout from '@/components/token-details/TokenAbout';
 import TokenInfo from '@/components/token-details/TokenInfo';
 import TokenSocials from '@/components/token-details/TokenSocials';
 import FloatingBuyButton from '@/components/token-details/FloatingBuyButton';
+import TopHoldersModal from '@/components/shared/TopHoldersModal';
 import BottomNav from '@/components/navigation/BottomNav';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
-import { formatPrice, formatMarketCap, calculatePriceChange } from '@/utils';
+import { formatPrice, formatMarketCap } from '@/utils';
 import { formatSocialsForDisplay } from '@/utils/socialHelpers';
 import { TokenAddress } from '@/types';
 
 export default function TokenDetailScreen() {
   const { address } = useLocalSearchParams<{ address: TokenAddress }>();
+  const [showHoldersModal, setShowHoldersModal] = React.useState(false);
+  
   const {
     tokenDetails,
     topHolders,
@@ -29,8 +32,10 @@ export default function TokenDetailScreen() {
     availableRanges,
   } = useTokenDetails(address);
 
-  // Calculate price change from chart data
-  const priceChange = chartData.length > 0 ? calculatePriceChange(chartData) : 0;
+  console.log("topHolders", topHolders);
+
+  // Use price change from token details instead of calculating from chart data
+  const priceChange = tokenDetails?.change24h || 0;
 
   if (isLoading) {
     return (
@@ -57,7 +62,7 @@ export default function TokenDetailScreen() {
           price={`$${formatPrice(tokenDetails.price)}`}
           priceChange={priceChange}
           profileImage={tokenDetails.image}
-          backgroundImage={tokenDetails.video || ''}
+          backgroundVideo={tokenDetails.video}
           address={tokenDetails.address}
         />
 
@@ -70,6 +75,7 @@ export default function TokenDetailScreen() {
             onRangeChange={setSelectedRange}
             isLoading={isChartLoading}
             availableRanges={availableRanges}
+            onPressHolders={topHolders.length > 0 ? () => setShowHoldersModal(true) : undefined}
           />
 
           <View style={styles.divider} />
@@ -85,7 +91,7 @@ export default function TokenDetailScreen() {
             circulatingSupply={
               tokenDetails.totalSupply ? tokenDetails.totalSupply.toLocaleString() : 'N/A'
             }
-            createdAt={new Date(tokenDetails.createdAt * 1000).toLocaleDateString()}
+            createdAt={new Date(tokenDetails.createdAt).toLocaleDateString()}
           />
 
           <View style={styles.divider} />
@@ -101,6 +107,14 @@ export default function TokenDetailScreen() {
         tokenPrice={tokenDetails.price}
       />
       <BottomNav activeTab={null} />
+      
+      {/* Top Holders Modal */}
+      <TopHoldersModal
+        visible={showHoldersModal}
+        onClose={() => setShowHoldersModal(false)}
+        topHolders={topHolders}
+        tokenSymbol={tokenDetails?.symbol}
+      />
     </View>
   );
 }

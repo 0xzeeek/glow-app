@@ -36,11 +36,15 @@ export function useVisibleTokenSubscriptions({
       
       // Update React Query cache for price history
       const ranges = ['1h', '1d', '7d', '30d', 'all'] as const;
+      
       ranges.forEach(range => {
         queryClient.setQueryData(
           queryKeys.prices.history(address, { range }),
           (oldData: any) => {
-            if (!oldData || !oldData.prices) return oldData;
+            // Only update if we have existing data with prices
+            if (!oldData || !oldData.prices || oldData.prices.length === 0) {
+              return oldData;
+            }
             
             // Add the new price point to the end of the array
             const newPricePoint = {

@@ -77,8 +77,6 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
   }, [allTokens, featuredToken]);
 
   const getTokenByAddress = useCallback((address: TokenAddress): Token | undefined => {
-    console.log('address', address);
-    console.log('allTokens.find(token => token.address === address)', allTokens.find(token => token.address === address));
     return allTokens.find(token => token.address === address);
   }, [allTokens]);
 

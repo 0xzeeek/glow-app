@@ -58,14 +58,6 @@ export interface WalletBalance {
   timestamp: number;
 }
 
-export interface TopHolder {
-  position: number;
-  image: string;
-  wallet: WalletAddress;
-  holdings: number;
-  percentage: number;
-}
-
 export interface TokenHolding extends Token {
   balance: number;
   value: number;
@@ -138,6 +130,32 @@ export interface TokenPricesResponse {
   prices: PricePoint[];
   range: string;
   count: number;
+}
+
+// New API response types for token holders
+export interface TokenHolder {
+  address: string;
+  balance: number;
+  decimals: number;
+  percentage: number; // Percentage of total supply
+  image?: string | null; // User profile image if holder is a registered user
+  username?: string | null; // User profile username if holder is a registered user
+}
+
+export interface GetTokenHoldersResponse {
+  token: string;
+  holders: TokenHolder[];
+  totalSupply?: number;
+  slot: number;
+}
+
+export interface TopHolder {
+  position: number;
+  image: string;
+  wallet: WalletAddress;
+  holdings: number;
+  percentage: number;
+  username?: string;
 }
 
 // ============================================

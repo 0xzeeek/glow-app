@@ -88,8 +88,6 @@ export default function ProfileScreen() {
     onPriceUpdate: handlePriceUpdate,
   });
 
-  console.log('tokenHoldings', tokenHoldings);
-
   // Use totalUsdValue from wallet holdings
   const totalValue = totalUsdValue;
   // Use the counting animation hook for the total value

@@ -4,12 +4,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import {
+  User,
+  CreateUserRequest,
+  CreateUserResponse,
+  Token,
+  TokenAddress,
+  WalletAddress,
+  WalletBalance,
+  PricePoint,
   TokenPricesResponse,
   GetPricesParams,
-  User,
-  WalletBalance,
-  PaginatedTokensResponse,
   TopHolder,
+  PaginatedTokensResponse,
+  TokenHolding,
+  TokenHolder,
+  GetTokenHoldersResponse,
 } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
@@ -168,17 +177,17 @@ class ApiClient {
   // Get token holders
   public async getTokenHolders(
     token: string,
-    limit: number = 3
   ): Promise<TopHolder[]> {
-    const response = await this.request<{ holders: any[] }>(`/tokens/${token}/holders`);
+    const response = await this.request<GetTokenHoldersResponse>(`/tokens/${token}/holders`);
     
     // Transform the response to match our TopHolder interface
-    return response.holders.slice(0, limit).map((holder: any, index: number) => ({
+    return response.holders.map((holder: TokenHolder, index: number) => ({
       position: index + 1,
       image: holder.image || '',
-      wallet: holder.wallet,
-      holdings: holder.holdings,
+      wallet: holder.address,
+      holdings: holder.balance / Math.pow(10, holder.decimals),
       percentage: holder.percentage,
+      username: holder.username || undefined,
     }));
   }
 
@@ -279,6 +288,8 @@ export const createQueryClient = (): QueryClient => {
       queries: {
         staleTime: 1000 * 60 * 5, // 5 minutes - data is fresh for 5 minutes
         gcTime: 1000 * 60 * 60 * 24, // 24 hours - keep data in cache for 24 hours
+        // Enable experimental flag for prefetching during render
+        experimental_prefetchInRender: true,
         // Retry strategy: 
         // - Retry up to 3 times for server errors (5xx) and network errors
         // - Don't retry client errors (4xx) 

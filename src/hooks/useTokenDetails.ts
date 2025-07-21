@@ -83,10 +83,8 @@ export function useTokenDetails(address: TokenAddress): UseTokenDetailsReturn {
     queries: [
       {
         queryKey: queryKeys.tokens.holders(address),
-        queryFn: () => apiClient.getTokenHolders(address, 3),
+        queryFn: () => apiClient.getTokenHolders(address),
         enabled: !!address,
-        staleTime: 10 * 60 * 1000, // 10 minutes
-        gcTime: 30 * 60 * 1000, // 30 minutes
       },
     ],
   });
@@ -126,5 +124,5 @@ export function useTokenDetails(address: TokenAddress): UseTokenDetailsReturn {
 // Export individual fetch functions for flexibility
 export async function fetchTopHolders(address: TokenAddress): Promise<TopHolder[]> {
   const apiClient = getApiClient();
-  return apiClient.getTokenHolders(address, 3);
+  return apiClient.getTokenHolders(address);
 } 

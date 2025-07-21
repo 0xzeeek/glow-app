@@ -76,10 +76,15 @@ export { default as SocialYoutube } from './icons/ui/social/youtube.png';
 export { default as Token1 } from './icons/ui/token/1.png';
 export { default as Token2 } from './icons/ui/token/2.png';
 export { default as Token3 } from './icons/ui/token/3.png';
+export { default as Token1White } from './icons/ui/token/1-white.png';
+export { default as Token2White } from './icons/ui/token/2-white.png';
+export { default as Token3White } from './icons/ui/token/3-white.png';
 export { default as TokenEye } from './icons/ui/token/eye.png';
 export { default as TokenLive } from './icons/ui/token/live.png';
 export { default as TokenProfile } from './icons/ui/token/profile.png';
 export { default as TokenShare } from './icons/ui/token/share.png';
+export { default as TopHolder } from './icons/ui/token/top-holder.png';
+export { default as Crown } from './icons/ui/token/crown.png';
 
 // Fonts
 export const fonts = {
