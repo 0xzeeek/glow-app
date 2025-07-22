@@ -47,6 +47,8 @@ const HeaderBar = forwardRef<HeaderBarRef, HeaderBarProps>(({ scrollY }, ref) =>
   const measurementsReady = useSharedValue(0); // Track if measurements are complete
   
   const handleDepositPress = () => {
+    // Add heavy haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     router.push('/(profile)');
   };
   

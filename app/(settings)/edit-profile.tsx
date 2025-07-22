@@ -15,6 +15,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
@@ -38,6 +39,7 @@ export default function EditProfileScreen() {
   } = useEditProfile();
 
   const handleBack = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.back();
     if (hasChanges) {
       const saved = await saveChanges();
@@ -50,6 +52,7 @@ export default function EditProfileScreen() {
   };
 
   const handleEditProfileImage = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     // Request permissions
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 

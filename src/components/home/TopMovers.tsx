@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Token } from '@/types';
 import { colors } from '@/theme/colors';
 import { CHART_COLORS } from '@/utils/constants';
@@ -136,7 +137,11 @@ export default function TopMovers({ data }: TopMoversProps) {
       >
         <TouchableOpacity
           style={styles.moverItem}
-          onPress={() => router.push(`/(token)/${token.address}`)}
+          onPress={() => {
+            // Add medium haptic feedback for token tap
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            router.push(`/(token)/${token.address}`);
+          }}
           activeOpacity={0.7}
         >
           <Image source={{ uri: token.image }} fadeDuration={0} style={styles.profileImage} />

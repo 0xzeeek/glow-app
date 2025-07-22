@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import BottomNav from '../../src/components/navigation/BottomNav';
 import { ProfileSettings, ProfileExplore, ProfileDepositWhite, ProfileDeposit, ProfileCash, ProfileShare } from '../../assets';
 import { colors } from '@/theme/colors';
@@ -107,29 +108,35 @@ export default function ProfileScreen() {
   }));
 
   const handleDeposit = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setShowDepositModal(true);
   };
 
   const handleExplore = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.replace('/(home)');
   };
 
   const handleCashOut = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (hasCash) {
       setShowCashOutModal(true);
     }
   };
 
   const handleShareToken = (tokenName: string, gains: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     console.log(`Share ${tokenName} with ${gains}% gains`);
     // TODO: Implement share functionality
   };
 
   const handleTokenPress = (tokenId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push(`/(token)/${tokenId}`);
   };
 
   const handleSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(settings)');
   };
 

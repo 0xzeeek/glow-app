@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { useUser } from '../../contexts/UserContext';
 import { Home, HomeSelected, Plus, PlusSelected, UserPlaceholder } from '../../../assets';
 import { colors } from '@/theme/colors';
@@ -14,18 +15,24 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
   const { image } = useUser();
 
   const handleHomePress = () => {
+    // Add heavy haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (activeTab !== 'home') {
       router.replace('/(home)');
     }
   };
 
   const handleProfilePress = () => {
+    // Add heavy haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (activeTab !== 'profile') {
       router.replace('/(profile)');
     }
   };
 
   const handleReferralPress = () => {
+    // Add heavy haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (activeTab !== 'referral') {
       router.replace('/(referral)');
     }

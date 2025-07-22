@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import * as Haptics from 'expo-haptics';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,6 +50,9 @@ export default function NotificationsScreen() {
   }, [checkNotificationPermissions]);
 
   const handleToggleNotifications = async (value: boolean) => {
+    // Add haptic feedback for switch toggle
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     if (value) {
       // Request permissions
       const { status } = await Notifications.requestPermissionsAsync();
@@ -79,6 +83,7 @@ export default function NotificationsScreen() {
   };
 
   const handleBack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.back();
   };
 

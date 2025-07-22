@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { OnboardingLogo, BackgroundOnbordingIntro } from '../../assets';
 import { Button } from '../../src/components/shared/Button';
 import { colors, theme } from '../../src/theme';
@@ -16,11 +17,13 @@ export default function WelcomeScreen() {
   };
 
   const handleTermsPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Open terms of use
     console.log('Open Terms of Use');
   };
 
   const handlePrivacyPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Open privacy policy
     console.log('Open Privacy Policy');
   };

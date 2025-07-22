@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { Button } from '../shared/Button';
 import BuyModal from '../shared/BuyModal';
 import { colors } from '@/theme/colors';
@@ -22,6 +23,7 @@ export default function FloatingBuyButton({ tokenName, tokenImage, tokenAddress,
           onPress={() => setShowBuyModal(true)}
           variant="secondary"
           style={styles.button}
+          hapticType="heavy"
         />
       </View>
       

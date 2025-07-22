@@ -9,6 +9,7 @@ import {
   Image,
   ImageSourcePropType,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors, fonts } from '@/theme';
 
 interface ButtonProps {
@@ -19,6 +20,7 @@ interface ButtonProps {
   style?: ViewStyle;
   icon?: ImageSourcePropType;
   iconStyle?: any;
+  hapticType?: 'light' | 'medium' | 'heavy';
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -29,6 +31,7 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   icon,
   iconStyle,
+  hapticType = 'medium',
 }) => {
   const isDisabled = disabled;
 
@@ -66,10 +69,24 @@ export const Button: React.FC<ButtonProps> = ({
     };
   };
 
+  const handlePress = () => {
+    if (!isDisabled) {
+      // Trigger haptic feedback based on type
+      const hapticStyle = hapticType === 'light' 
+        ? Haptics.ImpactFeedbackStyle.Light
+        : hapticType === 'heavy'
+        ? Haptics.ImpactFeedbackStyle.Heavy
+        : Haptics.ImpactFeedbackStyle.Medium;
+      
+      Haptics.impactAsync(hapticStyle);
+      onPress();
+    }
+  };
+
   return (
     <TouchableOpacity
       style={getButtonStyle()}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       activeOpacity={0.8}
     >

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import {
   TokenEye,
   TokenEyeWhite,
@@ -56,6 +57,8 @@ export default function TokenHeader({
   const isWatched = isInWatchlist(address);
 
   const handleWatchlistToggle = async () => {
+    // Add medium haptic feedback for watchlist toggle
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     try {
       await toggleWatchlist(address);
     } catch (error) {
@@ -107,6 +110,8 @@ export default function TokenHeader({
   };
 
   const handleSocialPress = async (platform: string, handle: string) => {
+    // Add light haptic feedback for social links
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const url = getSocialUrl(platform, handle);
     if (url) {
       try {
@@ -128,7 +133,14 @@ export default function TokenHeader({
       <View style={styles.overlay}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.topBar}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+            <TouchableOpacity
+              onPress={() => {
+                // Add heavy haptic feedback
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                router.back();
+              }}
+              style={styles.iconButton}
+            >
               <Ionicons name="chevron-back" size={24} color={colors.neutral[0]} />
             </TouchableOpacity>
 
@@ -137,7 +149,14 @@ export default function TokenHeader({
                 <TouchableOpacity style={styles.iconButton} onPress={handleWatchlistToggle}>
                   <Image source={isWatched ? TokenEyeWhite : TokenEye} style={[styles.icon]} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.iconButton}>
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    // Add medium haptic feedback for share action
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    // TODO: Implement share functionality
+                  }}
+                >
                   <Image source={TokenShare} style={styles.icon} />
                 </TouchableOpacity>
               </View>
@@ -148,8 +167,8 @@ export default function TokenHeader({
                   if (!icon) return null;
 
                   return (
-                    <TouchableOpacity 
-                      key={social.platform} 
+                    <TouchableOpacity
+                      key={social.platform}
                       style={styles.socialButton}
                       onPress={() => handleSocialPress(social.platform, social.handle)}
                     >

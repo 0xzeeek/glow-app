@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Platform, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
@@ -22,18 +23,22 @@ export default function SettingsScreen() {
   const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const handleBack = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.back();
   };
 
   const handleEditProfile = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(settings)/edit-profile');
   };
 
   const handleNotifications = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(settings)/notifications');
   };
 
   const handleRateGlow = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     // Open app store for rating
     if (Platform.OS === 'ios') {
       Linking.openURL('itms-apps://itunes.apple.com/app/id1234567890?action=write-review'); // Replace with actual App Store ID
@@ -43,10 +48,12 @@ export default function SettingsScreen() {
   };
 
   const handleLegalPrivacy = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push('/(settings)/legal-privacy');
   };
 
   const handleSignOut = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setShowSignOutModal(true);
   };
 
@@ -62,6 +69,7 @@ export default function SettingsScreen() {
   };
 
   const handleSocialPress = (platform: 'twitter' | 'instagram') => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     console.log(`${platform} pressed`);
     // TODO: Open social media links
   };

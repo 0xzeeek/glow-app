@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import TokenChartMini from '../shared/TokenChartMini';
 import { Token } from '@/types';
 import { fonts } from 'src/theme/typography';
@@ -35,6 +36,8 @@ export default function CreatorTokenRow({ token, chartData, change24h, onPress }
   const displayChange = change24h ?? 0;
 
   const handlePress = () => {
+    // Add medium haptic feedback for token row tap
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (onPress) {
       onPress();
     } else {

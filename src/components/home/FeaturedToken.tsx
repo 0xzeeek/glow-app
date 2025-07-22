@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Token } from '@/types';
 import BuyModal from '../shared/BuyModal';
 import { Button } from '../shared/Button';
@@ -18,10 +19,14 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
   const [showBuyModal, setShowBuyModal] = useState(false);
   
   const handleBuyPress = () => {
+    // Add heavy haptic feedback for buy button
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setShowBuyModal(true);
   };
   
   const handleTokenPress = () => {
+    // Add medium haptic feedback for token navigation
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push(`/(token)/${token.address}`);
   };
   
