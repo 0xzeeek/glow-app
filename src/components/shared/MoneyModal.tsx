@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
   swipeContainer: {
     paddingHorizontal: 20,
     position: 'absolute',
-    bottom: 100,
+    bottom: 80,
     left: 0,
     right: 0,
     zIndex: 10, // Ensure it's above other elements
