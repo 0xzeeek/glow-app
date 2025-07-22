@@ -1,8 +1,9 @@
 import { PlusWallet, Swirl, Glow, DepositWallet } from 'assets';
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useImperativeHandle, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { fonts } from '../../theme/typography';
 import { useUser } from '../../contexts';
 import { useCountingAnimation } from '../../hooks';
@@ -15,7 +16,9 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
   withSequence,
-  Easing
+  Easing,
+  useAnimatedReaction,
+  runOnJS
 } from 'react-native-reanimated';
 
 interface HeaderBarProps {
@@ -47,15 +50,43 @@ const HeaderBar = forwardRef<HeaderBarRef, HeaderBarProps>(({ scrollY }, ref) =>
     router.push('/(profile)');
   };
   
+  // Track target rotation separately for additive animation
+  const targetRotation = useSharedValue(0);
+  
+  // Haptic feedback function
+  const triggerHaptic = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+  
+  // Monitor rotation and trigger haptics at intervals
+  // Also check if we're still animating by comparing current vs target
+  useAnimatedReaction(
+    () => ({
+      segment: Math.floor(swirlRotation.value / 45),
+      isAnimating: Math.abs(targetRotation.value - swirlRotation.value) > 1
+    }),
+    (current, previous) => {
+      if (previous && current.segment !== previous.segment && current.isAnimating) {
+        runOnJS(triggerHaptic)();
+      }
+    }
+  );
+  
   // Handle swirl tap
   const handleSwirlPress = () => {
-    // Spin 8 full rotations (2880 degrees) with easing that slows down
-    swirlRotation.value = withSequence(
-      withTiming(360 * 6, { 
-        duration: 3000, 
+    // Add 6 more rotations to the target
+    // This makes the animation additive - each tap adds more spin!
+    targetRotation.value += 360 * 6;
+    
+    // Initial haptic on tap
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    swirlRotation.value = withTiming(
+      targetRotation.value,
+      { 
+        duration: 2000, // Reduced from 3000 for more responsive feel
         easing: Easing.out(Easing.exp) // Exponential easing for natural deceleration
-      }),
-      withTiming(0, { duration: 0 }) // Reset instantly
+      }
     );
   };
   
@@ -290,7 +321,7 @@ const HeaderBar = forwardRef<HeaderBarRef, HeaderBarProps>(({ scrollY }, ref) =>
       <SafeAreaView style={styles.safeArea}>
         <Animated.View style={[styles.container, animatedContainerStyle, animatedHeaderStyle]}>
           <Animated.View style={[styles.logoContainer]}>
-            <TouchableOpacity onPress={handleSwirlPress} activeOpacity={0.8}>
+            <TouchableOpacity onPress={() => handleSwirlPress()} activeOpacity={0.8}>
               <Animated.Image source={Swirl} style={[styles.swirl, animatedSwirlStyle]} />
             </TouchableOpacity>
             <Animated.Image source={Glow} style={[styles.glow, animatedGlowStyle]} />
@@ -315,7 +346,7 @@ const HeaderBar = forwardRef<HeaderBarRef, HeaderBarProps>(({ scrollY }, ref) =>
     <SafeAreaView style={styles.safeArea}>
       <Animated.View style={[styles.container, animatedContainerStyle, animatedHeaderStyle]}>
         <Animated.View style={[styles.logoContainer]}>
-          <TouchableOpacity onPress={handleSwirlPress} activeOpacity={0.8}>
+          <TouchableOpacity onPress={() => handleSwirlPress()} activeOpacity={0.8}>
             <Animated.Image source={Swirl} style={[styles.swirl, animatedSwirlStyle]} />
           </TouchableOpacity>
           <Animated.Image source={Glow} style={[styles.glow, animatedGlowStyle]} />
