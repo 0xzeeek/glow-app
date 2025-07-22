@@ -69,12 +69,13 @@ export { default as SettingsLegal } from './icons/ui/settings/legal.png';
 export { default as SettingsSignOut } from './icons/ui/settings/sign-out.png';
 
 // Social
-export { default as SocialInstagramWhite } from './icons/ui/social/instagram-white.png';
 export { default as SocialInstagram } from './icons/ui/social/instagram.png';
-export { default as SocialXWhite } from './icons/ui/social/x-white.png';
 export { default as SocialX } from './icons/ui/social/x.png';
-export { default as SocialYoutubeWhite } from './icons/ui/social/youtube-white.png';
 export { default as SocialYoutube } from './icons/ui/social/youtube.png';
+export { default as SocialTiktok } from './icons/ui/social/tiktok.png';
+export { default as SocialKick } from './icons/ui/social/kick.png';
+export { default as SocialTwitch } from './icons/ui/social/twitch.png';
+export { default as SocialWeb } from './icons/ui/social/web.png';
 
 // Token
 export { default as Token1 } from './icons/ui/token/1.png';
@@ -84,6 +85,7 @@ export { default as Token1White } from './icons/ui/token/1-white.png';
 export { default as Token2White } from './icons/ui/token/2-white.png';
 export { default as Token3White } from './icons/ui/token/3-white.png';
 export { default as TokenEye } from './icons/ui/token/eye.png';
+export { default as TokenEyeWhite } from './icons/ui/token/eye-white.png';
 export { default as TokenLive } from './icons/ui/token/live.png';
 export { default as TokenProfile } from './icons/ui/token/profile.png';
 export { default as TokenShare } from './icons/ui/token/share.png';

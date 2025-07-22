@@ -1,8 +1,27 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ImageBackground, SafeAreaView } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+  SafeAreaView,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { TokenEye, TokenShare, SocialXWhite, SocialYoutubeWhite, SocialInstagramWhite } from '../../../assets';
+import {
+  TokenEye,
+  TokenEyeWhite,
+  TokenShare,
+  SocialX,
+  SocialInstagram,
+  SocialYoutube,
+  SocialTiktok,
+  SocialKick,
+  SocialTwitch,
+  SocialWeb,
+} from '../../../assets';
 import { colors, fonts } from '../../theme';
 import { useWatchlistContext } from '../../contexts';
 import { formatPercentage } from '@/utils';
@@ -14,14 +33,27 @@ interface TokenHeaderProps {
   profileImage: string;
   backgroundVideo?: string;
   address: string;
+  socialLinks?: {
+    platform: string;
+    handle: string;
+    icon: string;
+  }[];
 }
 
-export default function TokenHeader({ name, price, priceChange, profileImage, backgroundVideo, address }: TokenHeaderProps) {
+export default function TokenHeader({
+  name,
+  price,
+  priceChange,
+  profileImage,
+  backgroundVideo,
+  address,
+  socialLinks = [],
+}: TokenHeaderProps) {
   const router = useRouter();
   const { isInWatchlist, toggleWatchlist } = useWatchlistContext();
   const isPositive = priceChange >= 0;
   const isWatched = isInWatchlist(address);
-  
+
   const handleWatchlistToggle = async () => {
     try {
       await toggleWatchlist(address);
@@ -29,58 +61,85 @@ export default function TokenHeader({ name, price, priceChange, profileImage, ba
       console.error('Error toggling watchlist:', error);
     }
   };
-  
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'x':
+        return SocialX;
+      case 'instagram':
+        return SocialInstagram;
+      case 'youtube':
+        return SocialYoutube;
+      case 'tiktok':
+        return SocialTiktok;
+      case 'kick':
+        return SocialKick;
+      case 'twitch':
+        return SocialTwitch;
+      case 'website':
+        return SocialWeb;
+      default:
+        return null;
+    }
+  };
+
+  // Get only the first 3 social links
+  const topSocialLinks = socialLinks.slice(0, 3);
+
   return (
-    <ImageBackground source={backgroundVideo ? { uri: backgroundVideo } : undefined} style={styles.container}>
+    <ImageBackground
+      source={backgroundVideo ? { uri: backgroundVideo } : undefined}
+      style={styles.container}
+    >
       <View style={styles.overlay}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.topBar}>
             <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
               <Ionicons name="chevron-back" size={24} color={colors.neutral[0]} />
             </TouchableOpacity>
-            
+
             <View style={styles.rightSection}>
               <View style={styles.topIcons}>
                 <TouchableOpacity style={styles.iconButton} onPress={handleWatchlistToggle}>
-                  <Image 
-                    source={TokenEye} 
-                    style={[
-                      styles.icon, 
-                      isWatched && styles.watchedIcon
-                    ]} 
-                  />
+                  <Image source={isWatched ? TokenEyeWhite : TokenEye} style={[styles.icon]} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton}>
                   <Image source={TokenShare} style={styles.icon} />
                 </TouchableOpacity>
               </View>
-              
+
               <View style={styles.socialIcons}>
-                <TouchableOpacity style={styles.socialButton}>
-                  <Image source={SocialXWhite} style={styles.socialIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.socialButton}>
-                  <Image source={SocialYoutubeWhite} style={styles.socialIcon} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.socialButton}>
-                  <Image source={SocialInstagramWhite} style={styles.socialIcon} />
-                </TouchableOpacity>
+                {topSocialLinks.map(social => {
+                  const icon = getSocialIcon(social.platform);
+                  if (!icon) return null;
+
+                  return (
+                    <TouchableOpacity key={social.platform} style={styles.socialButton}>
+                      <Image source={icon} style={styles.socialIcon} />
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             </View>
           </View>
-          
+
           <View style={styles.tokenInfo}>
             <View style={styles.profileImageContainer}>
-            <Image source={{ uri: profileImage }} style={styles.profileImage} />
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
             </View>
             <View style={styles.tokenNameContainer}>
               <Text style={styles.tokenName}>{name}</Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>{price}</Text>
-              <Text style={[styles.priceChange, { color: isPositive ? colors.green.white : colors.red.white }]}>
-                {isPositive ? '▲' : '▼'} {formatPercentage(Math.abs(priceChange))}%
-              </Text>
-            </View>
+              <View style={styles.priceRow}>
+                <Text style={styles.price}>{price}</Text>
+                <Text
+                  style={[
+                    styles.priceChange,
+                    { color: isPositive ? colors.green.white : colors.red.white },
+                  ]}
+                >
+                  {isPositive ? '▲' : '▼'} {formatPercentage(Math.abs(priceChange))}%
+                </Text>
+              </View>
             </View>
           </View>
         </SafeAreaView>
@@ -127,9 +186,6 @@ const styles = StyleSheet.create({
     height: 24,
     resizeMode: 'contain',
   },
-  watchedIcon: {
-    tintColor: colors.green.black,
-  },
   tokenInfo: {
     flex: 1,
     flexDirection: 'row',
@@ -137,7 +193,7 @@ const styles = StyleSheet.create({
     marginTop: -160,
     paddingHorizontal: 24,
   },
-  profileImageContainer:{
+  profileImageContainer: {
     width: 114,
     height: 114,
     borderRadius: 57,
@@ -188,5 +244,6 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     resizeMode: 'contain',
+    tintColor: colors.text.secondary,
   },
-}); 
+});

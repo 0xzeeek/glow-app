@@ -80,6 +80,7 @@ export default function TokenDetailScreen() {
           profileImage={tokenDetails.image}
           backgroundVideo={tokenDetails.video}
           address={tokenDetails.address}
+          socialLinks={formatSocialsForDisplay(tokenDetails.socials)}
         />
 
         <View style={styles.contentContainer}>

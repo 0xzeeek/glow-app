@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SocialX, SocialInstagram, SocialYoutube } from '../../../assets';
+import { SocialX, SocialInstagram, SocialYoutube, SocialTiktok, SocialKick, SocialTwitch, SocialWeb } from '../../../assets';
 import { colors, fonts } from '../../theme';
 
 interface TokenSocialsProps {
@@ -16,12 +16,19 @@ export default function TokenSocials({ socialLinks }: TokenSocialsProps) {
   const getSocialIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'x':
-      case 'twitter':
         return SocialX;
       case 'instagram':
         return SocialInstagram;
       case 'youtube':
         return SocialYoutube;
+      case 'tiktok':
+        return SocialTiktok;
+      case 'kick':
+        return SocialKick;
+      case 'twitch':
+        return SocialTwitch;
+      case 'website':
+        return SocialWeb;
       default:
         return null;
     }
