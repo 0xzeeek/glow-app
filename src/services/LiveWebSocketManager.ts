@@ -1,10 +1,17 @@
-import { BalanceUpdate, WalletAddress } from '../types';
+import { BalanceUpdate, WalletAddress, TokenUpdateEvent } from '../types';
 import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
 
-// Balance-specific WebSocket message
-interface BalanceWSMessage {
-  action: 'subscribeBalance' | 'unsubscribeBalance';
-  wallet: WalletAddress;
+// Unified subscription message
+interface UnifiedSubscriptionMessage {
+  action: 'subscribeLive';
+  subscriptions: {
+    balance?: {
+      wallets: WalletAddress[];
+    };
+    tokens?: {
+      type: 'all';
+    };
+  };
 }
 
 // Custom EventEmitter for React Native compatibility
@@ -57,7 +64,7 @@ class EventEmitter {
   }
 }
 
-interface BalanceWebSocketConfig {
+interface LiveWebSocketConfig {
   url: string;
   maxReconnectAttempts?: number;
   reconnectDelay?: number;
@@ -70,12 +77,13 @@ interface WebSocketEvents {
   disconnected: (reason?: string) => void;
   error: (error: Error) => void;
   balanceUpdate: (data: BalanceUpdate) => void;
+  tokenUpdate: (data: TokenUpdateEvent) => void;
   message: (data: any) => void;
 }
 
-export class BalanceWebSocketManager extends EventEmitter {
+export class LiveWebSocketManager extends EventEmitter {
   private ws: WebSocket | null = null;
-  private config: Required<BalanceWebSocketConfig>;
+  private config: Required<LiveWebSocketConfig>;
   private reconnectAttempts = 0;
   private heartbeatTimer: number | null = null;
   private reconnectTimer: number | null = null;
@@ -83,19 +91,20 @@ export class BalanceWebSocketManager extends EventEmitter {
   private isConnecting = false;
   private shouldReconnect = true;
   private currentWallet: string | null = null; // Track single wallet subscription
+  private isSubscribedToTokens = false; // Track token subscription state
 
-  constructor(config: BalanceWebSocketConfig) {
+  constructor(config: LiveWebSocketConfig) {
     super();
-    
+
     // Validate WebSocket URL
     if (!config.url || config.url.trim() === '') {
-      throw new Error('BalanceWebSocketManager: WebSocket URL is required');
+      throw new Error('LiveWebSocketManager: WebSocket URL is required');
     }
-    
+
     if (!config.url.startsWith('ws://') && !config.url.startsWith('wss://')) {
-      throw new Error('BalanceWebSocketManager: WebSocket URL must start with ws:// or wss://');
+      throw new Error('LiveWebSocketManager: WebSocket URL must start with ws:// or wss://');
     }
-    
+
     this.config = {
       url: config.url,
       maxReconnectAttempts: config.maxReconnectAttempts ?? 5,
@@ -107,7 +116,7 @@ export class BalanceWebSocketManager extends EventEmitter {
 
   public connect(): void {
     if (this.isConnecting || this.isConnected()) {
-      console.log('BalanceWebSocket already connected or connecting');
+      console.log('LiveWebSocket already connected or connecting');
       return;
     }
 
@@ -121,7 +130,7 @@ export class BalanceWebSocketManager extends EventEmitter {
     if (!this.isConnecting && !this.isConnected()) {
       this.connect();
     }
-    
+
     // Subscribe to wallet
     this.subscribeToBalance(wallet);
   }
@@ -133,13 +142,13 @@ export class BalanceWebSocketManager extends EventEmitter {
     this.cleanup();
 
     try {
-      console.log(`BalanceWebSocket: Attempting to connect to ${this.config.url}`);
+      console.log(`LiveWebSocket: Attempting to connect to ${this.config.url}`);
       // Simple connection without authentication
       this.ws = new WebSocket(this.config.url);
       this.setupEventHandlers();
       this.startConnectionTimeout();
     } catch (error) {
-      console.error('BalanceWebSocket: Failed to create WebSocket instance:', error);
+      console.error('LiveWebSocket: Failed to create WebSocket instance:', error);
       this.handleError(error as Error);
       this.isConnecting = false;
     }
@@ -149,28 +158,28 @@ export class BalanceWebSocketManager extends EventEmitter {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.log('BalanceWebSocket: Connected successfully');
+      console.log('LiveWebSocket: Connected successfully');
       this.clearConnectionTimeout();
       this.isConnecting = false;
       this.reconnectAttempts = 0;
       this.emit('connected');
       this.startHeartbeat();
 
-      // Resubscribe to current wallet if any, with a small delay to ensure connection is ready
+      // Resubscribe to all active subscriptions with a small delay to ensure connection is ready
       setTimeout(() => {
-        this.resubscribeToWallet();
+        this.resubscribeToAll();
       }, 100);
     };
 
     this.ws.onclose = event => {
       console.log(
-        `BalanceWebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`
+        `LiveWebSocket: Connection closed. Code: ${event.code}, Reason: ${event.reason || 'No reason provided'}`
       );
       this.handleDisconnect(event.reason || 'Connection closed');
     };
 
     this.ws.onerror = error => {
-      console.error('BalanceWebSocket: Error event received:', error);
+      console.error('LiveWebSocket: Error event received:', error);
       // In React Native, the error event doesn't provide much detail
       // The actual error details usually come through the onclose event
       this.handleError(new Error('WebSocket connection error'));
@@ -189,6 +198,13 @@ export class BalanceWebSocketManager extends EventEmitter {
       switch (message.type) {
         case 'BALANCE_UPDATE':
           this.emit('balanceUpdate', message as BalanceUpdate);
+          break;
+        case 'TOKEN_CREATED':
+        case 'TOKEN_UPDATED':
+          this.emit('tokenUpdate', message);
+          break;
+        case 'SUBSCRIPTION_CONFIRMED':
+          console.log('LiveWebSocket: Subscription confirmed:', message.subscriptions);
           break;
         case 'PONG':
           // Heartbeat response
@@ -286,43 +302,63 @@ export class BalanceWebSocketManager extends EventEmitter {
     }
   }
 
-  private resubscribeToWallet(): void {
-    if (!this.currentWallet) {
-      console.log('BalanceWebSocket: No wallet subscription to restore');
-      return;
+  private resubscribeToAll(): void {
+    const subscriptions: UnifiedSubscriptionMessage['subscriptions'] = {};
+
+    // Add wallet subscription if exists
+    if (this.currentWallet) {
+      console.log(`LiveWebSocket: Resubscribing to wallet ${this.currentWallet}`);
+      subscriptions.balance = {
+        wallets: [this.currentWallet],
+      };
     }
 
-    console.log(`BalanceWebSocket: Subscribing to wallet ${this.currentWallet}`);
-    const message: BalanceWSMessage = {
-      action: 'subscribeBalance',
-      wallet: this.currentWallet,
-    };
-    
-    // Use the safe send method instead of direct ws.send
-    this.send(message);
+    // Add token subscription if was subscribed
+    if (this.isSubscribedToTokens) {
+      console.log('LiveWebSocket: Resubscribing to token updates');
+      subscriptions.tokens = {
+        type: 'all',
+      };
+    }
+
+    // Only send if there are subscriptions to restore
+    if (Object.keys(subscriptions).length > 0) {
+      const message: UnifiedSubscriptionMessage = {
+        action: 'subscribeLive',
+        subscriptions,
+      };
+      this.send(message);
+    }
   }
 
   public subscribeToBalance(wallet: string): void {
     // If already subscribed to this wallet, do nothing
     if (this.currentWallet === wallet) {
-      console.log(`BalanceWebSocket: Already subscribed to wallet ${wallet}`);
+      console.log(`LiveWebSocket: Already subscribed to wallet ${wallet}`);
       return;
-    }
-
-    // If subscribed to a different wallet, unsubscribe first
-    if (this.currentWallet && this.currentWallet !== wallet) {
-      console.log(`BalanceWebSocket: Switching subscription from ${this.currentWallet} to ${wallet}`);
-      this.unsubscribeFromBalance(this.currentWallet);
     }
 
     // Track the new wallet subscription
     this.currentWallet = wallet;
-    
+
     // Only send subscription if connected
     if (this.isConnected()) {
-      const message: BalanceWSMessage = {
-        action: 'subscribeBalance',
-        wallet,
+      const subscriptions: UnifiedSubscriptionMessage['subscriptions'] = {
+        balance: {
+          wallets: [wallet],
+        },
+      };
+
+      // Include token subscription if active
+      if (this.isSubscribedToTokens) {
+        subscriptions.tokens = {
+          type: 'all',
+        };
+      }
+
+      const message: UnifiedSubscriptionMessage = {
+        action: 'subscribeLive',
+        subscriptions,
       };
       this.send(message);
     }
@@ -331,20 +367,91 @@ export class BalanceWebSocketManager extends EventEmitter {
   public unsubscribeFromBalance(wallet: string): void {
     // Remove from tracked wallets
     this.currentWallet = null;
-    
-    // Only send unsubscribe if connected
+
+    // In the new unified system, we resubscribe with only active subscriptions
     if (this.isConnected()) {
-      const message: BalanceWSMessage = {
-        action: 'unsubscribeBalance',
-        wallet,
+      const subscriptions: UnifiedSubscriptionMessage['subscriptions'] = {};
+
+      // Only include token subscription if still active
+      if (this.isSubscribedToTokens) {
+        subscriptions.tokens = {
+          type: 'all',
+        };
+      }
+
+      // Send subscription update (empty balance means unsubscribe from balance)
+      if (Object.keys(subscriptions).length > 0) {
+        const message: UnifiedSubscriptionMessage = {
+          action: 'subscribeLive',
+          subscriptions,
+        };
+        this.send(message);
+      }
+    }
+  }
+
+  public subscribeToTokens(): void {
+    // If already subscribed, do nothing
+    if (this.isSubscribedToTokens) {
+      console.log('LiveWebSocket: Already subscribed to token updates');
+      return;
+    }
+
+    // Track token subscription
+    this.isSubscribedToTokens = true;
+
+    // Only send subscription if connected
+    if (this.isConnected()) {
+      const subscriptions: UnifiedSubscriptionMessage['subscriptions'] = {
+        tokens: {
+          type: 'all',
+        },
+      };
+
+      // Include balance subscription if active
+      if (this.currentWallet) {
+        subscriptions.balance = {
+          wallets: [this.currentWallet],
+        };
+      }
+
+      const message: UnifiedSubscriptionMessage = {
+        action: 'subscribeLive',
+        subscriptions,
       };
       this.send(message);
     }
   }
 
+  public unsubscribeFromTokens(): void {
+    // Remove token subscription
+    this.isSubscribedToTokens = false;
+
+    // In the new unified system, we resubscribe with only active subscriptions
+    if (this.isConnected()) {
+      const subscriptions: UnifiedSubscriptionMessage['subscriptions'] = {};
+
+      // Only include balance subscription if still active
+      if (this.currentWallet) {
+        subscriptions.balance = {
+          wallets: [this.currentWallet],
+        };
+      }
+
+      // Send subscription update (no tokens means unsubscribe from tokens)
+      if (Object.keys(subscriptions).length > 0) {
+        const message: UnifiedSubscriptionMessage = {
+          action: 'subscribeLive',
+          subscriptions,
+        };
+        this.send(message);
+      }
+    }
+  }
+
   public send(data: any): void {
     if (!this.isConnected()) {
-      console.log('BalanceWebSocket: Cannot send message - not connected');
+      console.log('LiveWebSocket: Cannot send message - not connected');
       return;
     }
 
@@ -352,9 +459,9 @@ export class BalanceWebSocketManager extends EventEmitter {
       const message = JSON.stringify(data);
       this.ws!.send(message);
     } catch (error) {
-      console.error('BalanceWebSocket: Error sending message:', error);
+      console.error('LiveWebSocket: Error sending message:', error);
       console.error('Message that failed to send:', data);
-      
+
       // Create a more descriptive error
       const enhancedError = new Error(
         `Failed to send WebSocket message: ${(error as Error).message || 'Unknown error'}`
@@ -432,13 +539,13 @@ export class BalanceWebSocketManager extends EventEmitter {
 }
 
 // Singleton instance
-let instance: BalanceWebSocketManager | null = null;
+let instance: LiveWebSocketManager | null = null;
 
-export const getBalanceWebSocketManager = (config?: BalanceWebSocketConfig): BalanceWebSocketManager => {
+export const getLiveWebSocketManager = (config?: LiveWebSocketConfig): LiveWebSocketManager => {
   if (!instance && config) {
-    instance = new BalanceWebSocketManager(config);
+    instance = new LiveWebSocketManager(config);
   } else if (!instance) {
-    throw new Error('BalanceWebSocketManager not initialized. Please provide config.');
+    throw new Error('LiveWebSocketManager not initialized. Please provide config.');
   }
 
   return instance;

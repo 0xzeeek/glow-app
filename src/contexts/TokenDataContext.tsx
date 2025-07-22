@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode, useMemo, useCallback, useState, useRef } from 'react';
-import { useFlattenedInfiniteTokens } from '../hooks';
+import { useFlattenedInfiniteTokens, useTokenSocketUpdates } from '../hooks';
 import { Token, TokenAddress } from '../types';
 
 interface TokenDataContextType {
@@ -128,6 +128,9 @@ export function TokenDataProvider({ children }: TokenDataProviderProps) {
       return cleaned;
     });
   }, [refetch]);
+
+  // Subscribe to WebSocket token updates
+  useTokenSocketUpdates({ onTokenUpdate: refreshTokenData });
 
   const value: TokenDataContextType = {
     featuredToken,

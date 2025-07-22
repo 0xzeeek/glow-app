@@ -14,7 +14,7 @@ import {
   createQueryClient,
   initializeApiClient,
   initializeErrorHandler,
-  getBalanceWebSocketManager,
+  getLiveWebSocketManager,
   getPriceSocket,
 } from '../src/services';
 import { uiStore } from '../src/stores/uiStore';
@@ -54,8 +54,8 @@ export default function RootLayout() {
         });
 
         // Initialize WebSocket managers - they'll auto-connect when needed
-        getBalanceWebSocketManager({
-          url: process.env.EXPO_PUBLIC_BALANCE_WS_URL || '',
+        getLiveWebSocketManager({
+          url: process.env.EXPO_PUBLIC_LIVE_WS_URL || '',
           heartbeatInterval: 60000, // Ping every 60 seconds
         });
 

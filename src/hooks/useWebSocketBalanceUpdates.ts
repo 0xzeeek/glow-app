@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getBalanceWebSocketManager } from '../services';
+import { getLiveWebSocketManager } from '../services';
 import { queryKeys } from '../services/ApiClient';
 import { BalanceUpdate, WalletBalance } from '../types';
 import { TOKEN_ADDRESSES, calculatePnlPercentage } from '../utils';
 
 export function useWebSocketBalanceUpdates(walletAddress: string | null) {
   const queryClient = useQueryClient();
-  const balanceWsManagerRef = useRef<ReturnType<typeof getBalanceWebSocketManager> | null>(null);
+  const balanceWsManagerRef = useRef<ReturnType<typeof getLiveWebSocketManager> | null>(null);
   const isSubscribedRef = useRef(false);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export function useWebSocketBalanceUpdates(walletAddress: string | null) {
     const setupSubscription = () => {
       try {
         // Get Balance WebSocket manager instance
-        const balanceWsManager = getBalanceWebSocketManager();
+        const balanceWsManager = getLiveWebSocketManager();
         balanceWsManagerRef.current = balanceWsManager;
 
         // Don't need to connect - it's already connected from _layout.tsx

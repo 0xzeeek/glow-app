@@ -7,4 +7,5 @@ export * from './useVisibleTokenSubscriptions';
 export * from './useInfiniteTokens';
 export * from './useTokenQueries';
 export * from './useUserQueries';
+export * from './useTokenSocketUpdates';
 // export * from './useCaptureReferralCode';

@@ -96,6 +96,11 @@ export interface WSMessage {
   wallet?: WalletAddress;
 }
 
+export interface TokenUpdateEvent {
+  type: 'TOKEN_CREATED' | 'TOKEN_UPDATED';
+  token: Token;
+}
+
 export interface PriceUpdate {
   type: 'PRICE_UPDATE';
   token: TokenAddress;
