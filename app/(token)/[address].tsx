@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useTokenDetails } from '@/hooks';
 import { useUser } from '@/contexts/UserContext';
@@ -10,6 +10,7 @@ import TokenAbout from '@/components/token-details/TokenAbout';
 import TokenInfo from '@/components/token-details/TokenInfo';
 import TokenSocials from '@/components/token-details/TokenSocials';
 import FloatingBuyButton from '@/components/token-details/FloatingBuyButton';
+import FloatingActionButtons from '@/components/token-details/FloatingActionButtons';
 import TopHoldersModal from '@/components/shared/TopHoldersModal';
 import TokenDetailsSkeleton from '@/components/token-details/TokenDetailsSkeleton';
 import BottomNav from '@/components/navigation/BottomNav';
@@ -126,12 +127,26 @@ export default function TokenDetailScreen() {
         </View>
       </ScrollView>
 
-      <FloatingBuyButton
-        tokenName={tokenDetails.name}
-        tokenImage={tokenDetails.image}
-        tokenAddress={tokenDetails.address}
-        tokenPrice={tokenDetails.price}
-      />
+      {userHolding ? (
+        <FloatingActionButtons
+          tokenName={tokenDetails.name}
+          tokenImage={tokenDetails.image}
+          tokenAddress={tokenDetails.address}
+          tokenPrice={tokenDetails.price}
+          onSellComplete={async (amount) => {
+            // TODO: Implement sell logic
+            console.log('Selling', amount, 'of', tokenDetails.name);
+            return true;
+          }}
+        />
+      ) : (
+        <FloatingBuyButton
+          tokenName={tokenDetails.name}
+          tokenImage={tokenDetails.image}
+          tokenAddress={tokenDetails.address}
+          tokenPrice={tokenDetails.price}
+        />
+      )}
       <BottomNav activeTab={null} />
 
       {/* Top Holders Modal */}
