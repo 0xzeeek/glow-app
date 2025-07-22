@@ -11,6 +11,7 @@ import TokenInfo from '@/components/token-details/TokenInfo';
 import TokenSocials from '@/components/token-details/TokenSocials';
 import FloatingBuyButton from '@/components/token-details/FloatingBuyButton';
 import TopHoldersModal from '@/components/shared/TopHoldersModal';
+import TokenDetailsSkeleton from '@/components/token-details/TokenDetailsSkeleton';
 import BottomNav from '@/components/navigation/BottomNav';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
@@ -55,8 +56,9 @@ export default function TokenDetailScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.text.primary} />
+      <View style={styles.container}>
+        <TokenDetailsSkeleton />
+        <BottomNav activeTab={null} />
       </View>
     );
   }
