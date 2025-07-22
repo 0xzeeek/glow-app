@@ -135,7 +135,7 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces={false}>
         <View style={styles.gradientBackground}>
           {/* Settings Icon */}
           <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
