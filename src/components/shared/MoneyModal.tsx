@@ -14,6 +14,7 @@ import {
   Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import PurchaseSuccess from './PurchaseSuccess';
 import { useUser } from '../../contexts';
 import {
@@ -212,7 +213,19 @@ export default function MoneyModal({
     }
   }, [usdcBalance, mode, hasInteracted]);
 
+  // Clean up haptic interval on unmount
+  React.useEffect(() => {
+    return () => {
+      if (hapticInterval.current) {
+        clearInterval(hapticInterval.current);
+      }
+    };
+  }, []);
+
   const handleNumberPress = (num: string) => {
+    // Haptic feedback for number press
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     // If this is the first interaction, replace the entire amount
     if (!hasInteracted) {
       setHasInteracted(true);
@@ -238,6 +251,9 @@ export default function MoneyModal({
   };
 
   const handleDelete = () => {
+    // Haptic feedback for delete
+    Haptics.selectionAsync();
+    
     if (!hasInteracted) {
       setHasInteracted(true);
       setAmount('0');
@@ -252,6 +268,9 @@ export default function MoneyModal({
   };
 
   const handleQuickAmount = (value: string) => {
+    // Haptic feedback for quick amount selection
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
     setHasInteracted(true);
     if (mode === 'cash-out' && value.includes('%')) {
       const percentage = parseFloat(value) / 100;
@@ -265,6 +284,9 @@ export default function MoneyModal({
 
   const handleShareGains = async () => {
     if (mode === 'buy' && tokenName) {
+      // Haptic feedback for share
+      Haptics.selectionAsync();
+      
       try {
         const gains = 100; // TODO: Calculate actual gains
         await Share.share({
@@ -288,11 +310,17 @@ export default function MoneyModal({
   };
 
   const handleSelectPaymentMethod = (method: PaymentMethod) => {
+    // Haptic feedback for payment method selection
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
     setSelectedPaymentMethod(method);
     setShowPaymentMethods(false);
   };
 
   const handleCloseModal = () => {
+    // Haptic feedback for close
+    Haptics.selectionAsync();
+    
     // Animate out first
     Animated.parallel([
       Animated.timing(overlayOpacity, {
@@ -327,12 +355,28 @@ export default function MoneyModal({
     });
   };
 
+  // Track haptic interval
+  const hapticInterval = useRef<number | null>(null);
+
   // Swipe handler
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
     onPanResponderGrant: () => {
-      // Optional: Add visual feedback when touch starts
+      // Start continuous haptic feedback
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+      
+      // Set up INTENSE continuous buzzing effect
+      let toggle = false;
+      hapticInterval.current = setInterval(() => {
+        // Alternate between impact and selection for more intense buzzing
+        if (toggle) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } else {
+          Haptics.selectionAsync();
+        }
+        toggle = !toggle;
+      }, 5); // Vibrate every 20ms for INTENSE buzz
     },
     onPanResponderMove: (_, gestureState) => {
       if (gestureState.dx > 0) {
@@ -345,11 +389,20 @@ export default function MoneyModal({
       }
     },
     onPanResponderRelease: async (_, gestureState) => {
+      // Stop the buzzing
+      if (hapticInterval.current) {
+        clearInterval(hapticInterval.current);
+        hapticInterval.current = null;
+      }
+
       const swipeThreshold = screenWidth * 0.5;
       
       if (gestureState.dx > swipeThreshold) {
+        // Success haptic
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         // Validate amount
         if (numericAmount <= 0) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           alert('Please enter an amount');
           Animated.spring(swipeAnimation, {
             toValue: 0,
@@ -362,6 +415,7 @@ export default function MoneyModal({
         
         // Validate amount for cash-out
         if (mode === 'cash-out' && numericAmount > usdcBalance) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           alert('Insufficient balance');
           Animated.spring(swipeAnimation, {
             toValue: 0,
@@ -401,6 +455,7 @@ export default function MoneyModal({
           }
         } else {
           // Handle failure
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
           alert(mode === 'buy' ? 'Purchase failed. Please check your balance.' : 'Transaction failed.');
           Animated.spring(swipeAnimation, {
             toValue: 0,
@@ -411,6 +466,7 @@ export default function MoneyModal({
         }
       } else {
         // Snap back if not swiped far enough
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         Animated.spring(swipeAnimation, {
           toValue: 0,
           tension: 20,
@@ -420,6 +476,12 @@ export default function MoneyModal({
       }
     },
     onPanResponderTerminate: () => {
+      // Stop the buzzing
+      if (hapticInterval.current) {
+        clearInterval(hapticInterval.current);
+        hapticInterval.current = null;
+      }
+      
       // Handle gesture termination
       Animated.spring(swipeAnimation, {
         toValue: 0,
@@ -524,7 +586,10 @@ export default function MoneyModal({
               <TouchableOpacity
                 style={styles.cashTypeButton}
                 activeOpacity={0.8}
-                onPress={() => setShowPaymentMethods(true)}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowPaymentMethods(true);
+                }}
               >
                 <Image source={getPaymentButtonImage()} style={styles.cashTypeButtonIcon} />
               </TouchableOpacity>
@@ -625,7 +690,10 @@ export default function MoneyModal({
         transparent={true}
         onRequestClose={() => setShowPaymentMethods(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setShowPaymentMethods(false)}>
+        <TouchableWithoutFeedback onPress={() => {
+          Haptics.selectionAsync();
+          setShowPaymentMethods(false);
+        }}>
           <Animated.View
             style={[
               styles.paymentModalOverlay,
