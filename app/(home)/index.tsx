@@ -112,7 +112,9 @@ export default function HomeScreen() {
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      // Invalidate all queries in the cache
+      // TODO: completely removes all data
+      queryClient.removeQueries();
+      // Invalidate any remaining queries
       await queryClient.invalidateQueries();
       // This will also trigger refreshTokenData through the queries
       await refreshTokenData();
