@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, FlatList, StyleSheet, Text, ActivityIndicator, ViewToken, RefreshControl } from 'react-native';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
+import { useQueryClient } from '@tanstack/react-query';
 import HeaderBar from '../../src/components/navigation/HeaderBar';
 import TopMovers from '../../src/components/home/TopMovers';
 import FeaturedToken from '../../src/components/home/FeaturedToken';
@@ -14,6 +15,7 @@ import { interpolateChartData } from '@/utils';
 import { Token, TokenAddress } from '@/types';
 
 export default function HomeScreen() {
+  const queryClient = useQueryClient();
   const { 
     featuredToken, 
     creatorTokens, 
@@ -106,15 +108,18 @@ export default function HomeScreen() {
     minimumViewTime: 100,
   }), []);
 
-  // Handle refresh
+  // Handle refresh - clear entire cache
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
+      // Invalidate all queries in the cache
+      await queryClient.invalidateQueries();
+      // This will also trigger refreshTokenData through the queries
       await refreshTokenData();
     } finally {
       setIsRefreshing(false);
     }
-  }, [refreshTokenData]);
+  }, [refreshTokenData, queryClient]);
 
   // Load more when approaching the end
   const handleEndReached = useCallback(() => {

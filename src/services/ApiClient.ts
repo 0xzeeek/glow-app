@@ -179,6 +179,8 @@ class ApiClient {
     token: string,
   ): Promise<TopHolder[]> {
     const response = await this.request<GetTokenHoldersResponse>(`/tokens/${token}/holders`);
+
+    console.log('response', response);
     
     // Transform the response to match our TopHolder interface
     return response.holders.map((holder: TokenHolder, index: number) => ({

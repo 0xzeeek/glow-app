@@ -11,6 +11,7 @@ import {
   Image,
   Keyboard,
   Animated,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -115,54 +116,56 @@ export default function EmailScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={0}
       >
-        <View style={styles.content}>
-          <Animated.View 
-            style={[
-              styles.imageWrapper,
-              { transform: [{ translateY: imageTranslateY }] }
-            ]}
-          >
-            <Image source={OnboardingEmail} style={styles.onboardingEmail} />
-          </Animated.View>
-          <Animated.View 
-            style={[
-              styles.formContainer,
-              { transform: [{ translateY: contentTranslateY }] }
-            ]}
-          >
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>What's your email?</Text>
-              <Text style={styles.subtitle}>
-                We'll use it to sign you in. It stays private{'\n'}and we'll never send spam.
-              </Text>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="you@email.com"
-              placeholderTextColor={colors.text.neutral}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-              editable={!loading}
-            />
-            <View style={styles.checkboxRow}>
-              <Pressable
-                style={[styles.checkbox, agreed && styles.checkboxChecked]}
-                onPress={() => setAgreed(prev => !prev)}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: agreed }}
-              >
-                {agreed && <View style={styles.checkboxInner} />}
-              </Pressable>
-              <Text style={styles.checkboxLabel}>
-                I agree to the <Text style={styles.link} onPress={handleTermsPress}>Terms of Use</Text> and{' '}
-                <Text style={styles.link} onPress={handlePrivacyPress}>Privacy Policy</Text>
-              </Text>
-            </View>
-          </Animated.View>
-        </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <Animated.View 
+              style={[
+                styles.imageWrapper,
+                { transform: [{ translateY: imageTranslateY }] }
+              ]}
+            >
+              <Image source={OnboardingEmail} style={styles.onboardingEmail} />
+            </Animated.View>
+            <Animated.View 
+              style={[
+                styles.formContainer,
+                { transform: [{ translateY: contentTranslateY }] }
+              ]}
+            >
+              <View style={styles.titleContainer}>
+                <Text style={styles.title}>What's your email?</Text>
+                <Text style={styles.subtitle}>
+                  We'll use it to sign you in. It stays private and we'll never send spam.
+                </Text>
+              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="you@email.com"
+                placeholderTextColor={colors.text.neutral}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                editable={!loading}
+              />
+              <View style={styles.checkboxRow}>
+                <Pressable
+                  style={[styles.checkbox, agreed && styles.checkboxChecked]}
+                  onPress={() => setAgreed(prev => !prev)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: agreed }}
+                >
+                  {agreed && <Text style={styles.checkboxX}>×</Text>}
+                </Pressable>
+                <Text style={styles.checkboxLabel}>
+                  I agree to the <Text style={styles.link} onPress={handleTermsPress}>Terms of Use</Text> and{' '}
+                  <Text style={styles.link} onPress={handlePrivacyPress}>Privacy Policy</Text>
+                </Text>
+              </View>
+            </Animated.View>
+          </View>
+        </TouchableWithoutFeedback>
         <View style={styles.bottomContainer}>
           <View style={styles.progressWrapper}>
             <ProgressIndicator totalSteps={3} currentStep={2} />
@@ -227,6 +230,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     opacity: 0.7,
     lineHeight: 26,
+    paddingHorizontal: 8,
   },
   input: {
     height: 56,
@@ -260,14 +264,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   checkboxChecked: {
-    backgroundColor: colors.text.secondary,
-    borderColor: colors.text.primary,
+    borderColor: colors.text.secondary,
   },
-  checkboxInner: {
-    width: 12,
-    height: 12,
-    backgroundColor: colors.background.secondary,
-    borderRadius: 1,
+  checkboxX: {
+    fontFamily: fonts.primary,
+    fontSize: 18,
+    color: colors.text.secondary,
+    lineHeight: 17,
   },
   checkboxLabel: {
     fontFamily: fonts.primary,

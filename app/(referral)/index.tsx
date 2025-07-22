@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
   },
   inviteButtonContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 100,
     width: '90%',
     alignSelf: 'center',
   },

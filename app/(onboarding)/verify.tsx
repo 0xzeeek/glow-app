@@ -18,17 +18,16 @@ import { fonts } from '../../src/theme/typography';
 import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
 import { BackgroundOnbordingMain } from '../../assets';
 import { Button } from '../../src/components/shared/Button';
-import { useLoginWithEmail, useEmbeddedSolanaWallet } from '@privy-io/expo';
+import { useLoginWithEmail } from '@privy-io/expo';
 import { getApiClient } from '../../src/services';
 import { WalletAddress } from '../../src/types';
-import { getStoredReferral, clearStoredReferral } from '../../src/hooks';
+// import { getStoredReferral, clearStoredReferral } from '../../src/hooks';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function VerifyScreen() {
   const router = useRouter();
   const { loginWithCode, sendCode } = useLoginWithEmail()
-  const { create, wallets } = useEmbeddedSolanaWallet();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -63,50 +62,30 @@ export default function VerifyScreen() {
 
     setLoading(true);
     try {
-      const recievedReferralCode = await getStoredReferral();
+      // const recievedReferralCode = await getStoredReferral();
 
-      await loginWithCode({ code: otp, email });
+      const privyUser = await loginWithCode({ code: otp, email });
       
-      // Create wallet if needed
-      let walletAddress: WalletAddress | undefined;
-      const needsWalletCreation = wallets?.length === 0 && create;
+      // Get wallet from the Privy user response
+      const walletInfo = privyUser?.linked_accounts?.find(
+        (account: any) => account.type === 'wallet' && account.walletClient === 'privy'
+      );
       
-      if (needsWalletCreation) {
-        await create({ recoveryMethod: 'privy' });
-        
-        // Wait for wallet to be available (max 5 seconds)
-        const maxRetries = 10;
-        for (let i = 0; i < maxRetries; i++) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          // Check if wallets array has been updated
-          if (wallets && wallets.length > 0) {
-            walletAddress = wallets[0].address;
-            break;
-          }
-        }
-      } else if (wallets && wallets.length > 0) {
-        // Use existing wallet
-        walletAddress = wallets[0].address;
-      }
-
-      // Create user in backend
-      if (walletAddress && email) {
+      if (walletInfo && walletInfo.type === 'wallet' && email) {
+        const walletAddress = walletInfo.address as WalletAddress;
         const apiClient = getApiClient();
+        
         try {
-          await apiClient.createUser(walletAddress, email, recievedReferralCode || undefined);
-          // Clear the referral code after successful use
-          if (recievedReferralCode) {
-            await clearStoredReferral();
-          }
+          // Create or get existing user immediately
+          const response = await apiClient.createUser(walletAddress, email);
+          console.log('User ready:', response.user);
         } catch (error: any) {
-          // If user already exists (409), that's okay - continue
-          if (error.status !== 409) {
-            console.error('Failed to create user:', error);
-            // Don't block onboarding if user creation fails
-          }
+          console.error('Failed to create/get user:', error);
+          // Don't block onboarding for backend errors
         }
       }
-
+      
+      // Complete onboarding immediately
       await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       router.replace('/(home)');
     } catch (error: any) {

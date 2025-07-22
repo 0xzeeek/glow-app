@@ -86,7 +86,15 @@ export default function RootLayout() {
   const PRIVY_CLIENT_ID = process.env.EXPO_PUBLIC_PRIVY_CLIENT_ID;
 
   return (
-    <PrivyProvider appId={PRIVY_APP_ID || ''} clientId={PRIVY_CLIENT_ID || ''}>
+    <PrivyProvider appId={PRIVY_APP_ID || ''} clientId={PRIVY_CLIENT_ID || ''}
+    config={{
+      embedded: {
+          solana: {
+              createOnLogin: 'users-without-wallets',
+          },
+      },
+  }}
+    >
       <GestureHandlerRootView style={{ flex: 1 }}>
         <QueryClientProvider client={queryClient}>
           <ErrorBoundary>
