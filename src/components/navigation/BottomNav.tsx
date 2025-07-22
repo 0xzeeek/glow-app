@@ -8,9 +8,10 @@ import { colors } from '@/theme/colors';
 
 interface BottomNavProps {
   activeTab?: 'home' | 'referral' | 'profile' | null;
+  onHomePress?: () => void;
 }
 
-export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
+export default function BottomNav({ activeTab = 'home', onHomePress }: BottomNavProps) {
   const router = useRouter();
   const { image } = useUser();
 
@@ -19,6 +20,9 @@ export default function BottomNav({ activeTab = 'home' }: BottomNavProps) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (activeTab !== 'home') {
       router.replace('/(home)');
+    } else if (onHomePress) {
+      // If already on home screen and callback provided, scroll to top
+      onHomePress();
     }
   };
 

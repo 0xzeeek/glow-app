@@ -18,6 +18,7 @@ import { Token, TokenAddress } from '@/types';
 export default function HomeScreen() {
   const queryClient = useQueryClient();
   const headerRef = useRef<HeaderBarRef>(null);
+  const flatListRef = useRef<FlatList>(null);
   const { 
     featuredToken, 
     creatorTokens, 
@@ -189,6 +190,11 @@ export default function HomeScreen() {
     },
   });
 
+  // Scroll to top function
+  const scrollToTop = useCallback(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+
   // Show skeleton during initial load OR during refresh when data is cleared
   if ((isLoading && !isRefreshing) || (isRefreshing && allTokens.length === 0)) {
     return (
@@ -205,6 +211,7 @@ export default function HomeScreen() {
       <HeaderBar ref={headerRef} scrollY={scrollY} />
 
       <Animated.FlatList
+        ref={flatListRef}
         data={nonWatchlistTokens}
         renderItem={renderItem}
         keyExtractor={item => item.address}
@@ -232,7 +239,7 @@ export default function HomeScreen() {
         scrollEventThrottle={16}
       />
 
-      <BottomNav activeTab="home" />
+      <BottomNav activeTab="home" onHomePress={scrollToTop} />
     </View>
   );
 }
