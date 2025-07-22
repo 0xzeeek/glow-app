@@ -116,6 +116,7 @@ export default function MoneyModal({
 
   const [amount, setAmount] = useState(getDefaultAmount());
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [lastActionWasQuickAmount, setLastActionWasQuickAmount] = useState(false);
   const [showPaymentMethods, setShowPaymentMethods] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(
     DEFAULT_PAYMENT_METHODS[mode]
@@ -226,9 +227,20 @@ export default function MoneyModal({
     // Haptic feedback for number press
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
-    // If this is the first interaction, replace the entire amount
-    if (!hasInteracted) {
+    // Check if the current amount matches any quick amount - if so, replace it
+    const isQuickAmountValue = QUICK_AMOUNTS[mode].includes(amount) || 
+      (mode === 'cash-out' && QUICK_AMOUNTS[mode].some(qa => {
+        if (qa.includes('%')) {
+          const percentage = parseFloat(qa) / 100;
+          return amount === Math.floor(usdcBalance * percentage).toString();
+        }
+        return false;
+      }));
+    
+    // If this is the first interaction OR last action was quick amount OR current amount is a quick amount
+    if (!hasInteracted || lastActionWasQuickAmount || isQuickAmountValue) {
       setHasInteracted(true);
+      setLastActionWasQuickAmount(false);
       if (num === '.') {
         setAmount('0.');
       } else {
@@ -254,6 +266,9 @@ export default function MoneyModal({
     // Haptic feedback for delete
     Haptics.selectionAsync();
     
+    // Reset quick amount flag
+    setLastActionWasQuickAmount(false);
+    
     if (!hasInteracted) {
       setHasInteracted(true);
       setAmount('0');
@@ -272,6 +287,7 @@ export default function MoneyModal({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     setHasInteracted(true);
+    setLastActionWasQuickAmount(true);
     if (mode === 'cash-out' && value.includes('%')) {
       const percentage = parseFloat(value) / 100;
       setAmount(Math.floor(usdcBalance * percentage).toString());
@@ -348,6 +364,7 @@ export default function MoneyModal({
       setShowSuccess(false);
       setAmount(getDefaultAmount());
       setHasInteracted(false);
+      setLastActionWasQuickAmount(false);
       setSelectedPaymentMethod(DEFAULT_PAYMENT_METHODS[mode]);
       setShowPaymentMethods(false);
       swipeAnimation.setValue(0);
