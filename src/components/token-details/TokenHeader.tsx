@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ImageBackground,
   SafeAreaView,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -83,6 +84,39 @@ export default function TokenHeader({
     }
   };
 
+  const getSocialUrl = (platform: string, handle: string) => {
+    switch (platform.toLowerCase()) {
+      case 'x':
+        return `https://x.com/${handle}`;
+      case 'instagram':
+        return `https://instagram.com/${handle}`;
+      case 'youtube':
+        return `https://youtube.com/@${handle}`;
+      case 'tiktok':
+        return `https://tiktok.com/@${handle}`;
+      case 'kick':
+        return `https://kick.com/${handle}`;
+      case 'twitch':
+        return `https://twitch.tv/${handle}`;
+      case 'website':
+        // For websites, the handle should already be a full URL
+        return handle.startsWith('http') ? handle : `https://${handle}`;
+      default:
+        return null;
+    }
+  };
+
+  const handleSocialPress = async (platform: string, handle: string) => {
+    const url = getSocialUrl(platform, handle);
+    if (url) {
+      try {
+        await Linking.openURL(url);
+      } catch (error) {
+        console.error('Failed to open URL:', error);
+      }
+    }
+  };
+
   // Get only the first 3 social links
   const topSocialLinks = socialLinks.slice(0, 3);
 
@@ -114,7 +148,11 @@ export default function TokenHeader({
                   if (!icon) return null;
 
                   return (
-                    <TouchableOpacity key={social.platform} style={styles.socialButton}>
+                    <TouchableOpacity 
+                      key={social.platform} 
+                      style={styles.socialButton}
+                      onPress={() => handleSocialPress(social.platform, social.handle)}
+                    >
                       <Image source={icon} style={styles.socialIcon} />
                     </TouchableOpacity>
                   );

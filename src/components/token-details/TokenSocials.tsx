@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SocialX, SocialInstagram, SocialYoutube, SocialTiktok, SocialKick, SocialTwitch, SocialWeb } from '../../../assets';
 import { colors, fonts } from '../../theme';
@@ -34,20 +34,67 @@ export default function TokenSocials({ socialLinks }: TokenSocialsProps) {
     }
   };
   
+  const getSocialUrl = (platform: string, handle: string) => {
+    switch (platform.toLowerCase()) {
+      case 'x':
+        return `https://x.com/${handle}`;
+      case 'instagram':
+        return `https://instagram.com/${handle}`;
+      case 'youtube':
+        return `https://youtube.com/@${handle}`;
+      case 'tiktok':
+        return `https://tiktok.com/@${handle}`;
+      case 'kick':
+        return `https://kick.com/${handle}`;
+      case 'twitch':
+        return `https://twitch.tv/${handle}`;
+      case 'website':
+        // For websites, the handle should already be a full URL
+        return handle.startsWith('http') ? handle : `https://${handle}`;
+      default:
+        return null;
+    }
+  };
+  
+  const formatDisplayHandle = (platform: string, handle: string) => {
+    if (platform.toLowerCase() === 'website') {
+      // Remove http:// or https:// from website URLs for display
+      return handle.replace(/^https?:\/\//, '');
+    }
+    return handle;
+  };
+  
+  const handleSocialPress = async (platform: string, handle: string) => {
+    const url = getSocialUrl(platform, handle);
+    if (url) {
+      try {
+        await Linking.openURL(url);
+      } catch (error) {
+        console.error('Failed to open URL:', error);
+      }
+    }
+  };
+  
   return (
     <View style={styles.container}>
       <Text style={styles.title}>SOCIALS</Text>
       <View style={styles.socialList}>
         {socialLinks.map((social) => {
           const icon = getSocialIcon(social.platform);
+          const displayHandle = formatDisplayHandle(social.platform, social.handle);
+          
           return (
-            <TouchableOpacity key={social.platform} style={styles.socialRow}>
+            <TouchableOpacity 
+              key={social.platform} 
+              style={styles.socialRow}
+              onPress={() => handleSocialPress(social.platform, social.handle)}
+            >
               <View style={styles.leftSection}>
                 {icon && <Image source={icon} style={styles.socialIcon} />}
                 <Text style={styles.platform}>{social.platform}</Text>
               </View>
               <View style={styles.rightSection}>
-                <Text style={styles.handle}>{social.handle}</Text>
+                <Text style={styles.handle}>{displayHandle}</Text>
                 <Ionicons name="chevron-forward" size={10} color={colors.text.primary} />
               </View>
             </TouchableOpacity>
