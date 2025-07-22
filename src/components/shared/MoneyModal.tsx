@@ -336,7 +336,10 @@ export default function MoneyModal({
     },
     onPanResponderMove: (_, gestureState) => {
       if (gestureState.dx > 0) {
-        const maxSwipe = screenWidth - 140;
+        // Track width minus button width minus padding (20px on each side)
+        const trackWidth = screenWidth - 40; // Container has 20px padding on each side
+        const buttonWidth = 60;
+        const maxSwipe = trackWidth - buttonWidth;
         const swipeValue = Math.min(gestureState.dx, maxSwipe);
         swipeAnimation.setValue(swipeValue);
       }
@@ -576,14 +579,17 @@ export default function MoneyModal({
               {/* Swipe to Action */}
               <View style={styles.swipeContainer}>
                 <View style={styles.swipeTrack}>
+                  <Text style={styles.swipeText}>
+                    SWIPE TO {mode === 'buy' ? 'BUY' : mode === 'deposit' ? 'DEPOSIT' : 'CASH OUT'}
+                  </Text>
                   {/* Green progress background */}
                   <Animated.View
                     style={[
                       styles.swipeProgress,
                       {
                         width: swipeAnimation.interpolate({
-                          inputRange: [0, screenWidth - 140],
-                          outputRange: ['0%', '100%'],
+                          inputRange: [0, screenWidth - 100], // trackWidth - buttonWidth = (screenWidth - 40) - 60
+                          outputRange: [60, screenWidth - 40], // Button width to full track width
                           extrapolate: 'clamp',
                         }),
                       },
@@ -602,9 +608,6 @@ export default function MoneyModal({
                       <Image source={DepositSwipe} style={styles.swipeIcon} />
                     </View>
                   </Animated.View>
-                  <Text style={styles.swipeText}>
-                    SWIPE TO {mode === 'buy' ? 'BUY' : mode === 'deposit' ? 'DEPOSIT' : 'CASH OUT'}
-                  </Text>
                 </View>
               </View>
             </>
@@ -836,13 +839,17 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: colors.green.black,
     borderRadius: 30,
+    left: 0,
+    top: 0,
+    zIndex: 2, // Above text but below button
   },
   swipeButton: {
     position: 'absolute',
     width: 60,
     height: 60,
     left: 0,
-    zIndex: 5, // Ensure button is above progress
+    top: 0,
+    zIndex: 3, // Ensure button is above progress
   },
   swipeButtonInner: {
     width: 60,
@@ -971,4 +978,4 @@ const styles = StyleSheet.create({
     bottom: 8,
     alignSelf: 'center',
   },
-}); 
+});
