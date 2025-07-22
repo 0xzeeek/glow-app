@@ -380,4 +380,4 @@ const styles = StyleSheet.create({
     height: 16,
     width: 100,
   },
-}); 
+});

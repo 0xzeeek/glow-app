@@ -1,11 +1,12 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, useRef } from 'react';
 import { View, FlatList, StyleSheet, Text, ActivityIndicator, ViewToken, RefreshControl } from 'react-native';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useQueryClient } from '@tanstack/react-query';
-import HeaderBar from '../../src/components/navigation/HeaderBar';
+import HeaderBar, { HeaderBarRef } from '../../src/components/navigation/HeaderBar';
 import TopMovers from '../../src/components/home/TopMovers';
 import FeaturedToken from '../../src/components/home/FeaturedToken';
 import CreatorTokenRow from '../../src/components/home/CreatorTokenRow';
+import HomeScreenSkeleton from '../../src/components/home/HomeScreenSkeleton';
 import BottomNav from '../../src/components/navigation/BottomNav';
 import { useTokenData, useWatchlistContext } from '../../src/contexts';
 import { useMultipleToken24hPrices, useVisibleTokenSubscriptions } from '../../src/hooks';
@@ -16,6 +17,7 @@ import { Token, TokenAddress } from '@/types';
 
 export default function HomeScreen() {
   const queryClient = useQueryClient();
+  const headerRef = useRef<HeaderBarRef>(null);
   const { 
     featuredToken, 
     creatorTokens, 
@@ -111,8 +113,10 @@ export default function HomeScreen() {
   // Handle refresh - clear entire cache
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
+    // Trigger swirl animation
+    headerRef.current?.animateSwirl();
     try {
-      // TODO: completely removes all data
+      // Remove all queries from cache to force fresh fetch
       queryClient.removeQueries();
       // Invalidate any remaining queries
       await queryClient.invalidateQueries();
@@ -185,13 +189,12 @@ export default function HomeScreen() {
     },
   });
 
-  if (isLoading && !isRefreshing) {
+  // Show skeleton during initial load OR during refresh when data is cleared
+  if ((isLoading && !isRefreshing) || (isRefreshing && allTokens.length === 0)) {
     return (
       <View style={styles.container}>
-        <HeaderBar />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.neutral[500]} />
-        </View>
+        <HeaderBar ref={headerRef} />
+        <HomeScreenSkeleton />
         <BottomNav activeTab="home" />
       </View>
     );
@@ -199,7 +202,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <HeaderBar scrollY={scrollY} />
+      <HeaderBar ref={headerRef} scrollY={scrollY} />
 
       <Animated.FlatList
         data={nonWatchlistTokens}

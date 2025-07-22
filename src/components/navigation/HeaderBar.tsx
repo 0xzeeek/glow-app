@@ -1,5 +1,5 @@
 import { PlusWallet, Swirl, Glow, DepositWallet } from 'assets';
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, Image, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,9 +22,13 @@ interface HeaderBarProps {
   scrollY?: SharedValue<number>;
 }
 
+export interface HeaderBarRef {
+  animateSwirl: () => void;
+}
+
 const { width: screenWidth } = Dimensions.get('window');
 
-export default function HeaderBar({ scrollY }: HeaderBarProps) {
+const HeaderBar = forwardRef<HeaderBarRef, HeaderBarProps>(({ scrollY }, ref) => {
   const router = useRouter();
   const { totalUsdValue } = useUser();;
   
@@ -54,6 +58,11 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
       withTiming(0, { duration: 0 }) // Reset instantly
     );
   };
+  
+  // Expose the swirl animation through ref
+  useImperativeHandle(ref, () => ({
+    animateSwirl: handleSwirlPress
+  }), []);
   
   // Measure the cash text width
   const onCashTextLayout = (event: any) => {
@@ -320,7 +329,9 @@ export default function HeaderBar({ scrollY }: HeaderBarProps) {
       </Animated.View>
     </SafeAreaView>
   );
-}
+});
+
+export default HeaderBar;
 
 const styles = StyleSheet.create({
   safeArea: {

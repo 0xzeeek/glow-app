@@ -507,7 +507,7 @@ export default function MoneyModal({
                 <Text style={styles.cashText}>
                   {BALANCE_LABELS[mode]}: ${usdcBalance.toFixed(2)}
                 </Text>
-                {mode === 'buy' && <Ionicons name="chevron-down" size={16} color="#999" />}
+                {/* {mode === 'buy' && <Ionicons name="chevron-down" size={16} color="#999" />} */}
               </TouchableOpacity>
 
               {/* Amount Display */}
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 10,
   },
   headerTitle: {
