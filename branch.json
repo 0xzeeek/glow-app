@@ -1,4 +1,8 @@
 {
-    "liveKey": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-    "testKey": "key_test_puFfB8PBHyStVF50aXmOymooEtiXFGIf"
+    "branch_key": {
+      "live": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
+      "test": "key_test_gsyew8RqLARCQu65b9bUuimarzf8BRE2"
+    },
+    "ios_bundle_id": "com.zeke.glow",
+    "android_package_name": "com.zeke.glow"
   }

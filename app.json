@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "glow",
-    "slug": "glow",
+    "slug": "glow-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,67 +15,19 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.zeke.glow",
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "Glow uses notifications to alert you about launches, price moves, and rewards in real time.",
-        "branch_key": {
-          "live": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf"
-        }
-      },
-      "associatedDomains": [
-        "applinks:glow.app.link",
-        "applinks:glow-alternate.app.link"
-      ],
-      "bundleIdentifier": "com.fiigmnt.glow"
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.zekeglow.glow",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "data": [
-            {
-              "scheme": "https",
-              "host": "glow.app.link"
-            },
-            {
-              "scheme": "https",
-              "host": "glow-alternate.app.link"
-            },
-            {
-              "scheme": "glow"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        },
-        {
-          "action": "VIEW",
-          "data": [
-            {
-              "scheme": "https",
-              "host": "glow.app.link"
-            },
-            {
-              "scheme": "https",
-              "host": "glow-alternate.app.link"
-            },
-            {
-              "scheme": "glow"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        }
-      ],
-      "package": "com.fiigmnt.glow"
+      "edgeToEdgeEnabled": true
     },
     "plugins": [
       "expo-router",
@@ -90,22 +42,31 @@
       [
         "@config-plugins/react-native-branch",
         {
-          "apiKey": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-          "iosAppDomain": "glow.app.link"
+          "apiKey": "key_test_gsyew8RqLARCQu65b9bUuimarzf8BRE2",
+          "iosAppDomain": "6zemu.test-app.link"
         }
       ],
-      "expo-secure-store",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
     },
-    "owner": "zeke-glow",
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/14810e18-bb4f-4d6d-9976-410019e23ecd"
+    },
+    "owner": "glow-systems",
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "f0bfb786-a293-422b-ab63-134eb09cea01"
-      }
+        "projectId": "14810e18-bb4f-4d6d-9976-410019e23ecd"
+      },
+      "branchLiveKey": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
+      "branchTestKey": "key_test_gsyew8RqLARCQu65b9bUuimarzf8BRE2"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

@@ -1,51 +1,38 @@
 {
-  "cli": {
-    "version": ">= 16.17.0",
-    "appVersionSource": "remote"
-  },
-  "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "environment": "development"
+    "cli": {
+      "version": ">= 16.17.0",
+      "appVersionSource": "remote"
     },
-    "ios-simulator": {
-      "extends": "development",
-      "ios": {
-        "simulator": true
+    "build": {
+      "development": {
+        "developmentClient": true,
+        "distribution": "internal",
+        "env": {
+          "EXPO_PUBLIC_API_URL": "https://75ore9wwlk.execute-api.us-east-1.amazonaws.com",
+          "EXPO_PUBLIC_LIVE_WS_URL": "wss://ry6qx3a3ki.execute-api.us-east-1.amazonaws.com/$default",
+          "EXPO_PUBLIC_PRICE_WS_URL": "wss://glow-edge.z-4af.workers.dev/ws",
+          "EXPO_PUBLIC_PRIVY_APP_ID": "cmd4uc0bl00q9jr0nti7174aw",
+          "EXPO_PUBLIC_PRIVY_CLIENT_ID": "client-WY6Nkfbdukpg3LHfZ9ZWUTTsJVh3RHJ8gYFX5KYnsS9Bg"
+        }
       },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://75ore9wwlk.execute-api.us-east-1.amazonaws.com",
-        "EXPO_PUBLIC_LIVE_WS_URL": "wss://ry6qx3a3ki.execute-api.us-east-1.amazonaws.com/$default",
-        "EXPO_PUBLIC_PRICE_WS_URL": "wss://glow-edge.z-4af.workers.dev/ws",
-        "EXPO_PUBLIC_PRIVY_APP_ID": "cmd4uc0bl00q9jr0nti7174aw",
-        "EXPO_PUBLIC_PRIVY_CLIENT_ID": "client-WY6Nkfbdukpg3LHfZ9ZWUTTsJVh3RHJ8gYFX5KYnsS9Bg",
-        "IOS_BRANCH_KEY": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-        "ANDROID_BRANCH_KEY": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-        "BRANCH_API_KEY": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf"
+      "ios-simulator": {
+        "extends": "development",
+        "ios": {
+          "simulator": true
+        }
+      },
+      "preview": {
+        "extends": "development",
+        "distribution": "internal"
+      },
+      "production": {
+        "extends": "development",
+        "autoIncrement": true,
+        "distribution": "store"
       }
     },
-    "preview": {
-      "extends": "development",
-      "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://75ore9wwlk.execute-api.us-east-1.amazonaws.com",
-        "EXPO_PUBLIC_LIVE_WS_URL": "wss://ry6qx3a3ki.execute-api.us-east-1.amazonaws.com/$default",
-        "EXPO_PUBLIC_PRICE_WS_URL": "wss://glow-edge.z-4af.workers.dev/ws",
-        "EXPO_PUBLIC_PRIVY_APP_ID": "cmd4uc0bl00q9jr0nti7174aw",
-        "EXPO_PUBLIC_PRIVY_CLIENT_ID": "client-WY6Nkfbdukpg3LHfZ9ZWUTTsJVh3RHJ8gYFX5KYnsS9Bg",
-        "IOS_BRANCH_KEY": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-        "ANDROID_BRANCH_KEY": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-        "BRANCH_API_KEY": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf"
-      }
-    },
-    "production": {
-      "extends": "development",
-      "autoIncrement": true,
-      "distribution": "store"
+    "submit": {
+      "production": {}
     }
-  },
-  "submit": {
-    "production": {}
   }
-}
+  

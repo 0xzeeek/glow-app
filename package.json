@@ -16,7 +16,7 @@
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md}\"",
     "type-check": "tsc --noEmit",
-    "check-api-key": "node scripts/check-api-key.js"
+    "pre-build": "npx expo prebuild --clean"
   },
   "dependencies": {
     "@config-plugins/react-native-branch": "^10.0.0",
@@ -24,12 +24,12 @@
     "@expo/vector-icons": "^14.1.0",
     "@privy-io/expo": "^0.55.6",
     "@privy-io/expo-native-extensions": "^0.0.5",
-    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-navigation/native": "^7.1.6",
-    "@sentry/react-native": "^6.16.1",
-    "@shopify/flash-list": "^1.8.3",
-    "@shopify/react-native-skia": "^2.1.0",
+    "@sentry/react-native": "~6.14.0",
+    "@shopify/flash-list": "1.7.6",
+    "@shopify/react-native-skia": "2.0.0-next.4",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
     "@tanstack/query-async-storage-persister": "^5.83.0",
@@ -56,22 +56,22 @@
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.9",
+    "expo-updates": "~0.28.17",
     "expo-web-browser": "~14.2.0",
     "fast-text-encoding": "^1.0.6",
     "lodash": "^4.17.21",
     "moti": "^0.30.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "react-native": "0.79.4",
+    "react-native": "0.79.5",
     "react-native-branch": "^6.8.0",
-    "react-native-gesture-handler": "^2.27.1",
+    "react-native-gesture-handler": "~2.24.0",
     "react-native-get-random-values": "^1.11.0",
     "react-native-mmkv": "^3.3.0",
     "react-native-passkeys": "^0.3.3",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
-    "react-native-svg": "^15.12.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
@@ -88,7 +88,6 @@
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.17.20",
     "@types/react": "~19.0.10",
-    "@types/react-native": "^0.73.0",
     "babel-jest": "^30.0.2",
     "babel-plugin-module-resolver": "^5.0.2",
     "eslint-config-airbnb": "^19.0.4",
@@ -98,12 +97,18 @@
     "jest-expo": "~53.0.8",
     "jest-websocket-mock": "^2.5.0",
     "prettier": "^3.6.2",
-    "react-native-svg-transformer": "^1.5.1",
     "react-test-renderer": "19.0.0",
     "typescript": "~5.8.3"
   },
   "resolutions": {
     "jose": "^5.3.0"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
+    }
+  }
 }
