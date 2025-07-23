@@ -23,8 +23,6 @@
       },
       "associatedDomains": [
         "applinks:glow.app.link",
-        "applinks:glow-alternate.app.link",
-        "applinks:glow.app.link",
         "applinks:glow-alternate.app.link"
       ],
       "bundleIdentifier": "com.fiigmnt.glow" 
