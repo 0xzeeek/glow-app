@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     splash: {
       image: './assets/images/splash-icon.png',
       resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      backgroundColor: '#000000',
     },
     ios: {
       supportsTablet: true,
@@ -31,7 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: 'com.zekeglow.glow',
       adaptiveIcon: {
         foregroundImage: './assets/images/adaptive-icon.png',
-        backgroundColor: '#ffffff',
+        backgroundColor: '#000000',
       },
       edgeToEdgeEnabled: true,
     },
