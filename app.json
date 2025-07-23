@@ -25,7 +25,7 @@
         "applinks:glow.app.link",
         "applinks:glow-alternate.app.link"
       ],
-      "bundleIdentifier": "com.fiigmnt.glow" 
+      "bundleIdentifier": "com.fiigmnt.glow"
     },
     "android": {
       "adaptiveIcon": {
@@ -87,13 +87,7 @@
           "sounds": []
         }
       ],
-      [
-        "@config-plugins/react-native-branch",
-        {
-          "apiKey": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
-          "iosAppDomain": "glow.app.link"
-        }
-      ],
+      "expo-branch",
       "expo-secure-store",
       "expo-web-browser"
     ],
