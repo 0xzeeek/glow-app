@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Alert } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import { useUser } from '../contexts/UserContext';
 import { getApiClient } from '../services/ApiClient';
 import { ApiError } from '../services/ApiClient';
@@ -67,14 +68,13 @@ const uploadProfileImage = async (imageUri: string, wallet: string): Promise<str
 };
 
 export function useEditProfile(): UseEditProfileReturn {
+  const queryClient = useQueryClient();
   const { 
     username, 
     image,
     walletAddress,
-    setUsername, 
-    setImage 
   } = useUser();
-
+  
   const [localUserName, setLocalUserName] = useState(username);
   const [localProfileImage, setLocalProfileImage] = useState(image);
   
@@ -139,7 +139,6 @@ export function useEditProfile(): UseEditProfileReturn {
       
       if (image) {
         setLocalProfileImage(image);
-
       } else {
         Alert.alert('Error', 'Failed to upload profile picture');
       }
@@ -149,7 +148,7 @@ export function useEditProfile(): UseEditProfileReturn {
     } finally {
       setIsUploadingImage(false);
     }
-  }, [walletAddress]);
+  }, [walletAddress, queryClient]);
 
   const saveChanges = useCallback(async (): Promise<boolean> => {
     // Validate before saving
@@ -171,17 +170,22 @@ export function useEditProfile(): UseEditProfileReturn {
 
     try {
       const apiClient = getApiClient();
-      await apiClient.updateUser(walletAddress, localUserName);
-
-      // Save changes to context
-      setUsername(localUserName);
+      const updatedUser = await apiClient.updateUser(walletAddress, localUserName);
       
-      if (localProfileImage !== image) {
-        setImage(localProfileImage);
-      }
-
       // Update original values
       originalUsername.current = localUserName;
+
+      // First invalidate the specific user query to mark it as stale
+      await queryClient.invalidateQueries({
+        queryKey: ['users', walletAddress],
+        exact: true,
+      });
+      
+      // Then force an immediate refetch
+      await queryClient.refetchQueries({
+        queryKey: ['users', walletAddress],
+        exact: true,
+      });
 
       return true;
     } catch (error) {
@@ -206,8 +210,7 @@ export function useEditProfile(): UseEditProfileReturn {
     image,
     walletAddress,
     usernameError, 
-    setUsername, 
-    setImage
+    queryClient
   ]);
 
   return {

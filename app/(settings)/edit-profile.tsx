@@ -40,15 +40,18 @@ export default function EditProfileScreen() {
 
   const handleBack = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.back();
+    
     if (hasChanges) {
       const saved = await saveChanges();
       if (!saved) {
         Alert.alert('Unable to Save', 'There was an error saving your changes. Please try again.', [
           { text: 'OK' },
         ]);
+        return; // Don't navigate back if save failed
       }
     }
+    
+    router.back();
   };
 
   const handleEditProfileImage = async () => {
