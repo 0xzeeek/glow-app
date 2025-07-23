@@ -1,6 +1,5 @@
 import * as Sentry from '@sentry/react-native';
 import { Alert, Platform } from 'react-native';
-import { ApiError } from './ApiClient';
 import { uiStore } from '../stores/uiStore';
 
 interface ErrorConfig {
@@ -40,6 +39,18 @@ interface ErrorReport {
   error?: Error;
   context?: ErrorContext;
   timestamp: number;
+}
+
+export class ApiError extends Error {
+  public status: number;
+  public data?: any;
+
+  constructor(message: string, status: number, data?: any) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
 }
 
 export class ErrorHandler {

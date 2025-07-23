@@ -20,7 +20,7 @@ import {
   TokenHolder,
   GetTokenHoldersResponse,
 } from '../types';
-import { getErrorHandler, ErrorCategory, ErrorSeverity } from './ErrorHandler';
+import { getErrorHandler, ErrorCategory, ErrorSeverity, ApiError } from './ErrorHandler';
 
 interface ApiConfig {
   baseURL: string;
@@ -247,19 +247,6 @@ class ApiClient {
   }
 }
 
-// Custom error class
-export class ApiError extends Error {
-  public status: number;
-  public data?: any;
-
-  constructor(message: string, status: number, data?: any) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.data = data;
-  }
-}
-
 // Create singleton instance
 let apiClient: ApiClient | null = null;
 
@@ -380,3 +367,5 @@ export const queryKeys = {
     holdings: (wallet: string) => ['wallets', wallet, 'balance'] as const,
   },
 }; 
+
+export { ApiClient, ApiError };

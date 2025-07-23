@@ -139,6 +139,7 @@ export function useEditProfile(): UseEditProfileReturn {
       
       if (image) {
         setLocalProfileImage(image);
+
       } else {
         Alert.alert('Error', 'Failed to upload profile picture');
       }
