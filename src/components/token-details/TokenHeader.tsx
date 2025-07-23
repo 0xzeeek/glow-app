@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   tokenName: {
-    fontSize: 24,
+    fontSize: 18,
     fontFamily: fonts.primaryBold,
     color: colors.text.secondary,
     marginBottom: 4,

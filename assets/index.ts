@@ -37,11 +37,11 @@ export { default as CloseModal } from './icons/ui/navigation/close-modal.png';
 export { default as DepositWallet } from './icons/ui/navigation/deposit-wallet.png';
 export { default as Home } from './icons/ui/navigation/home.png';
 export { default as HomeSelected } from './icons/ui/navigation/home-selected.png';
-export { default as PlusSelected } from './icons/ui/navigation/plus-selected.png';
 export { default as PlusWallet } from './icons/ui/navigation/plus-wallet.png';
-export { default as Plus } from './icons/ui/navigation/plus.png';
 export { default as Profile } from './icons/ui/navigation/profile.png';
-export { default as Logo } from './icons/ui/navigation/logo.png';
+export { default as ProfileSelected } from './icons/ui/navigation/profile-selected.png';
+export { default as Spiral } from './icons/ui/navigation/spiral.png';
+export { default as SpiralSelected } from './icons/ui/navigation/spiral-selected.png';
 
 // Profile
 export { default as ProfileCash } from './icons/ui/profile/cash.png';

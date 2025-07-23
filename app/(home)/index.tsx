@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tokenListSection: {
-    marginTop: 20,
+    marginTop: 32,
   },
   sectionTitle: {
     fontSize: 14,

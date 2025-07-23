@@ -90,6 +90,15 @@ export function useEditProfile(): UseEditProfileReturn {
     localUserName !== username ||
     localProfileImage !== image;
 
+  // Create a wrapper function that clears error when typing starts
+  const handleUsernameChange = useCallback((newUsername: string) => {
+    setLocalUserName(newUsername);
+    // Clear error when user starts typing
+    if (usernameError) {
+      setUsernameError(null);
+    }
+  }, [usernameError]);
+
   const handleUsernameBlur = useCallback(async () => {
     // Clear previous error
     setUsernameError(null);
@@ -219,7 +228,7 @@ export function useEditProfile(): UseEditProfileReturn {
     isCheckingUsername,
     isUploadingImage,
     usernameError,
-    setLocalUserName,
+    setLocalUserName: handleUsernameChange,
     setLocalProfileImage,
     handleUsernameBlur,
     handleImageChange,

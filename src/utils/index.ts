@@ -26,55 +26,52 @@ export function calculatePnlPercentage(
 
   // Current value of holdings
   const currentValue = currentBalance * currentPrice;
-  
+
   // Unrealized PnL = current value - (average buy price × current balance)
-  const unrealizedPnL = currentValue - (pnlData.avgBuyPrice * currentBalance);
-  
+  const unrealizedPnL = currentValue - pnlData.avgBuyPrice * currentBalance;
+
   // Total PnL = unrealized PnL + realized PnL
   const totalPnL = unrealizedPnL + pnlData.realizedPnL;
-  
+
   // PnL percentage = (total PnL / total spent) × 100
   const pnlPercentage = (totalPnL / pnlData.totalSpentUsd) * 100;
-  
+
   return pnlPercentage;
-} 
+}
 
 export const formatPrice = (price: number): string => {
   if (price >= 1) {
     return price.toFixed(2);
   } else if (price >= 0.01) {
     return price.toFixed(4);
-  } else if (price >= 0.0001) {
-    return price.toFixed(6);
   } else {
-    return price.toFixed(8);
+    return price.toFixed(6);
   }
 };
 
 export const formatMarketCap = (marketCap: number): string => {
   if (marketCap >= 1_000_000_000) {
-    return `${(marketCap / 1_000_000_000).toFixed(2)}B`;
+    return `${(marketCap / 1_000_000_000).toFixed(1)}B`;
   } else if (marketCap >= 1_000_000) {
-    return `${(marketCap / 1_000_000).toFixed(2)}M`;
+    return `${(marketCap / 1_000_000).toFixed(1)}M`;
   } else if (marketCap >= 1_000) {
-    return `${(marketCap / 1_000).toFixed(2)}K`;
+    return `${(marketCap / 1_000).toFixed(1)}K`;
   } else {
-    return marketCap.toFixed(2);
+    return marketCap.toFixed(0);
   }
 };
 
 export const formatNumber = (price: number): string => {
-  
   // For small prices (less than 1), use 4 decimal places
   if (price < 1) {
     return price.toFixed(4);
   }
-  
+
   // For prices between 1 and 1000, use 2 decimal places
   if (price < 1000) {
     return price.toFixed(2);
   }
-  
+
   // For large prices, use comma formatting with no decimals
   return price.toLocaleString('en-US', { maximumFractionDigits: 0 });
 };
@@ -91,12 +88,12 @@ export const formatPercentage = (percentage: number, decimals: number = 2): stri
 
 export const calculatePriceChange = (priceData: { price: number }[]): number => {
   if (!priceData || priceData.length === 0) return 0;
-  
+
   const firstPrice = priceData[0].price;
   const lastPrice = priceData[priceData.length - 1].price;
-  
+
   if (firstPrice === 0) return 0;
-  
+
   // Return with reasonable precision
   const change = ((lastPrice - firstPrice) / firstPrice) * 100;
   return Math.round(change * 100) / 100; // Round to 2 decimal places
@@ -107,18 +104,21 @@ interface ChartPoint {
   price: number;
 }
 
-export const interpolateChartData = (data: ChartPoint[], targetPoints: number = 200): ChartPoint[] => {
+export const interpolateChartData = (
+  data: ChartPoint[],
+  targetPoints: number = 200
+): ChartPoint[] => {
   if (!data || data.length === 0) return [];
   if (data.length === 1) {
     return Array(targetPoints).fill(data[0]);
   }
-  
+
   // Sort data by timestamp
   const sortedData = [...data].sort((a, b) => a.timestamp - b.timestamp);
-  
+
   // First, create initial points through linear interpolation or sampling
   let initialPoints: ChartPoint[] = [];
-  
+
   if (sortedData.length >= targetPoints) {
     // If we have more data than needed, sample evenly
     const step = (sortedData.length - 1) / (targetPoints - 1);
@@ -130,16 +130,16 @@ export const interpolateChartData = (data: ChartPoint[], targetPoints: number = 
     // Linear interpolation to get more points
     const timeRange = sortedData[sortedData.length - 1].timestamp - sortedData[0].timestamp;
     const timeStep = timeRange / (targetPoints - 1);
-    
+
     for (let i = 0; i < targetPoints; i++) {
-      const targetTime = sortedData[0].timestamp + (i * timeStep);
-      
+      const targetTime = sortedData[0].timestamp + i * timeStep;
+
       // Find the two points this time falls between
       let j = 0;
       while (j < sortedData.length - 1 && sortedData[j + 1].timestamp < targetTime) {
         j++;
       }
-      
+
       if (j === sortedData.length - 1) {
         initialPoints.push(sortedData[j]);
       } else {
@@ -147,26 +147,26 @@ export const interpolateChartData = (data: ChartPoint[], targetPoints: number = 
         const t2 = sortedData[j + 1].timestamp;
         const p1 = sortedData[j].price;
         const p2 = sortedData[j + 1].price;
-        
+
         const ratio = (targetTime - t1) / (t2 - t1);
         const interpolatedPrice = p1 + (p2 - p1) * ratio;
-        
+
         initialPoints.push({
           timestamp: targetTime,
-          price: interpolatedPrice
+          price: interpolatedPrice,
         });
       }
     }
   }
-  
+
   // Apply smoothing using a simple moving average with gaussian weights
   const smoothedPoints: ChartPoint[] = [];
   const windowSize = Math.min(5, Math.floor(initialPoints.length / 10)); // Adaptive window size
-  
+
   for (let i = 0; i < initialPoints.length; i++) {
     let weightedSum = 0;
     let weightSum = 0;
-    
+
     // Apply gaussian-like weights
     for (let j = -windowSize; j <= windowSize; j++) {
       const index = i + j;
@@ -177,12 +177,12 @@ export const interpolateChartData = (data: ChartPoint[], targetPoints: number = 
         weightSum += weight;
       }
     }
-    
+
     smoothedPoints.push({
       timestamp: initialPoints[i].timestamp,
-      price: weightedSum / weightSum
+      price: weightedSum / weightSum,
     });
   }
-  
+
   return smoothedPoints;
 };

@@ -87,7 +87,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-start',
     paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingTop: 14,
+    paddingBottom: 16,
   },
   topSection: {
     flex: 1,
@@ -101,7 +102,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 57,
-    borderWidth: 2,
+    borderWidth: 4,
     borderColor: colors.green.black,
   },
   profileImage: {

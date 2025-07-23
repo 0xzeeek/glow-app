@@ -3,7 +3,7 @@ import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useUser } from '../../contexts/UserContext';
-import { Home, HomeSelected, Plus, PlusSelected, UserPlaceholder } from '../../../assets';
+import { Home, HomeSelected, Spiral, SpiralSelected, Profile, ProfileSelected } from '../../../assets';
 import { colors } from '@/theme/colors';
 
 interface BottomNavProps {
@@ -42,25 +42,34 @@ export default function BottomNav({ activeTab = 'home', onHomePress }: BottomNav
     }
   };
 
+  console.log('image', image);
+
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={handleHomePress}>
         <Image source={activeTab === 'home' ? HomeSelected : Home} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleReferralPress}>
-        <Image source={activeTab === 'referral' ? PlusSelected : Plus} style={styles.navIcon} />
+        <Image source={activeTab === 'referral' ? SpiralSelected : Spiral} style={styles.navIcon} />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem} onPress={handleProfilePress}>
-        {image && Number(image) !== 13 ? (
+        {image && typeof image !== 'number' ? (
           <Image
             source={{ uri: image }}
             style={[styles.profileImage, activeTab === 'profile' && styles.activeProfileImage]}
           />
         ) : (
+          activeTab === 'profile' ? (
           <Image
-            source={UserPlaceholder}
-            style={[styles.profileImage, activeTab === 'profile' && styles.activeProfileImage]}
+            source={ProfileSelected}
+            style={styles.navIcon}
           />
+          ) : (
+            <Image
+              source={Profile}
+              style={styles.navIcon}
+            />
+          )
         )}
       </TouchableOpacity>
     </View>
@@ -74,7 +83,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.background.primary,
     paddingVertical: 12,
-    paddingBottom: 20,
+    paddingBottom: 30,
     borderTopWidth: 1,
     borderTopColor: colors.neutral[200],
   },

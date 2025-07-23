@@ -42,7 +42,7 @@ export default function FloatingBuyButton({ tokenName, tokenImage, tokenAddress,
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 90,
+    bottom: 110,
     left: 16,
     right: 16,
   },
