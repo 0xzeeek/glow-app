@@ -4778,13 +4778,6 @@ expo-blur@^14.1.5:
   resolved "https://registry.yarnpkg.com/expo-blur/-/expo-blur-14.1.5.tgz#910712389e19286ccdc136275bf569f427aa05ef"
   integrity sha512-CCLJHxN4eoAl06ESKT3CbMasJ98WsjF9ZQEJnuxtDb9ffrYbZ+g9ru84fukjNUOTtc8A8yXE5z8NgY1l0OMrmQ==
 
-expo-branch@^6.4.0:
-  version "6.4.0"
-  resolved "https://registry.yarnpkg.com/expo-branch/-/expo-branch-6.4.0.tgz#7fa611f6f4f8f952376fc095c846c85e86cdd871"
-  integrity sha512-NcwLyFgy0ljNyQTWuMoOJGra+SSNoy4ughh09aD2VGxL3TMAgL+YRe056EifR8+wnCq/fAWbjCp7qoZ6mUOWAA==
-  dependencies:
-    react-native-branch "5.0.0"
-
 expo-constants@~17.1.7:
   version "17.1.7"
   resolved "https://registry.yarnpkg.com/expo-constants/-/expo-constants-17.1.7.tgz#35194c1cef51f1ea756333418f1e077be79a012b"
@@ -7601,11 +7594,6 @@ react-is@^19.0.0, react-is@^19.1.0:
   version "19.1.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-19.1.0.tgz#805bce321546b7e14c084989c77022351bbdd11b"
   integrity sha512-Oe56aUPnkHyyDxxkvqtd7KkdQP5uIUfHxd5XTb3wE9d/kRnZLmKbDB0GWk919tdQ+mxxPtG6EAs6RMT6i1qtHg==
-
-react-native-branch@5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/react-native-branch/-/react-native-branch-5.0.0.tgz#9d2102abb3c9a577ce4327e434151ece2b4c7c78"
-  integrity sha512-6VInx3bvWOfEJ916zdA1yzJhcjB26N0oMUJInW3reFIijsk6KOjyM46UH3/MixdNUOV/nZn1JoRZM+wpLffDWQ==
 
 react-native-branch@^6.8.0:
   version "6.8.0"
