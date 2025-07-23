@@ -33,7 +33,7 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
   return (
     <>
       <ImageBackground 
-        source={{ uri: 'https://picsum.photos/800/400?grayscale&blur=2' }} 
+        source={{ uri: token.video }} 
         style={styles.bannerContainer}
         resizeMode="cover"
       >

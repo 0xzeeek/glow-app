@@ -18,7 +18,7 @@
       "infoPlist": {
         "NSUserNotificationsUsageDescription": "Glow uses notifications to alert you about launches, price moves, and rewards in real time.",
         "branch_key": {
-          "live": "YOUR_BRANCH_LIVE_KEY"
+          "live": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf"
         }
       },
       "associatedDomains": [
@@ -27,7 +27,7 @@
         "applinks:glow.app.link",
         "applinks:glow-alternate.app.link"
       ],
-      "bundleIdentifier": "com.fiigmnt.glow"
+      "bundleIdentifier": "com.fiigmnt.glow" 
     },
     "android": {
       "adaptiveIcon": {
@@ -79,11 +79,6 @@
       ],
       "package": "com.fiigmnt.glow"
     },
-    "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
       "expo-router",
       [
@@ -94,9 +89,15 @@
           "sounds": []
         }
       ],
+      [
+        "@config-plugins/react-native-branch",
+        {
+          "apiKey": "key_live_puFfB8PBHyStVF50aXmOymooEtiXFGIf",
+          "iosAppDomain": "glow.app.link"
+        }
+      ],
       "expo-secure-store",
-      "expo-web-browser",
-      "expo-branch"
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
