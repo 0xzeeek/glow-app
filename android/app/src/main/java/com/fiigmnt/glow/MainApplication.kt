@@ -1,4 +1,4 @@
-package com.glow
+package com.fiigmnt.glow
 
 import android.app.Application
 import android.content.res.Configuration
