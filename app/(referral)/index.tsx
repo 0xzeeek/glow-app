@@ -7,14 +7,19 @@ import {
   Dimensions,
   Image,
   RefreshControl,
+  ImageBackground,
 } from 'react-native';
 import { Button } from '@/components/shared/Button';
 import { colors, fonts } from '@/theme';
-import { ReferralCircle, ReferralQuestion } from '../../assets';
+import {
+  ReferralBackground,
+  ReferralOne,
+  ReferralTwo,
+  ReferralThree,
+  ReferralArrow,
+} from '../../assets';
 import { useUser } from '../../src/contexts/UserContext';
 import { useUserProfile } from '../../src/hooks/useUserQueries';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function ReferralScreen() {
   const { feesEarned, walletAddress } = useUser();
@@ -30,27 +35,29 @@ export default function ReferralScreen() {
     }
   }, [refetchUserProfile]);
 
-  const handleLearnMore = () => {
-    console.log('Learn more pressed');
-  };
-
   const handleInviteFriends = () => {
     console.log('Invite friends pressed');
   };
+
+  const [referralCount, setReferralCount] = useState({
+    one: 0,
+    two: 0,
+    three: 0,
+  });
 
   const formatCurrency = (amount: number | string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 0,
     }).format(Number(amount));
   };
 
   return (
-    <>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
+    <ImageBackground source={ReferralBackground} style={styles.container} resizeMode="cover">
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -73,100 +80,188 @@ export default function ReferralScreen() {
           The more your friends (and their friends trade), the more you all make
         </Text>
 
-        {/* Learn More Button */}
-        <Button
-          title="LEARN MORE"
-          onPress={handleLearnMore}
-          variant="primary"
-          icon={ReferralQuestion}
-          style={styles.learnMoreButton}
-        />
-
-        <View style={styles.circleImageContainer}>
-          <Image source={ReferralCircle} style={styles.circleImage} />
+        {/* Referral Structure */}
+        <View style={styles.referralContainer}>
+          <View style={styles.pillContainer}>
+            <View style={[styles.countContainer, styles.one]}>
+              <Text style={styles.countText}>{referralCount.one}</Text>
+            </View>
+            <Image source={ReferralOne} style={styles.percentagePillOne} />
+            <Text style={styles.levelDescription}>of your friend's fees</Text>
+          </View>
+          <Image source={ReferralArrow} style={styles.arrow} />
+          <View style={styles.pillContainer}>
+            <View style={[styles.countContainer, styles.two]}>
+              <Text style={styles.countText}>{referralCount.two}</Text>
+            </View>
+            <Image source={ReferralTwo} style={styles.percentagePillTwo} />
+            <Text style={styles.levelDescription}>from their friends</Text>
+          </View>
+            <Image source={ReferralArrow} style={styles.arrow} />
+            <View style={styles.pillContainer}>
+              <View style={[styles.countContainer, styles.three]}>
+                <Text style={styles.countText}>{referralCount.three}</Text>
+              </View>
+              <Image source={ReferralThree} style={styles.percentagePillThree} />
+              <Text style={styles.levelDescription}>from their friend's friend</Text>
+            </View>
         </View>
+
+        {/* Bottom Text */}
+        <Text style={styles.bottomText}>No limits. No catch. Just rewards.</Text>
       </ScrollView>
 
       <View style={styles.inviteButtonContainer}>
         <Button
           title="INVITE FRIENDS"
           onPress={handleInviteFriends}
-          variant="secondary"
+          variant="primary"
           style={styles.inviteButton}
         />
       </View>
-    </>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingTop: 40,
   },
   scrollContent: {
-    marginTop: -20,
     flexGrow: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 30,
     paddingTop: 40,
-    paddingBottom: 100, // Add extra padding for the bottom nav
+    paddingBottom: 120,
     alignItems: 'center',
-    backgroundColor: colors.background.primary,
   },
   rewardsCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 22,
     alignItems: 'flex-start',
-    marginBottom: 30,
+    marginBottom: 40,
     width: '100%',
-    borderWidth: 1,
-    borderColor: colors.neutral[200],
   },
   rewardsLabel: {
     fontFamily: fonts.primaryBold,
     fontSize: 14,
-    color: colors.neutral[500],
+    color: colors.green.black,
     marginBottom: 8,
+    letterSpacing: 1,
   },
   rewardsAmount: {
     fontFamily: fonts.secondaryMedium,
     fontSize: 46,
-    color: colors.text.primary,
+    color: colors.text.secondary,
   },
   title: {
     fontFamily: fonts.primaryMedium,
-    fontSize: 24,
-    color: colors.text.primary,
+    fontSize: 22,
+    color: colors.green.black,
     textAlign: 'center',
     marginBottom: 12,
   },
   description: {
     fontFamily: fonts.primary,
     fontSize: 16,
-    color: colors.neutral[500],
+    color: colors.text.secondary,
     textAlign: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    lineHeight: 22,
+    marginBottom: 30,
+    opacity: 0.6,
   },
-  learnMoreButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-  },
-  circleImageContainer: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH,
+  referralContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    marginBottom: 50,
+    gap: 10,
   },
-  circleImage: {
-    width: '100%',
-    height: '100%',
+  pillContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    gap: 10,
+  },
+  countContainer: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 20,
+    height: 20,
+    backgroundColor: colors.background.secondary,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#666666',
+    zIndex: 1,
+  },
+  one: {
+    top: -8,
+    left: 32,
+  },
+  two: {
+    top: -8,
+    left: 10,
+  },
+  three: {
+    top: -8,
+    left: 35,
+  },
+  countText: {
+    fontFamily: fonts.secondaryMedium,
+    fontSize: 12,
+    color: colors.green.black,
+  },
+  arrow: {
+    width: 22,
+    height: 22,
     resizeMode: 'contain',
+    paddingVertical: 6,
+  },
+  peopleIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  personIcon: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  personIconOffset: {
+    marginLeft: -6,
+  },
+  personIconOffset2: {
+    marginLeft: -12,
+  },
+  percentagePillOne: {
+    width: 96,
+    height: 32,
+    resizeMode: 'contain',
+  },
+  percentagePillTwo: {
+    width: 122,
+    height: 32,
+    resizeMode: 'contain',
+  },
+  percentagePillThree: {
+    width: 137,
+    height: 32,
+    resizeMode: 'contain',
+  },
+  levelDescription: {
+    fontFamily: fonts.primary,
+    fontSize: 16,
+    color: colors.text.secondary,
+    opacity: 0.6,
+  },
+  bottomText: {
+    fontFamily: fonts.primaryMedium,
+    fontSize: 22,
+    color: colors.green.black,
+    textAlign: 'center',
   },
   inviteButtonContainer: {
     position: 'absolute',
-    bottom: 100,
+    bottom: 10,
     width: '90%',
     alignSelf: 'center',
   },

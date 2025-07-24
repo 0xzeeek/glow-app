@@ -53,9 +53,11 @@ export { default as ProfileSettings } from './icons/ui/profile/settings.png';
 export { default as ProfileShare } from './icons/ui/profile/share.png';
 
 // Referral
-export { default as ReferralProfile } from './icons/ui/referral/profile.png';
-export { default as ReferralQuestion } from './icons/ui/referral/question.png';
-export { default as ReferralCircle } from './icons/ui/referral/circle.png';
+export { default as ReferralBackground } from './icons/ui/referral/background.png';
+export { default as ReferralOne } from './icons/ui/referral/one.png';
+export { default as ReferralTwo } from './icons/ui/referral/two.png';
+export { default as ReferralThree } from './icons/ui/referral/three.png';
+export { default as ReferralArrow } from './icons/ui/referral/arrow.png';
 
 // Settings
 export { default as SettingsDelete } from './icons/ui/settings/delete.png';
