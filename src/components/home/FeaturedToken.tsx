@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ImageBackground } from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Video, ResizeMode } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Token } from '@/types';
 import BuyModal from '../shared/BuyModal';
 import { Button } from '../shared/Button';
@@ -32,35 +34,41 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
   
   return (
     <>
-      <ImageBackground 
-        source={{ uri: token.video }} 
-        style={styles.bannerContainer}
-        resizeMode="cover"
-      >
-        <View style={styles.overlay}>
-          <View style={styles.contentWrapper}>
-            <TouchableOpacity style={styles.topSection} onPress={handleTokenPress} activeOpacity={0.8}>
-              <View style={styles.profileWrapper}>
-                <Image source={{ uri: token.image }} style={styles.profileImage} />
-              </View>
-
-              <View style={styles.nameSection}>
-                  <Image source={TokenLive} style={styles.liveIcon} />
-                <Text style={styles.tokenName}>{token.name}</Text>
-              </View>
-            </TouchableOpacity>
-
-            <View style={styles.bottomSection}>
-              <TouchableOpacity style={styles.marketCapSection} onPress={handleTokenPress} activeOpacity={0.8}>
-                <Text style={styles.marketCapLabel}>MARKET CAP</Text>
-                <Text style={styles.marketCapValue}>{formatMarketCap(token.marketCap || 0)}</Text>
-              </TouchableOpacity>
-              
-              <Button title="BUY NOW" onPress={handleBuyPress} style={styles.buyButton} />
+      <View style={styles.bannerContainer}>
+        <Video
+          source={{ uri: token.video }}
+          style={styles.video}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping
+          isMuted
+        />
+        <LinearGradient
+          colors={['#2A4E68', '#002845']}
+          style={styles.gradientOverlay}
+        />
+        <View style={styles.contentWrapper}>
+          <TouchableOpacity style={styles.topSection} onPress={handleTokenPress} activeOpacity={0.8}>
+            <View style={styles.profileWrapper}>
+              <Image source={{ uri: token.image }} style={styles.profileImage} />
             </View>
+
+            <View style={styles.nameSection}>
+                <Image source={TokenLive} style={styles.liveIcon} />
+              <Text style={styles.tokenName}>{token.name}</Text>
+            </View>
+          </TouchableOpacity>
+
+          <View style={styles.bottomSection}>
+            <TouchableOpacity style={styles.marketCapSection} onPress={handleTokenPress} activeOpacity={0.8}>
+              <Text style={styles.marketCapLabel}>MARKET CAP</Text>
+              <Text style={styles.marketCapValue}>{formatMarketCap(token.marketCap || 0)}</Text>
+            </TouchableOpacity>
+            
+            <Button title="BUY NOW" onPress={handleBuyPress} style={styles.buyButton} />
           </View>
         </View>
-      </ImageBackground>
+      </View>
       
       <BuyModal
         visible={showBuyModal}
@@ -77,11 +85,26 @@ export default function FeaturedToken({ token }: FeaturedTokenProps) {
 const styles = StyleSheet.create({
   bannerContainer: {
     width: '100%',
+    position: 'relative',
   },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(30, 58, 138, 0.8)',
-    justifyContent: 'center',
+  video: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0.8,
   },
   contentWrapper: {
     flex: 1,

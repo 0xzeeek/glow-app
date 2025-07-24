@@ -5,13 +5,14 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
-  ImageBackground,
   SafeAreaView,
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Video, ResizeMode } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   TokenEye,
   TokenEyeWhite,
@@ -126,10 +127,21 @@ export default function TokenHeader({
   const topSocialLinks = socialLinks.slice(0, 3);
 
   return (
-    <ImageBackground
-      source={backgroundVideo ? { uri: backgroundVideo } : undefined}
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      {backgroundVideo && (
+        <Video
+          source={{ uri: backgroundVideo }}
+          style={styles.backgroundVideo}
+          resizeMode={ResizeMode.COVER}
+          shouldPlay
+          isLooping
+          isMuted
+        />
+      )}
+      <LinearGradient
+        colors={['#2A4E68', '#002845']}
+        style={styles.gradientOverlay}
+      />
       <View style={styles.overlay}>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.topBar}>
@@ -201,7 +213,7 @@ export default function TokenHeader({
           </View>
         </SafeAreaView>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
 
@@ -209,10 +221,29 @@ const styles = StyleSheet.create({
   container: {
     height: 450,
     width: '100%',
+    position: 'relative',
+  },
+  backgroundVideo: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: '100%',
+    height: '100%',
+    opacity: 0.8,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(30, 58, 138, 0.85)',
   },
   safeArea: {
     flex: 1,
