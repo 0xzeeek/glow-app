@@ -42,8 +42,6 @@ export default function BottomNav({ activeTab = 'home', onHomePress }: BottomNav
     }
   };
 
-  console.log('image', image);
-
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.navItem} onPress={handleHomePress}>

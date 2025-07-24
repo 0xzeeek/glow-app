@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, useRef } from 'react';
+import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, ActivityIndicator, ViewToken, RefreshControl } from 'react-native';
 import Animated, { useSharedValue, useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useQueryClient } from '@tanstack/react-query';
@@ -7,8 +7,7 @@ import TopMovers from '../../src/components/home/TopMovers';
 import FeaturedToken from '../../src/components/home/FeaturedToken';
 import CreatorTokenRow from '../../src/components/home/CreatorTokenRow';
 import HomeScreenSkeleton from '../../src/components/home/HomeScreenSkeleton';
-import BottomNav from '../../src/components/navigation/BottomNav';
-import { useTokenData, useWatchlistContext } from '../../src/contexts';
+import { useTokenData, useWatchlistContext, useNavigation } from '../../src/contexts';
 import { useMultipleToken24hPrices, useVisibleTokenSubscriptions } from '../../src/hooks';
 import { fonts } from '@/theme/typography';
 import { colors } from '@/theme/colors';
@@ -19,6 +18,7 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const headerRef = useRef<HeaderBarRef>(null);
   const flatListRef = useRef<FlatList>(null);
+  const { homeScrollToTopRef } = useNavigation();
   const { 
     featuredToken, 
     creatorTokens, 
@@ -33,6 +33,19 @@ export default function HomeScreen() {
   const { watchlist } = useWatchlistContext();
   const [visibleTokens, setVisibleTokens] = useState<Token[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Scroll to top function
+  const scrollToTop = useCallback(() => {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, []);
+
+  // Register scroll-to-top function with navigation context
+  useEffect(() => {
+    homeScrollToTopRef.current = scrollToTop;
+    return () => {
+      homeScrollToTopRef.current = null;
+    };
+  }, [scrollToTop, homeScrollToTopRef]);
 
   // Filter tokens based on watchlist
   const watchlistTokens = useMemo(
@@ -190,18 +203,12 @@ export default function HomeScreen() {
     },
   });
 
-  // Scroll to top function
-  const scrollToTop = useCallback(() => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-  }, []);
-
   // Show skeleton during initial load OR during refresh when data is cleared
   if ((isLoading && !isRefreshing) || (isRefreshing && allTokens.length === 0)) {
     return (
       <View style={styles.container}>
         <HeaderBar ref={headerRef} />
         <HomeScreenSkeleton />
-        <BottomNav activeTab="home" />
       </View>
     );
   }
@@ -238,8 +245,6 @@ export default function HomeScreen() {
         onScroll={scrollHandler}
         scrollEventThrottle={16}
       />
-
-      <BottomNav activeTab="home" onHomePress={scrollToTop} />
     </View>
   );
 }
@@ -250,7 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.primary,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 90, // Add extra padding for the bottom nav
   },
   loadingContainer: {
     flex: 1,

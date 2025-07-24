@@ -13,7 +13,6 @@ import FloatingBuyButton from '@/components/token-details/FloatingBuyButton';
 import FloatingActionButtons from '@/components/token-details/FloatingActionButtons';
 import TopHoldersModal from '@/components/shared/TopHoldersModal';
 import TokenDetailsSkeleton from '@/components/token-details/TokenDetailsSkeleton';
-import BottomNav from '@/components/navigation/BottomNav';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { formatPrice, formatMarketCap } from '@/utils';
@@ -59,7 +58,6 @@ export default function TokenDetailScreen() {
     return (
       <View style={styles.container}>
         <TokenDetailsSkeleton />
-        <BottomNav activeTab={null} />
       </View>
     );
   }
@@ -75,7 +73,7 @@ export default function TokenDetailScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
         <TokenHeader
           name={tokenDetails.name}
           price={`$${formatPrice(tokenDetails.price)}`}
@@ -147,7 +145,6 @@ export default function TokenDetailScreen() {
           tokenPrice={tokenDetails.price}
         />
       )}
-      <BottomNav activeTab={null} />
 
       {/* Top Holders Modal */}
       <TopHoldersModal
@@ -170,7 +167,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingTop: 24,
-    paddingBottom: 160,
+    paddingBottom: 200, // Extra padding for bottom nav and floating buttons
     shadowColor: colors.neutral[1000],
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,

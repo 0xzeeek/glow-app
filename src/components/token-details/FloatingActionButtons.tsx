@@ -71,7 +71,7 @@ export default function FloatingActionButtons({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 110,
+    bottom: 20,
     left: 16,
     right: 16,
   },

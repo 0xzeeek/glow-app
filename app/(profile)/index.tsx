@@ -1,9 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, ImageBackground } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import BottomNav from '../../src/components/navigation/BottomNav';
-import { ProfileSettings, ProfileExplore, ProfileDepositWhite, ProfileDeposit, ProfileCash, ProfileShare } from '../../assets';
+import {
+  ProfileSettings,
+  ProfileExplore,
+  ProfileDepositWhite,
+  ProfileDeposit,
+  ProfileCash,
+  ProfileShare,
+  SettingsProfile,
+  ProfileBackground,
+} from '../../assets';
 import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
@@ -19,27 +27,19 @@ import { WalletBalance } from '../../src/types';
 import { calculatePnlPercentage } from '../../src/utils';
 
 export default function ProfileScreen() {
-  const { 
-    image, 
-    username, 
-    totalUsdValue,
-    usdcBalance,
-    tokenHoldings,
-    walletAddress
-  } = useUser();
+  const { image, username, totalUsdValue, usdcBalance, tokenHoldings, walletAddress } = useUser();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showCashOutModal, setShowCashOutModal] = useState(false);
   const router = useRouter();
   const queryClient = useQueryClient();
 
   // Handle price updates by updating the cached wallet holdings
-  const handlePriceUpdate = useCallback((tokenAddress: string, newPrice: number) => {
-    if (!walletAddress) return;
+  const handlePriceUpdate = useCallback(
+    (tokenAddress: string, newPrice: number) => {
+      if (!walletAddress) return;
 
-    // Update the cached wallet holdings data
-    queryClient.setQueryData<WalletBalance>(
-      queryKeys.users.holdings(walletAddress),
-      (oldData) => {
+      // Update the cached wallet holdings data
+      queryClient.setQueryData<WalletBalance>(queryKeys.users.holdings(walletAddress), oldData => {
         if (!oldData) return oldData;
 
         // Find the token that was updated
@@ -54,11 +54,7 @@ export default function ProfileScreen() {
         const newUsdValue = token.balance * newPrice;
 
         // Recalculate PnL percentage with the new price
-        const newPnlPercentage = calculatePnlPercentage(
-          token.balance,
-          newPrice,
-          token.pnlData
-        );
+        const newPnlPercentage = calculatePnlPercentage(token.balance, newPrice, token.pnlData);
 
         // Update the token with new price and calculated values
         updatedTokens[tokenIndex] = {
@@ -78,9 +74,10 @@ export default function ProfileScreen() {
           totalUsdValue: newTotalUsdValue,
           timestamp: Date.now(),
         };
-      }
-    );
-  }, [walletAddress, queryClient]);
+      });
+    },
+    [walletAddress, queryClient]
+  );
 
   // Subscribe to live price updates for all holdings
   useVisibleTokenSubscriptions({
@@ -93,10 +90,10 @@ export default function ProfileScreen() {
   const totalValue = totalUsdValue;
   // Use the counting animation hook for the total value
   const { displayValue, bounceScale } = useCountingAnimation(totalValue, {
-    duration: 1000,      // Slightly slower for bigger numbers
-    enableBounce: true
+    duration: 1000, // Slightly slower for bigger numbers
+    enableBounce: true,
   });
-  
+
   // Filter out USDC from token holdings
   const nonUsdcTokens = tokenHoldings.filter(token => token.symbol !== 'USDC');
   const hasTokens = nonUsdcTokens.length > 0;
@@ -142,124 +139,125 @@ export default function ProfileScreen() {
 
   return (
     <>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces={false}>
-        <View style={styles.gradientBackground}>
-          {/* Settings Icon */}
-          <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
-            <Image source={ProfileSettings} style={styles.settingsIcon} />
-          </TouchableOpacity>
+      <ImageBackground source={ProfileBackground} style={styles.container}>
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false} bounces={false}>
+          <View style={styles.gradientBackground}>
+            {/* Settings Icon */}
+            <TouchableOpacity style={styles.settingsButton} onPress={handleSettings}>
+              <Image source={ProfileSettings} style={styles.settingsIcon} />
+            </TouchableOpacity>
 
-          {/* Profile Section */}
-          <View style={styles.profileSection}>
-            <View style={styles.profileImageWrapper}>
-              <Image 
-                source={{ uri: image || Profile }} 
-                style={styles.profileImage} 
-              />
+            {/* Profile Section */}
+            <View style={styles.profileSection}>
+              <View style={styles.profileImageWrapper}>
+                {image ? (
+                  <Image source={{ uri: image }} style={styles.profileImage} />
+                ) : (
+                  <Image source={SettingsProfile} style={styles.profileImagePlaceholder} />
+                )}
+              </View>
+              <Text style={styles.username}>{username || ''}</Text>
             </View>
-            <Text style={styles.username}>{username || ''}</Text>
           </View>
-        </View>
 
-        {/* Balance Section */}
-        <View style={styles.balanceSection}>
-          <Animated.Text style={[styles.balanceAmount, animatedBalanceStyle]}>
-            ${displayValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </Animated.Text>
-          <Text style={styles.buyingPowerText}>BUYING POWER ${Math.floor(usdcBalance)}</Text>
+          {/* Balance Section */}
+          <View style={styles.balanceSection}>
+            <Animated.Text style={[styles.balanceAmount, animatedBalanceStyle]}>
+              $
+              {displayValue.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </Animated.Text>
+            <Text style={styles.buyingPowerText}>BUYING POWER ${Math.floor(usdcBalance)}</Text>
 
-          <View style={styles.buttonRow}>
-            <Button
-              title="DEPOSIT"
-              onPress={handleDeposit}
-              variant={hasCash ? "filled" : "secondary"}
-              icon={hasCash ? ProfileDeposit : ProfileDepositWhite}
-              style={styles.actionButton}
-            />
-            <Button
-              title="CASH OUT"
-              onPress={handleCashOut}
-              variant={"filled"}
-              icon={ProfileCash}
-              disabled={!hasCash}
-              style={styles.actionButton}
-            />
-          </View>
-        </View>
-
-        {/* Holdings Section */}
-        <View style={styles.holdingsSection}>
-          {hasTokens ? (
-            <>
-              <Text style={styles.holdingsTitle}>HOLDINGS</Text>
-              {nonUsdcTokens.map((token) => (
-                <TouchableOpacity 
-                  key={token.address}
-                  style={styles.tokenRow}
-                  onPress={() => handleTokenPress(token.address)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.tokenImageContainer}>
-                    <Image source={{ uri: token.image }} style={styles.tokenImage} />
-                  </View>
-                  <View style={styles.tokenInfo}>
-                    <Text style={styles.tokenName}>{token.name}</Text>
-                    <Text style={styles.tokenBalance}>{token.balance.toFixed(2)} {token.symbol}</Text>
-                  </View>
-                  <View style={styles.tokenValueSection}>
-                    <Text style={styles.tokenValue}>${token.value.toFixed(2)}</Text>
-                    {token.pnlPercentage !== undefined && (
-                      <Text style={[
-                        styles.tokenPnl,
-                        token.pnlPercentage >= 0 ? styles.positiveChange : styles.negativeChange
-                      ]}>
-                        {token.pnlPercentage >= 0 ? '▲' : '▼'} {Math.abs(token.pnlPercentage).toFixed(2)}%
-                      </Text>
-                    )}
-                  </View>
-                  <TouchableOpacity 
-                    style={styles.shareButton}
-                    onPress={() => handleShareToken(token.name, 0)}
-                  >
-                    <Image source={ProfileShare} style={styles.shareIcon} />
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
-            </>
-          ) : (
-            <View style={styles.noHoldingsContainer}>
-              <Text style={styles.noHoldingsTitle}>No Holdings Yet</Text>
-              <Text style={styles.noHoldingsText}>Holdings you own will show up here</Text>
-
+            <View style={styles.buttonRow}>
               <Button
-                title="EXPLORE"
-                onPress={handleExplore}
-                variant="filled"
-                icon={ProfileExplore}
-                style={styles.exploreButton}
+                title="DEPOSIT"
+                onPress={handleDeposit}
+                variant={hasCash ? 'filled' : 'secondary'}
+                icon={hasCash ? ProfileDeposit : ProfileDepositWhite}
+                style={styles.actionButton}
+              />
+              <Button
+                title="CASH OUT"
+                onPress={handleCashOut}
+                variant={'filled'}
+                icon={ProfileCash}
+                disabled={!hasCash}
+                style={styles.actionButton}
               />
             </View>
-          )}
-        </View>
+          </View>
 
-        {/* Bottom spacing for nav */}
-        <View style={{ height: 80 }} />
-      </ScrollView>
+          {/* Holdings Section */}
+          <View style={styles.holdingsSection}>
+            {hasTokens ? (
+              <>
+                <Text style={styles.holdingsTitle}>HOLDINGS</Text>
+                {nonUsdcTokens.map(token => (
+                  <TouchableOpacity
+                    key={token.address}
+                    style={styles.tokenRow}
+                    onPress={() => handleTokenPress(token.address)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.tokenImageContainer}>
+                      <Image source={{ uri: token.image }} style={styles.tokenImage} />
+                    </View>
+                    <View style={styles.tokenInfo}>
+                      <Text style={styles.tokenName}>{token.name}</Text>
+                      <Text style={styles.tokenBalance}>
+                        {token.balance.toFixed(2)} {token.symbol}
+                      </Text>
+                    </View>
+                    <View style={styles.tokenValueSection}>
+                      <Text style={styles.tokenValue}>${token.value.toFixed(2)}</Text>
+                      {token.pnlPercentage !== undefined && (
+                        <Text
+                          style={[
+                            styles.tokenPnl,
+                            token.pnlPercentage >= 0 ? styles.positiveChange : styles.negativeChange,
+                          ]}
+                        >
+                          {token.pnlPercentage >= 0 ? '▲' : '▼'}{' '}
+                          {Math.abs(token.pnlPercentage).toFixed(2)}%
+                        </Text>
+                      )}
+                    </View>
+                    <TouchableOpacity
+                      style={styles.shareButton}
+                      onPress={() => handleShareToken(token.name, 0)}
+                    >
+                      <Image source={ProfileShare} style={styles.shareIcon} />
+                    </TouchableOpacity>
+                  </TouchableOpacity>
+                ))}
+              </>
+            ) : (
+              <View style={styles.noHoldingsContainer}>
+                <Text style={styles.noHoldingsTitle}>No Holdings Yet</Text>
+                <Text style={styles.noHoldingsText}>Holdings you own will show up here</Text>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNavContainer}>
-        <BottomNav activeTab="profile" />
-      </View>
+                <Button
+                  title="EXPLORE"
+                  onPress={handleExplore}
+                  variant="filled"
+                  icon={ProfileExplore}
+                  style={styles.exploreButton}
+                />
+              </View>
+            )}
+          </View>
 
-      <DepositModal
-        visible={showDepositModal}
-        onClose={() => setShowDepositModal(false)}
-      />
-      
-      <CashOutModal
-        visible={showCashOutModal}
-        onClose={() => setShowCashOutModal(false)}
-      />
+          {/* Bottom spacing for nav */}
+          <View style={{ height: 120 }} />
+        </ScrollView>
+      </ImageBackground>
+
+      <DepositModal visible={showDepositModal} onClose={() => setShowDepositModal(false)} />
+
+      <CashOutModal visible={showCashOutModal} onClose={() => setShowCashOutModal(false)} />
     </>
   );
 }
@@ -269,12 +267,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background.primary,
   },
+  scrollContainer: {
+    flex: 1,
+  },
   gradientBackground: {
     height: 320,
     paddingTop: 60,
     alignItems: 'center',
-    // TOOD: move this to colors
-    backgroundColor: '#4B79A1',
+    overflow: 'hidden',
   },
   settingsButton: {
     position: 'absolute',
@@ -307,6 +307,12 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 100,
+  },
+  profileImagePlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 100,
+    tintColor: colors.background.primary,
   },
   username: {
     fontSize: 30,
@@ -457,12 +463,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 40,
     width: 'auto',
-  },
-  bottomNavContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.background.primary,
   },
 });

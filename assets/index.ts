@@ -17,6 +17,7 @@ export { default as BackgroundOnbordingIntro } from './images/background/onboard
 export { default as BackgroundOnbordingMain } from './images/background/onboarding-main.png';
 export { default as BackgroundProfile } from './images/background/profile.png';
 export { default as BackgroundReferral } from './images/background/referral.png';
+export { default as ProfileBackground } from './images/profile/background.png';
 
 // ----- Placeholder Images -----
 export { default as UserPlaceholder } from './images/placeholder/user.png';
@@ -67,6 +68,7 @@ export { default as SettingsRate } from './icons/ui/settings/rate.png';
 export { default as SettingsNotifications } from './icons/ui/settings/notifications.png';
 export { default as SettingsLegal } from './icons/ui/settings/legal.png';
 export { default as SettingsSignOut } from './icons/ui/settings/sign-out.png';
+export { default as SettingsProfile } from './icons/ui/settings/profile.png';
 
 // Social
 export { default as SocialInstagram } from './icons/ui/social/instagram.png';

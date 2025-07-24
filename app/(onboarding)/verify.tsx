@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
+import {
+  View,
+  Text,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../src/theme';
 import { fonts } from '../../src/theme/typography';
 import { ProgressIndicator } from '../../src/components/shared/ProgressIndicator';
@@ -27,10 +28,11 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function VerifyScreen() {
   const router = useRouter();
-  const { loginWithCode, sendCode } = useLoginWithEmail()
+  const { loginWithCode, sendCode } = useLoginWithEmail();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
 
   useEffect(() => {
     const loadEmail = async () => {
@@ -65,16 +67,16 @@ export default function VerifyScreen() {
       // const recievedReferralCode = await getStoredReferral();
 
       const privyUser = await loginWithCode({ code: otp, email });
-      
+
       // Get wallet from the Privy user response
       const walletInfo = privyUser?.linked_accounts?.find(
         (account: any) => account.type === 'wallet' && account.walletClient === 'privy'
       );
-      
+
       if (walletInfo && walletInfo.type === 'wallet' && email) {
         const walletAddress = walletInfo.address as WalletAddress;
         const apiClient = getApiClient();
-        
+
         try {
           // Create or get existing user immediately
           const response = await apiClient.createUser(walletAddress, email);
@@ -84,7 +86,7 @@ export default function VerifyScreen() {
           // Don't block onboarding for backend errors
         }
       }
-      
+
       // Complete onboarding immediately
       await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       router.replace('/(home)');
@@ -97,12 +99,27 @@ export default function VerifyScreen() {
 
   const handleResend = async () => {
     await sendCode({ email });
+    setCodeSent(true);
+    // Reset the "Code sent" message after 3 seconds
+    setTimeout(() => {
+      setCodeSent(false);
+    }, 3000);
+  };
+
+  const handleBack = () => {
+    router.back();
   };
 
   return (
     <View style={styles.container}>
       <Image source={BackgroundOnbordingMain} style={styles.backgroundImage} resizeMode="cover" />
-      <KeyboardAvoidingView 
+
+      {/* Back button */}
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+        <Ionicons name="chevron-back" size={28} color={colors.text.secondary} />
+      </TouchableOpacity>
+
+      <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -127,9 +144,15 @@ export default function VerifyScreen() {
             editable={!loading}
           />
 
-          <TouchableOpacity onPress={handleResend} disabled={loading}>
+          <TouchableOpacity onPress={handleResend} disabled={loading || codeSent}>
             <Text style={styles.resendText}>
-              Didn't receive a code? <Text style={styles.resendLink}>Resend</Text>
+              {codeSent ? (
+                'Code sent'
+              ) : (
+                <>
+                  Didn't receive a code? <Text style={styles.resendLink}>Resend</Text>
+                </>
+              )}
             </Text>
           </TouchableOpacity>
         </View>
@@ -138,9 +161,9 @@ export default function VerifyScreen() {
           <View style={styles.progressWrapper}>
             <ProgressIndicator totalSteps={3} currentStep={3} />
           </View>
-          <Button 
-            title="Verify" 
-            onPress={handleVerify} 
+          <Button
+            title="Verify"
+            onPress={handleVerify}
             disabled={!otp || otp.length < 6 || loading}
           />
         </View>
@@ -160,6 +183,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     zIndex: 0,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 24,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     flex: 1,
@@ -208,6 +241,14 @@ const styles = StyleSheet.create({
     letterSpacing: 8,
     width: SCREEN_WIDTH - 48,
   },
+  verificationEmailText: {
+    fontFamily: fonts.primary,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.4)',
+    textAlign: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 24,
+  },
   resendText: {
     fontFamily: fonts.primary,
     fontSize: 14,
@@ -231,4 +272,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-}); 
+});

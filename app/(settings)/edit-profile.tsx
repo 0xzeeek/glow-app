@@ -20,7 +20,7 @@ import { colors } from '@/theme/colors';
 import { fonts } from '@/theme/typography';
 import { useUser } from '../../src/contexts/UserContext';
 import { useEditProfile } from '../../src/hooks/useEditProfile';
-import { Profile, SettingsEdit } from '../../assets';
+import { Profile, SettingsEdit, SettingsProfile } from '../../assets';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -111,7 +111,11 @@ export default function EditProfileScreen() {
         {/* Profile Image Section */}
         <View style={styles.profileImageSection}>
           <View style={styles.profileImageContainer}>
-            <Image source={{ uri: localProfileImage || Profile }} style={styles.profileImage} />
+            {localProfileImage && typeof localProfileImage !== 'number' ? (
+              <Image source={{ uri: localProfileImage }} style={styles.profileImage} />
+            ) : (
+              <Image source={SettingsProfile} style={styles.profileImage} />
+            )}
             {isUploadingImage && (
               <View style={styles.imageOverlay}>
                 <ActivityIndicator size="large" color={colors.background.primary} />

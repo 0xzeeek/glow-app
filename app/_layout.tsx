@@ -2,7 +2,8 @@
 import 'react-native-url-polyfill/auto';
 
 import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
+import { Stack, useSegments } from 'expo-router';
+import { View, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Font from 'expo-font';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -19,16 +20,106 @@ import {
 } from '../src/services';
 import { uiStore } from '../src/stores/uiStore';
 import { fonts } from '../assets';
-import { AppProviders } from '../src/contexts';
+import { AppProviders, useNavigation } from '../src/contexts';
 import { colors } from '@/theme/colors';
 import { PrivyProvider } from '@privy-io/expo';
 import ErrorBoundary from '../src/components/shared/ErrorBoundary';
+import BottomNav from '../src/components/navigation/BottomNav';
 // import { useCaptureReferralCode } from '../src/hooks';
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = createQueryClient();
+
+// Helper to determine if bottom nav should be shown
+function shouldShowBottomNav(segments: string[]): boolean {
+  const firstSegment = segments[0];
+  // Show bottom nav for home, referral, profile, and token screens
+  return firstSegment === '(home)' || firstSegment === '(referral)' || firstSegment === '(profile)' || firstSegment === '(token)';
+}
+
+// Helper to get active tab
+function getActiveTab(segments: string[]): 'home' | 'referral' | 'profile' | null {
+  const firstSegment = segments[0];
+  if (firstSegment === '(home)') return 'home';
+  if (firstSegment === '(referral)') return 'referral';
+  if (firstSegment === '(profile)') return 'profile';
+  return null;
+}
+
+// Separate component for the main app content to use hooks
+function AppContent() {
+  const segments = useSegments();
+  const { homeScrollToTopRef } = useNavigation();
+  const showBottomNav = shouldShowBottomNav(segments);
+  const activeTab = getActiveTab(segments);
+
+  const handleHomePress = () => {
+    // Call the scroll-to-top function if it's registered
+    if (homeScrollToTopRef.current) {
+      homeScrollToTopRef.current();
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <Stack
+        screenOptions={{
+          contentStyle: styles.stackContent,
+        }}
+      >
+        <Stack.Screen
+          name="(onboarding)"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+            contentStyle: {
+              backgroundColor: colors.background.secondary,
+            },
+          }}
+        />
+        <Stack.Screen
+          name="(home)"
+          options={{
+            headerShown: false,
+            animation: 'none',
+          }}
+        />
+        <Stack.Screen
+          name="(referral)"
+          options={{ headerShown: false, animation: 'none' }}
+        />
+        <Stack.Screen 
+          name="(token)" 
+          options={{ 
+            headerShown: false,
+            presentation: 'card',
+            animation: 'slide_from_right',
+          }} 
+        />
+        <Stack.Screen
+          name="(profile)"
+          options={{
+            headerShown: false,
+            animation: 'none',
+          }}
+        />
+        <Stack.Screen
+          name="(settings)"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+      {showBottomNav && (
+        <BottomNav activeTab={activeTab} onHomePress={activeTab === 'home' ? handleHomePress : undefined} />
+      )}
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [isReady, setIsReady] = useState(false);
@@ -100,45 +191,7 @@ export default function RootLayout() {
           <ErrorBoundary>
             <AppProviders>
               <StatusBar style="light" />
-              <Stack>
-                <Stack.Screen
-                  name="(onboarding)"
-                  options={{
-                    headerShown: false,
-                    animation: 'slide_from_right',
-                    contentStyle: {
-                      backgroundColor: colors.background.secondary,
-                    },
-                  }}
-                />
-                <Stack.Screen
-                  name="(home)"
-                  options={{
-                    headerShown: false,
-                    animation: 'none',
-                  }}
-                />
-                <Stack.Screen
-                  name="(referral)"
-                  options={{ headerShown: false, animation: 'none' }}
-                />
-                <Stack.Screen name="(token)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="(profile)"
-                  options={{
-                    headerShown: false,
-                    animation: 'none',
-                  }}
-                />
-                <Stack.Screen
-                  name="(settings)"
-                  options={{
-                    headerShown: false,
-                    animation: 'slide_from_right',
-                  }}
-                />
-                <Stack.Screen name="+not-found" />
-              </Stack>
+              <AppContent />
             </AppProviders>
           </ErrorBoundary>
         </QueryClientProvider>
@@ -146,3 +199,13 @@ export default function RootLayout() {
     </PrivyProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background.primary,
+  },
+  stackContent: {
+    flex: 1,
+  },
+});

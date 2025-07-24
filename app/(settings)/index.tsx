@@ -14,7 +14,8 @@ import {
   SettingsLegal,
   SettingsSignOut,
   SocialX,
-  SocialInstagram
+  SocialInstagram,
+  SettingsProfile
 } from '../../assets';
 
 export default function SettingsScreen() {
@@ -112,12 +113,10 @@ export default function SettingsScreen() {
         {/* Profile Section */}
         <TouchableOpacity style={styles.profileSection} onPress={handleEditProfile}>
           <View style={styles.profileLeft}>
-            {image ? (
+            {image && typeof image !== 'number' ? (
               <Image source={{ uri: image }} style={styles.profileImage} />
             ) : (
-              <View style={styles.profilePlaceholder}>
-                <Ionicons name="person" size={30} color={colors.neutral[600]} />
-              </View>
+              <Image source={SettingsProfile} style={styles.profileImage} />
             )}
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{username || ''}</Text>
@@ -224,15 +223,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    marginRight: 16,
-  },
-  profilePlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.neutral[200],
-    justifyContent: 'center',
-    alignItems: 'center',
     marginRight: 16,
   },
   profileInfo: {

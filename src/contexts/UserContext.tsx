@@ -14,7 +14,6 @@ import {
   useWalletHoldings,
 } from '../hooks';
 import { getErrorHandler } from '../services/ErrorHandler';
-import { UserPlaceholder } from '../../assets';
 import { WalletBalance, TokenHolding } from '../types';
 
 interface UserContextType {
@@ -64,7 +63,7 @@ export function UserProvider({ children }: UserProviderProps) {
   // User profile state
   const [username, setUsernameState] = useState('');
   const [email, setEmailState] = useState('');
-  const [image, setImageState] = useState<string | null>(UserPlaceholder);
+  const [image, setImageState] = useState<string | null>(null);
   const [memberSince, setMemberSince] = useState(new Date());
   const [feesEarned, setFeesEarned] = useState<string | null>(null);
 
@@ -77,7 +76,7 @@ export function UserProvider({ children }: UserProviderProps) {
     if (userProfile) {
       setUsernameState(userProfile.username);
       setEmailState(userProfile.email);
-      setImageState(userProfile.image || UserPlaceholder);
+      setImageState(userProfile.image || null);
       setMemberSince(new Date(userProfile.createdAt));
       setFeesEarned(userProfile.feesEarned || null);
     }
