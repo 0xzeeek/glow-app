@@ -179,8 +179,6 @@ class ApiClient {
     token: string,
   ): Promise<TopHolder[]> {
     const response = await this.request<GetTokenHoldersResponse>(`/tokens/${token}/holders`);
-
-    console.log('response', response);
     
     // Transform the response to match our TopHolder interface
     return response.holders.map((holder: TokenHolder, index: number) => ({
@@ -327,6 +325,10 @@ export const createQueryClient = (): QueryClient => {
         const queryKey = query.queryKey;
         // Don't persist price history queries
         if (Array.isArray(queryKey) && queryKey[0] === 'prices' && queryKey[2] === 'history') {
+          return false;
+        }
+        // Don't persist failed queries (prevents 404 errors from being cached)
+        if (query.state.status === 'error') {
           return false;
         }
         // Persist all other queries

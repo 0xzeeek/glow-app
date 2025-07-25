@@ -8,11 +8,8 @@ import React, {
   useMemo,
 } from 'react';
 import { usePrivy, useEmbeddedSolanaWallet } from '@privy-io/expo';
-import {
-  useUserProfile,
-  useWebSocketBalanceUpdates,
-  useWalletHoldings,
-} from '../hooks';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUserProfile, useWebSocketBalanceUpdates, useWalletHoldings } from '../hooks';
 import { getErrorHandler } from '../services/ErrorHandler';
 import { WalletBalance, TokenHolding } from '../types';
 
@@ -43,6 +40,7 @@ interface UserContextType {
   setImage: (image: string | null) => void;
   signOut: () => void;
   refetchHoldings: () => void;
+  setHasCompletedOnboarding: (completed: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -55,22 +53,42 @@ export function UserProvider({ children }: UserProviderProps) {
   // Privy integration
   const { user, logout: privySignOut } = usePrivy();
   const { wallets } = useEmbeddedSolanaWallet();
-
-  // const { data: userProfile } = useUserProfile(wallets?.[0]?.address || null);
-  // TODO: remove hardcoded wallet address
-  const { data: userProfile } = useUserProfile('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
-
+  // Check if onboarding is complete
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   // User profile state
   const [username, setUsernameState] = useState('');
   const [email, setEmailState] = useState('');
   const [image, setImageState] = useState<string | null>(null);
   const [memberSince, setMemberSince] = useState(new Date());
   const [feesEarned, setFeesEarned] = useState<string | null>(null);
-
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   // Memoize setter functions
   const setUsername = useCallback((name: string) => setUsernameState(name), []);
   const setEmail = useCallback((email: string) => setEmailState(email), []);
   const setImage = useCallback((image: string | null) => setImageState(image), []);
+
+  useEffect(() => {
+    (async () => {
+      const stored = await AsyncStorage.getItem('hasCompletedOnboarding');
+      if (stored === 'true') {
+        setHasCompletedOnboarding(true);
+      }
+    })();
+  }, []);
+
+   // Memoize onboarding completion handler
+   const handleSetHasCompletedOnboarding = useCallback((completed: boolean) => {
+    setHasCompletedOnboarding(completed);
+    // Also persist to AsyncStorage for app restarts
+    AsyncStorage.setItem('hasCompletedOnboarding', completed ? 'true' : 'false');
+  }, []);
+
+  const { data: userProfile } = useUserProfile(
+    hasCompletedOnboarding && walletAddress ? walletAddress : null
+  );
+
+    // TODO: remove hardcoded wallet address
+  // const { data: userProfile } = useUserProfile('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
 
   useEffect(() => {
     if (userProfile) {
@@ -82,17 +100,14 @@ export function UserProvider({ children }: UserProviderProps) {
     }
   }, [userProfile]);
 
-  // Wallet state
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-
   // Extract wallet address from Privy wallets
   useEffect(() => {
     if (wallets && wallets.length > 0) {
       // Get the first Solana wallet
       const primaryWallet = wallets[0];
-      // setWalletAddress(primaryWallet.address);
+      setWalletAddress(primaryWallet.address);
       // TODO: remove hardcoded wallet address
-      setWalletAddress('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
+      // setWalletAddress('8EDurUnRAKw5MEDiJtVeYBZS7h7kEVzvYwZpgUeuZAMd');
 
       // Set user context for error tracking
       const errorHandler = getErrorHandler();
@@ -115,14 +130,15 @@ export function UserProvider({ children }: UserProviderProps) {
     isLoading: isLoadingHoldings,
     error: holdingsError,
     refetch: refetchHoldings,
-  } = useWalletHoldings(walletAddress);
+  } = useWalletHoldings(hasCompletedOnboarding ? walletAddress : null);
 
-  useWebSocketBalanceUpdates(walletAddress);
+  useWebSocketBalanceUpdates(hasCompletedOnboarding ? walletAddress : null);
 
   // Memoize refetch function
   const memoizedRefetchHoldings = useCallback(() => {
     refetchHoldings();
   }, [refetchHoldings]);
+
 
   const signOut = useCallback(async () => {
     // Add breadcrumb before clearing data
@@ -133,6 +149,10 @@ export function UserProvider({ children }: UserProviderProps) {
     setEmailState('');
     setImageState(null);
     setWalletAddress(null);
+    setHasCompletedOnboarding(false);
+
+    // Clear onboarding flag from storage
+    await AsyncStorage.removeItem('hasCompletedOnboarding');
 
     // Clear error handler user context
     getErrorHandler().clearUserContext();
@@ -147,9 +167,10 @@ export function UserProvider({ children }: UserProviderProps) {
 
   // Calculate total USD value from individual token values
   const calculatedTotalUsdValue = useMemo(() => {
-    const value = walletBalance?.tokens.reduce((total, token) => {
-      return total + (token.value || 0);
-    }, 0) || 0;
+    const value =
+      walletBalance?.tokens.reduce((total, token) => {
+        return total + (token.value || 0);
+      }, 0) || 0;
     return value;
   }, [walletBalance?.tokens]);
 
@@ -159,52 +180,57 @@ export function UserProvider({ children }: UserProviderProps) {
   }, [walletBalance?.tokens]);
 
   // Memoize the entire context value
-  const value: UserContextType = useMemo(() => ({
-    // User profile
-    username,
-    email,
-    image,
-    memberSince,
-    feesEarned,
+  const value: UserContextType = useMemo(
+    () => ({
+      // User profile
+      username,
+      email,
+      image,
+      memberSince,
+      feesEarned,
 
-    // Wallet
-    walletAddress,
+      // Wallet
+      walletAddress,
 
-    // Wallet Data
-    walletBalance: walletBalance || null,
-    isLoadingHoldings,
-    holdingsError: holdingsError as Error | null,
+      // Wallet Data
+      walletBalance: walletBalance || null,
+      isLoadingHoldings,
+      holdingsError: holdingsError as Error | null,
 
-    // Wallet values
-    usdcBalance,
-    totalUsdValue: calculatedTotalUsdValue,
-    tokenHoldings,
+      // Wallet values
+      usdcBalance,
+      totalUsdValue: calculatedTotalUsdValue,
+      tokenHoldings,
 
-    // Actions
-    setUsername,
-    setEmail,
-    setImage,
-    signOut,
-    refetchHoldings: memoizedRefetchHoldings,
-  }), [
-    username,
-    email,
-    image,
-    memberSince,
-    feesEarned,
-    walletAddress,
-    walletBalance,
-    isLoadingHoldings,
-    holdingsError,
-    usdcBalance,
-    calculatedTotalUsdValue,
-    tokenHoldings,
-    setUsername,
-    setEmail,
-    setImage,
-    signOut,
-    memoizedRefetchHoldings,
-  ]);
+      // Actions
+      setUsername,
+      setEmail,
+      setImage,
+      signOut,
+      refetchHoldings: memoizedRefetchHoldings,
+      setHasCompletedOnboarding: handleSetHasCompletedOnboarding,
+    }),
+    [
+      username,
+      email,
+      image,
+      memberSince,
+      feesEarned,
+      walletAddress,
+      walletBalance,
+      isLoadingHoldings,
+      holdingsError,
+      usdcBalance,
+      calculatedTotalUsdValue,
+      tokenHoldings,
+      setUsername,
+      setEmail,
+      setImage,
+      signOut,
+      memoizedRefetchHoldings,
+      handleSetHasCompletedOnboarding,
+    ]
+  );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

@@ -22,6 +22,7 @@ import { Button } from '../../src/components/shared/Button';
 import { useLoginWithEmail } from '@privy-io/expo';
 import { getApiClient } from '../../src/services';
 import { WalletAddress } from '../../src/types';
+import { useUser } from '../../src/contexts/UserContext';
 // import { getStoredReferral, clearStoredReferral } from '../../src/hooks';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -29,6 +30,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function VerifyScreen() {
   const router = useRouter();
   const { loginWithCode, sendCode } = useLoginWithEmail();
+  const { setHasCompletedOnboarding } = useUser();
   const [otp, setOtp] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,13 +70,19 @@ export default function VerifyScreen() {
 
       const privyUser = await loginWithCode({ code: otp, email });
 
+      console.log('privyUser', privyUser);
+
       // Get wallet from the Privy user response
       const walletInfo = privyUser?.linked_accounts?.find(
-        (account: any) => account.type === 'wallet' && account.walletClient === 'privy'
+        (account: any) => account.type === 'wallet' && account.wallet_client === 'privy'
       );
+
+      console.log('walletInfo found:', walletInfo);
+      console.log('email:', email);
 
       if (walletInfo && walletInfo.type === 'wallet' && email) {
         const walletAddress = walletInfo.address as WalletAddress;
+        console.log('Creating user with wallet:', walletAddress);
         const apiClient = getApiClient();
 
         try {
@@ -85,10 +93,13 @@ export default function VerifyScreen() {
           console.error('Failed to create/get user:', error);
           // Don't block onboarding for backend errors
         }
+      } else {
+        console.log('Wallet info not found or email missing');
       }
 
       // Complete onboarding immediately
-      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+      setHasCompletedOnboarding(true);
+      
       router.replace('/(home)');
     } catch (error: any) {
       console.error('Verification error:', error);

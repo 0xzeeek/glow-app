@@ -36,13 +36,6 @@ export default function TokenDetailScreen() {
     availableRanges,
   } = useTokenDetails(address);
 
-  // Debug re-renders
-  React.useEffect(() => {
-    if (tokenDetails) {
-      console.log('tokenDetails updated:', tokenDetails.address);
-    }
-  }, [tokenDetails?.address]);
-
   // Use price change from token details instead of calculating from chart data
   const priceChange = tokenDetails?.change24h || 0;
 
